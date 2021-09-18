@@ -9148,6 +9148,16 @@ static void FinaliseHouseArray()
 		EnsureEarlyHouse(HZ_ZON4 | HZ_SUBARTC_ABOVE);
 		EnsureEarlyHouse(HZ_ZON5 | HZ_SUBARTC_ABOVE);
 	}
+
+	// Stepan: experimental 10x slowdown
+	// Increase population and mail
+    for (int i = 0; i < NUM_HOUSES; i++) {
+	    auto *hs = HouseSpec::Get(i);
+	    if (hs && hs->enabled) {
+            hs->population *= 10;
+            hs->mail_generation *= 10;
+        }
+	}
 }
 
 /**
@@ -9216,6 +9226,14 @@ static void FinaliseIndustriesArray()
 		if (!indsp->enabled) {
 			indsp->name = STR_NEWGRF_INVALID_INDUSTRYTYPE;
 		}
+	}
+
+    // Stepan: increase production rate 10 times.
+	for (uint j = 0; j < NUM_INDUSTRYTYPES; ++j) {
+        IndustrySpec *indsp = &_industry_specs[j];
+        if (indsp->enabled)
+            for (uint c = 0; c != INDUSTRY_NUM_OUTPUTS; ++c)
+                indsp->production_rate[c] *= 10;
 	}
 }
 

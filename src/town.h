@@ -73,7 +73,7 @@ struct Town : TownPool::PoolItem<&_town_pool> {
 	int16 ratings[MAX_COMPANIES];  ///< ratings of each company for this town
 
 	TransportedCargoStat<uint32> supplied[NUM_CARGO]; ///< Cargo statistics about supplied cargo.
-	TransportedCargoStat<uint16> received[NUM_TE];    ///< Cargo statistics about received cargotypes.
+	TransportedCargoStat<uint32> received[NUM_TE];    ///< Cargo statistics about received cargotypes.
 	uint32 goal[NUM_TE];                              ///< Amount of cargo required for the town to grow.
 
 	std::string text; ///< General text with additional information.
@@ -84,8 +84,10 @@ struct Town : TownPool::PoolItem<&_town_pool> {
 
 	uint16 time_until_rebuild;       ///< time until we rebuild a house
 
-	uint16 grow_counter;             ///< counter to count when to grow, value is smaller than or equal to growth_rate
-	uint16 growth_rate;              ///< town growth rate
+	uint32 grow_counter;             ///< counter to count when to grow, value is smaller than or equal to growth_rate
+
+	// Stepan: In might be quite a big number.
+	uint32_t growth_rate;              ///< town growth rate
 
 	byte fund_buildings_months;      ///< fund buildings program in action?
 	byte road_build_months;          ///< fund road reconstruction in action?

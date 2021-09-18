@@ -239,10 +239,15 @@ static const SaveLoad _town_desc[] = {
 	SLE_CONDVAR(Town, supplied[CT_MAIL].new_act,       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
 	SLE_CONDVAR(Town, supplied[CT_MAIL].new_act,       SLE_UINT32,                 SLV_9, SLV_165),
 
-	SLE_CONDVAR(Town, received[TE_FOOD].old_act,       SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
-	SLE_CONDVAR(Town, received[TE_WATER].old_act,      SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
-	SLE_CONDVAR(Town, received[TE_FOOD].new_act,       SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
-	SLE_CONDVAR(Town, received[TE_WATER].new_act,      SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVAR(Town, received[TE_FOOD].old_act,       SLE_FILE_U16 | SLE_VAR_U32,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVAR(Town, received[TE_WATER].old_act,      SLE_FILE_U16 | SLE_VAR_U32,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVAR(Town, received[TE_FOOD].new_act,       SLE_FILE_U16 | SLE_VAR_U32,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVAR(Town, received[TE_WATER].new_act,      SLE_FILE_U16 | SLE_VAR_U32,                 SL_MIN_VERSION, SLV_165),
+
+    SLE_CONDVAR(Town, received[TE_FOOD].old_act,       SLE_UINT32,                 SLV_STEPAN, SLV_165),
+    SLE_CONDVAR(Town, received[TE_WATER].old_act,      SLE_UINT32,                 SLV_STEPAN, SLV_165),
+    SLE_CONDVAR(Town, received[TE_FOOD].new_act,       SLE_UINT32,                 SLV_STEPAN, SLV_165),
+    SLE_CONDVAR(Town, received[TE_WATER].new_act,      SLE_UINT32,                 SLV_STEPAN, SLV_165),
 
 	SLE_CONDARR(Town, goal, SLE_UINT32, NUM_TE, SLV_165, SL_MAX_VERSION),
 
@@ -250,11 +255,13 @@ static const SaveLoad _town_desc[] = {
 
 	SLE_CONDVAR(Town, time_until_rebuild,    SLE_FILE_U8 | SLE_VAR_U16,  SL_MIN_VERSION, SLV_54),
 	SLE_CONDVAR(Town, time_until_rebuild,    SLE_UINT16,                SLV_54, SL_MAX_VERSION),
-	SLE_CONDVAR(Town, grow_counter,          SLE_FILE_U8 | SLE_VAR_U16,  SL_MIN_VERSION, SLV_54),
-	SLE_CONDVAR(Town, grow_counter,          SLE_UINT16,                SLV_54, SL_MAX_VERSION),
-	SLE_CONDVAR(Town, growth_rate,           SLE_FILE_U8 | SLE_VAR_I16,  SL_MIN_VERSION, SLV_54),
-	SLE_CONDVAR(Town, growth_rate,           SLE_FILE_I16 | SLE_VAR_U16, SLV_54, SLV_165),
-	SLE_CONDVAR(Town, growth_rate,           SLE_UINT16,                 SLV_165, SL_MAX_VERSION),
+	SLE_CONDVAR(Town, grow_counter,          SLE_FILE_U8 | SLE_VAR_U32,  SL_MIN_VERSION, SLV_54),
+	SLE_CONDVAR(Town, grow_counter,          SLE_FILE_U16 | SLE_VAR_U32, SLV_54, SLV_STEPAN),
+	SLE_CONDVAR(Town, grow_counter,          SLE_UINT32,                SLV_STEPAN, SL_MAX_VERSION),
+	SLE_CONDVAR(Town, growth_rate,           SLE_FILE_U8 | SLE_VAR_U32,  SL_MIN_VERSION, SLV_54),
+	SLE_CONDVAR(Town, growth_rate,           SLE_FILE_I16 | SLE_VAR_U32, SLV_54, SLV_165),
+	SLE_CONDVAR(Town, growth_rate, SLE_FILE_U16 | SLE_VAR_U32, SLV_165, SLV_STEPAN),
+	SLE_CONDVAR(Town, growth_rate, SLE_UINT32, SLV_STEPAN, SL_MAX_VERSION),
 
 	    SLE_VAR(Town, fund_buildings_months, SLE_UINT8),
 	    SLE_VAR(Town, road_build_months,     SLE_UINT8),

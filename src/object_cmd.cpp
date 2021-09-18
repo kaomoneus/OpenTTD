@@ -614,6 +614,10 @@ static void TileLoop_Object(TileIndex tile)
 	if (GB(r, 0, 8) < (256 / 4 / (6 - level))) {
 		uint amt = GB(r, 0, 8) / 8 / 4 + 1;
 		if (EconomyIsInRecession()) amt = (amt + 1) >> 1;
+
+		// Stepan: increase amount 10 times
+		amt *= 10;
+
 		MoveGoodsToStation(CT_PASSENGERS, amt, ST_HEADQUARTERS, GetTileOwner(tile), stations.GetStations());
 	}
 
@@ -623,6 +627,10 @@ static void TileLoop_Object(TileIndex tile)
 	if (GB(r, 8, 8) < (196 / 4 / (6 - level))) {
 		uint amt = GB(r, 8, 8) / 8 / 4 + 1;
 		if (EconomyIsInRecession()) amt = (amt + 1) >> 1;
+
+        // Stepan: increase amount 10 times
+        amt *= 10;
+
 		MoveGoodsToStation(CT_MAIL, amt, ST_HEADQUARTERS, GetTileOwner(tile), stations.GetStations());
 	}
 }

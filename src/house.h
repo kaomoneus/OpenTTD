@@ -99,11 +99,11 @@ struct HouseSpec {
 	/* Standard properties */
 	Year min_year;                            ///< introduction year of the house
 	Year max_year;                            ///< last year it can be built
-	byte population;                          ///< population (Zero on other tiles in multi tile house.)
+    uint16 population;                          ///< population (Zero on other tiles in multi tile house.)
 	byte removal_cost;                        ///< cost multiplier for removing it
 	StringID building_name;                   ///< building name
 	uint16 remove_rating_decrease;            ///< rating decrease if removed
-	byte mail_generation;                     ///< mail generation multiplier (tile based, as the acceptances below)
+    uint16 mail_generation;                     ///< mail generation multiplier (tile based, as the acceptances below)
 	byte cargo_acceptance[HOUSE_NUM_ACCEPTS]; ///< acceptance level for the cargo slots
 	CargoID accepts_cargo[HOUSE_NUM_ACCEPTS]; ///< input cargo slots
 	BuildingFlags building_flags;             ///< some flags that describe the house (size, stadium etc...)

@@ -80,6 +80,7 @@ typedef std::vector<Industry *> SmallIndustryList;
 /**
  * Score info, values used for computing the detailed performance rating.
  */
+// TODO: Stepan perhaps we should update it as well.
 const ScoreInfo _score_info[] = {
 	{     120, 100}, // SCORE_VEHICLES
 	{      80, 100}, // SCORE_STATIONS
@@ -752,6 +753,9 @@ void RecomputePrices()
 	/* Setup maximum loan */
 	_economy.max_loan = ((uint64)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / 50000 * 50000;
 
+	// Stepan: I was here...
+	_economy.max_loan *= 10;
+
 	/* Setup price bases */
 	for (Price i = PR_BEGIN; i < PR_END; i++) {
 		Money price = _price_base_specs[i].start_price;
@@ -797,12 +801,19 @@ void RecomputePrices()
 			/* No base price should be zero, but be sure. */
 			assert(price != 0);
 		}
+
+        // Stepan: and here as well:
+        price *= 10;
+
 		/* Store value */
 		_price[i] = price;
 	}
 
 	/* Setup cargo payment */
 	for (CargoSpec *cs : CargoSpec::Iterate()) {
+
+	    // Stepan: but we keep current payments fares,
+	    // for we can do it 10 times faster.
 		cs->current_payment = ((int64)cs->initial_payment * _economy.inflation_payment) >> 16;
 	}
 
@@ -968,6 +979,8 @@ Money GetPrice(Price index, uint cost_factor, const GRFFile *grf_file, int shift
 
 Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, CargoID cargo_type)
 {
+    // TODO: Stepan: somehow we should compress
+    //   curve like 100 or even 1000 times.
 	const CargoSpec *cs = CargoSpec::Get(cargo_type);
 	if (!cs->IsValid()) {
 		/* User changed newgrfs and some vehicle still carries some cargo which is no longer available. */

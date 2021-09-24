@@ -78,7 +78,7 @@ struct Industry : IndustryPool::PoolItem<&_industry_pool> {
 	byte last_month_pct_transported[INDUSTRY_NUM_OUTPUTS]; ///< percentage transported per cargo in the last full month
 	uint32 last_month_production[INDUSTRY_NUM_OUTPUTS];    ///< total units produced per cargo in the last full month
 	uint32 last_month_transported[INDUSTRY_NUM_OUTPUTS];   ///< total units transported per cargo in the last full month
-	uint16 counter;                                        ///< used for animation and/or production (if available cargo)
+	uint32 counter;                                        ///< used for animation and/or production (if available cargo)
 
 	IndustryType type;             ///< type of industry.
 	Owner owner;                   ///< owner of the industry.  Which SHOULD always be (imho) OWNER_NONE

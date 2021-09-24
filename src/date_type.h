@@ -25,16 +25,19 @@ typedef uint8  Day;   ///< Type for the day of the month, note: 1 based, first d
  * 1 tick is approximately 30 ms.
  * 1 day is thus about 2 seconds (74 * 30 = 2220) on a machine that can run OpenTTD normally
  */
-static const int DAY_TICKS         =  74; ///< ticks per day
+
+static const int PACE_FACTOR = 10;
+
+static const int DAY_TICKS         =  74 * PACE_FACTOR; ///< ticks per day
 static const int DAYS_IN_YEAR      = 365; ///< days per year
 static const int DAYS_IN_LEAP_YEAR = 366; ///< sometimes, you need one day more...
 static const int MONTHS_IN_YEAR    =  12; ///< months per year
 
-static const int STATION_RATING_TICKS     = 185; ///< cycle duration for updating station rating
-static const int STATION_ACCEPTANCE_TICKS = 250; ///< cycle duration for updating station acceptance
-static const int STATION_LINKGRAPH_TICKS  = 504; ///< cycle duration for cleaning dead links
-static const int CARGO_AGING_TICKS        = 185; ///< cycle duration for aging cargo
-static const int INDUSTRY_PRODUCE_TICKS   = 256; ///< cycle duration for industry production
+static const int STATION_RATING_TICKS     = 185 * PACE_FACTOR; ///< cycle duration for updating station rating
+static const int STATION_ACCEPTANCE_TICKS = 250 * PACE_FACTOR; ///< cycle duration for updating station acceptance
+static const int STATION_LINKGRAPH_TICKS  = 504 * PACE_FACTOR; ///< cycle duration for cleaning dead links
+static const int CARGO_AGING_TICKS        = 185 * PACE_FACTOR; ///< cycle duration for aging cargo
+static const int INDUSTRY_PRODUCE_TICKS   = 256 * PACE_FACTOR; ///< cycle duration for industry production
 static const int TOWN_GROWTH_TICKS        = 70;  ///< cycle duration for towns trying to grow. (this originates from the size of the town array in TTD
 static const int INDUSTRY_CUT_TREE_TICKS  = INDUSTRY_PRODUCE_TICKS * 2; ///< cycle duration for lumber mill's extra action
 

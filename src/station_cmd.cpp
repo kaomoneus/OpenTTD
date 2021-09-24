@@ -3811,7 +3811,7 @@ static void StationHandleSmallTick(BaseStation *st)
 {
 	if ((st->facilities & FACIL_WAYPOINT) != 0 || !st->IsInUse()) return;
 
-	byte b = st->delete_ctr + 1;
+	uint16 b = st->delete_ctr + 1;
 	if (b >= STATION_RATING_TICKS) b = 0;
 	st->delete_ctr = b;
 

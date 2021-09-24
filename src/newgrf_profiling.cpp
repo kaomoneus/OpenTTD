@@ -141,7 +141,7 @@ std::string NewGRFProfiler::GetOutputFilename() const
 
 uint32 NewGRFProfiler::FinishAll()
 {
-	int max_ticks = 0;
+	uint32 max_ticks = 0;
 	uint32 total_microseconds = 0;
 	for (NewGRFProfiler &pr : _newgrf_profilers) {
 		if (pr.active) {

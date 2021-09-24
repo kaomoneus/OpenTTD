@@ -54,8 +54,8 @@ static const SaveLoad _industry_desc[] = {
 	SLE_CONDARR(Industry, last_month_transported,     SLE_FILE_U16 | SLE_VAR_U32,  2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
 	SLE_CONDARR(Industry, last_month_transported, SLE_FILE_U16 | SLE_VAR_U32, 16, SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_STEPAN),
 	SLE_CONDARR(Industry, last_month_transported, SLE_UINT32, 16, SLV_STEPAN, SL_MAX_VERSION),
-
-	    SLE_VAR(Industry, counter,                    SLE_UINT16),
+    SLE_CONDVAR(Industry, counter,                SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_STEPAN),
+    SLE_CONDVAR(Industry, counter,                    SLE_UINT32, SLV_STEPAN, SL_MAX_VERSION),
 
 	    SLE_VAR(Industry, type,                       SLE_UINT8),
 	    SLE_VAR(Industry, owner,                      SLE_UINT8),

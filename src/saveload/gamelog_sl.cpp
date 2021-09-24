@@ -343,7 +343,8 @@ public:
 
 static const SaveLoad _gamelog_desc[] = {
 	SLE_CONDVAR(LoggedAction, at,            SLE_UINT8,   SLV_RIFF_TO_ARRAY, SL_MAX_VERSION),
-	SLE_VAR(LoggedAction, tick,              SLE_UINT16),
+	SLE_CONDVAR(LoggedAction, tick,              SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_STEPAN),
+	SLE_CONDVAR(LoggedAction, tick,              SLE_UINT32, SLV_STEPAN, SL_MAX_VERSION),
 	SLEG_STRUCTLIST("action", SlGamelogAction),
 };
 

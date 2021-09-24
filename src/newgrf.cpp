@@ -1315,7 +1315,7 @@ static ChangeInfoResult RailVehicleChangeInfo(uint engine, int numinfo, int prop
 				break;
 
 			case PROP_TRAIN_CARGO_AGE_PERIOD: // 0x2B Cargo aging period
-				ei->cargo_age_period = buf->ReadWord();
+				ei->cargo_age_period = buf->ReadWord() * PACE_FACTOR;
 				break;
 
 			case 0x2C:   // CTT refit include list
@@ -1505,7 +1505,7 @@ static ChangeInfoResult RoadVehicleChangeInfo(uint engine, int numinfo, int prop
 				break;
 
 			case PROP_ROADVEH_CARGO_AGE_PERIOD: // 0x22 Cargo aging period
-				ei->cargo_age_period = buf->ReadWord();
+				ei->cargo_age_period = buf->ReadWord() * PACE_FACTOR;
 				break;
 
 			case PROP_ROADVEH_SHORTEN_FACTOR: // 0x23 Shorter vehicle
@@ -1681,7 +1681,7 @@ static ChangeInfoResult ShipVehicleChangeInfo(uint engine, int numinfo, int prop
 				break;
 
 			case PROP_SHIP_CARGO_AGE_PERIOD: // 0x1D Cargo aging period
-				ei->cargo_age_period = buf->ReadWord();
+				ei->cargo_age_period = buf->ReadWord() * PACE_FACTOR;
 				break;
 
 			case 0x1E:   // CTT refit include list
@@ -1831,7 +1831,7 @@ static ChangeInfoResult AircraftVehicleChangeInfo(uint engine, int numinfo, int 
 				break;
 
 			case PROP_AIRCRAFT_CARGO_AGE_PERIOD: // 0x1C Cargo aging period
-				ei->cargo_age_period = buf->ReadWord();
+				ei->cargo_age_period = buf->ReadWord() * PACE_FACTOR;
 				break;
 
 			case 0x1D:   // CTT refit include list
@@ -9148,16 +9148,6 @@ static void FinaliseHouseArray()
 		EnsureEarlyHouse(HZ_ZON4 | HZ_SUBARTC_ABOVE);
 		EnsureEarlyHouse(HZ_ZON5 | HZ_SUBARTC_ABOVE);
 	}
-
-	// Stepan: experimental 10x slowdown
-	// Increase population and mail
-    for (int i = 0; i < NUM_HOUSES; i++) {
-	    auto *hs = HouseSpec::Get(i);
-	    if (hs && hs->enabled) {
-            hs->population *= 10;
-            hs->mail_generation *= 10;
-        }
-	}
 }
 
 /**
@@ -9798,7 +9788,7 @@ void LoadNewGRF(uint load_index, uint num_baseset)
 	Date date            = _date;
 	Year year            = _cur_year;
 	DateFract date_fract = _date_fract;
-	uint16 tick_counter  = _tick_counter;
+	uint32 tick_counter  = _tick_counter;
 	byte display_opt     = _display_opt;
 
 	if (_networking) {

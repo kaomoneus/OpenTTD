@@ -754,7 +754,7 @@ void RecomputePrices()
 	_economy.max_loan = ((uint64)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / 50000 * 50000;
 
 	// Stepan: I was here...
-	_economy.max_loan *= 10;
+	_economy.max_loan *= PACE_FACTOR;
 
 	/* Setup price bases */
 	for (Price i = PR_BEGIN; i < PR_END; i++) {
@@ -803,7 +803,7 @@ void RecomputePrices()
 		}
 
         // Stepan: and here as well:
-        price *= 10;
+        price *= PACE_FACTOR;
 
 		/* Store value */
 		_price[i] = price;
@@ -811,9 +811,6 @@ void RecomputePrices()
 
 	/* Setup cargo payment */
 	for (CargoSpec *cs : CargoSpec::Iterate()) {
-
-	    // Stepan: but we keep current payments fares,
-	    // for we can do it 10 times faster.
 		cs->current_payment = ((int64)cs->initial_payment * _economy.inflation_payment) >> 16;
 	}
 

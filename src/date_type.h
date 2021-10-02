@@ -42,7 +42,13 @@ static const int STATION_RATING_TICKS     = 185; ///< cycle duration for updatin
 
 static const int STATION_ACCEPTANCE_TICKS = 250 * PACE_FACTOR; ///< cycle duration for updating station acceptance
 static const int STATION_LINKGRAPH_TICKS  = 504 * PACE_FACTOR; ///< cycle duration for cleaning dead links
-static const int CARGO_AGING_TICKS        = 185 * PACE_FACTOR; ///< cycle duration for aging cargo
+
+// Stepan: also prevent cargo aging from scale, here it rather
+// depends in distance and visual vehicle speed.
+static const int CARGO_AGING_TICKS        = 185; ///< cycle duration for aging cargo
+
+// TODO: Consider not to scale intdustry produce ticks
+//   here and in industry_cmd, those actions almost cancel each other.
 static const int INDUSTRY_PRODUCE_TICKS   = 256 * PACE_FACTOR; ///< cycle duration for industry production
 static const int TOWN_GROWTH_TICKS        = 70;  ///< cycle duration for towns trying to grow. (this originates from the size of the town array in TTD
 static const int INDUSTRY_CUT_TREE_TICKS  = INDUSTRY_PRODUCE_TICKS * 2; ///< cycle duration for lumber mill's extra action

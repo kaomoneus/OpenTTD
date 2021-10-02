@@ -876,6 +876,9 @@ void ShowCompanyValueGraph()
 /* PAYMENT RATES */
 /*****************/
 
+//TODO: Stepan: scale should depend on PACE_FACTOR
+//   for big PACE_FACTOR numbers you should have less days
+//   and opposite.
 struct PaymentRatesGraphWindow : BaseGraphWindow {
 	uint line_height;   ///< Pixel height of each cargo type row.
 	Scrollbar *vscroll; ///< Cargo list scrollbar.

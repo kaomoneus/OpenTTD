@@ -26,6 +26,8 @@ typedef uint8  Day;   ///< Type for the day of the month, note: 1 based, first d
  * 1 day is thus about 2 seconds (74 * 30 = 2220) on a machine that can run OpenTTD normally
  */
 
+// Stepan: "pace factor" is how many times game's clock
+// should go slower comparing to vanilla version.
 static const int PACE_FACTOR = 10;
 
 static const int DAY_TICKS         =  74 * PACE_FACTOR; ///< ticks per day
@@ -33,7 +35,11 @@ static const int DAYS_IN_YEAR      = 365; ///< days per year
 static const int DAYS_IN_LEAP_YEAR = 366; ///< sometimes, you need one day more...
 static const int MONTHS_IN_YEAR    =  12; ///< months per year
 
-static const int STATION_RATING_TICKS     = 185 * PACE_FACTOR; ///< cycle duration for updating station rating
+// Stepan, NOTE: we don't scale station ratings
+// ticks, because it is addicted to user's clock.
+// So it should happen with same rate from user perspective.
+static const int STATION_RATING_TICKS     = 185; ///< cycle duration for updating station rating
+
 static const int STATION_ACCEPTANCE_TICKS = 250 * PACE_FACTOR; ///< cycle duration for updating station acceptance
 static const int STATION_LINKGRAPH_TICKS  = 504 * PACE_FACTOR; ///< cycle duration for cleaning dead links
 static const int CARGO_AGING_TICKS        = 185 * PACE_FACTOR; ///< cycle duration for aging cargo

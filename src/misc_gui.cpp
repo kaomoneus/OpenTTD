@@ -580,7 +580,7 @@ void ShowCostOrIncomeAnimation(int x, int y, int z, Money cost)
 		msg = STR_INCOME_FLOAT_INCOME;
 	}
 	SetDParam(0, cost);
-	AddTextEffect(msg, pt.x, pt.y, DAY_TICKS, TE_RISING);
+	AddTextEffect(msg, pt.x, pt.y, VANILLA_DAY_TICKS, TE_RISING);
 }
 
 /**
@@ -597,7 +597,7 @@ void ShowFeederIncomeAnimation(int x, int y, int z, Money transfer, Money income
 
 	SetDParam(0, transfer);
 	if (income == 0) {
-		AddTextEffect(STR_FEEDER, pt.x, pt.y, DAY_TICKS, TE_RISING);
+		AddTextEffect(STR_FEEDER, pt.x, pt.y, VANILLA_DAY_TICKS, TE_RISING);
 	} else {
 		StringID msg = STR_FEEDER_COST;
 		if (income < 0) {
@@ -605,7 +605,7 @@ void ShowFeederIncomeAnimation(int x, int y, int z, Money transfer, Money income
 			msg = STR_FEEDER_INCOME;
 		}
 		SetDParam(1, income);
-		AddTextEffect(msg, pt.x, pt.y, DAY_TICKS, TE_RISING);
+		AddTextEffect(msg, pt.x, pt.y, VANILLA_DAY_TICKS, TE_RISING);
 	}
 }
 

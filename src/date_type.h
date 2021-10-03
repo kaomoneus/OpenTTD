@@ -30,7 +30,9 @@ typedef uint8  Day;   ///< Type for the day of the month, note: 1 based, first d
 // should go slower comparing to vanilla version.
 static const int PACE_FACTOR = 10;
 
-static const int DAY_TICKS         =  74 * PACE_FACTOR; ///< ticks per day
+static const int VANILLA_DAY_TICKS = 74; ///< ticks per vanilla day. Used as a primary time unit for animation.
+
+static const int DAY_TICKS         = VANILLA_DAY_TICKS * PACE_FACTOR; ///< ticks per day
 static const int DAYS_IN_YEAR      = 365; ///< days per year
 static const int DAYS_IN_LEAP_YEAR = 366; ///< sometimes, you need one day more...
 static const int MONTHS_IN_YEAR    =  12; ///< months per year

@@ -2598,7 +2598,7 @@ void CcStartStopVehicle(const CommandCost &result, TileIndex tile, uint32 p1, ui
 
 	StringID msg = (v->vehstatus & VS_STOPPED) ? STR_VEHICLE_COMMAND_STOPPED : STR_VEHICLE_COMMAND_STARTED;
 	Point pt = RemapCoords(v->x_pos, v->y_pos, v->z_pos);
-	AddTextEffect(msg, pt.x, pt.y, DAY_TICKS / PACE_FACTOR, TE_RISING);
+	AddTextEffect(msg, pt.x, pt.y, VANILLA_DAY_TICKS, TE_RISING);
 }
 
 /**

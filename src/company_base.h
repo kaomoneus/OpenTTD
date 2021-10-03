@@ -80,7 +80,7 @@ struct CompanyProperties {
 
 	byte months_of_bankruptcy;       ///< Number of months that the company is unable to pay its debts
 	CompanyMask bankrupt_asked;      ///< which companies were asked about buying it?
-	int16 bankrupt_timeout;          ///< If bigger than \c 0, amount of time to wait for an answer on an offer to buy this company.
+	int32 bankrupt_timeout;          ///< If bigger than \c 0, amount of time to wait for an answer on an offer to buy this company.
 	Money bankrupt_value;
 
 	uint32 terraform_limit;          ///< Amount of tileheights we can (still) terraform (times 65536).

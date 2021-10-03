@@ -689,8 +689,7 @@ static void HandleBankruptcyTakeover(Company *c)
 
 	SetBit(c->bankrupt_asked, best->index);
 
-	// FIXME, Stepan: depends on day ticks, so fix type from int16 to int32
-	c->bankrupt_timeout = (int16)TAKE_OVER_TIMEOUT;
+	c->bankrupt_timeout = TAKE_OVER_TIMEOUT;
 	if (best->is_ai) {
 		AI::NewEvent(best->index, new ScriptEventCompanyAskMerger(c->index, ClampToI32(c->bankrupt_value)));
 	} else if (IsInteractiveCompany(best->index)) {

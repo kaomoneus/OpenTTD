@@ -976,8 +976,7 @@ Money GetPrice(Price index, uint cost_factor, const GRFFile *grf_file, int shift
 
 Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, CargoID cargo_type)
 {
-    // TODO: Stepan: somehow we should compress
-    //   curve like 100 or even 1000 times.
+	// Stepan: here "days" mean vanilla days (in fact is "time units")
 	const CargoSpec *cs = CargoSpec::Get(cargo_type);
 	if (!cs->IsValid()) {
 		/* User changed newgrfs and some vehicle still carries some cargo which is no longer available. */

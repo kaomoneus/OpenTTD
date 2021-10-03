@@ -880,6 +880,28 @@ void ShowCompanyValueGraph()
 //   for big PACE_FACTOR numbers you should have less days
 //   and opposite.
 struct PaymentRatesGraphWindow : BaseGraphWindow {
+	enum TransitUnits {
+		MINUTES, HOURS, DAYS
+	};
+
+	struct TransitUnitDesc {
+		// Stepan: for slow pace mode we reduce max amount
+		// of transit days, by dividing it by PACE FACTOR.
+		// It might happen that days is to large unit to draw an informative
+		// graph, perhaps we need to measure it in hours or even in minutes.
+		//
+		// In another words:
+		//
+		// Graph width is always 200 time units (aka vanilla days)
+		// If we measure in game days it will be 200 / PACE_FACTOR
+		// Just because PACE_FACTOR might be > 200, we need to measure it in
+		// smaller units.
+
+		TransitUnits unit_type;
+		uint step_in_x_units;
+		StringID label_id;
+	};
+
 	uint line_height;   ///< Pixel height of each cargo type row.
 	Scrollbar *vscroll; ///< Cargo list scrollbar.
 	uint legend_width;  ///< Width of legend 'blob'.
@@ -887,15 +909,28 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 	PaymentRatesGraphWindow(WindowDesc *desc, WindowNumber window_number) :
 			BaseGraphWindow(desc, WID_CPR_GRAPH, STR_JUST_CURRENCY_SHORT)
 	{
+		auto transit_units = GetTransitUnits();
+
 		this->num_on_x_axis = 20;
 		this->num_vert_lines = 20;
 		this->month = 0xFF;
-		this->x_values_start     = 10;
-		this->x_values_increment = 10;
+
+		// Stepan: in this graph we about to go over 200 vanilla days
+		//    and draw prices lines for them.
+		//    For the user though we should display game days,
+		//    or hours, or minutes and it depends in PACE FACTOR.
+
+		this->x_values_start     = transit_units.step_in_x_units * 1;
+		this->x_values_increment = transit_units.step_in_x_units;
 
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_CPR_MATRIX_SCROLLBAR);
 		this->vscroll->SetCount(_sorted_standard_cargo_specs_size);
+
+		// Stepan: setup footer hint dynamically depending in PACE FACTOR value.
+		this->GetWidget<NWidgetLeaf>(WID_CPR_FOOTER)->SetDataTip(
+			transit_units.label_id, STR_NULL
+		);
 
 		/* Initialise the dataset */
 		this->OnHundredthTick();
@@ -1060,6 +1095,35 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		}
 		this->num_dataset = i;
 	}
+
+	static TransitUnitDesc GetTransitUnits() {
+		uint width_in_minutes = 200 * 24 * 60 / PACE_FACTOR;
+		uint step_in_minutes = width_in_minutes / 20;
+		uint step_in_x_units;
+
+		TransitUnits transit_unit_type;
+		StringID label_id;
+
+		if (step_in_minutes < 60) {
+			transit_unit_type = MINUTES;
+			step_in_x_units = step_in_minutes;
+			label_id = STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_MINUTES;
+		} else if (step_in_minutes < 60 * 24) {
+			transit_unit_type = HOURS;
+			step_in_x_units = step_in_minutes / 60;
+			label_id = STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_HOURS;
+		} else {
+			transit_unit_type = DAYS;
+			step_in_x_units = step_in_minutes / (60 * 24);
+			label_id = STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL;
+		}
+
+		return TransitUnitDesc{
+				transit_unit_type,
+				step_in_x_units,
+				label_id,
+		};
+	}
 };
 
 static const NWidgetPart _nested_cargo_payment_rates_widgets[] = {
@@ -1093,7 +1157,12 @@ static const NWidgetPart _nested_cargo_payment_rates_widgets[] = {
 		EndContainer(),
 		NWidget(NWID_HORIZONTAL),
 			NWidget(NWID_SPACER), SetMinimalSize(WD_RESIZEBOX_WIDTH, 0), SetFill(1, 0), SetResize(1, 0),
-			NWidget(WWT_TEXT, COLOUR_BROWN, WID_CPR_FOOTER), SetMinimalSize(0, 6), SetPadding(2, 0, 2, 0), SetDataTip(STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL, STR_NULL),
+
+			NWidget(WWT_TEXT, COLOUR_BROWN, WID_CPR_FOOTER),
+				SetMinimalSize(0, 6), SetPadding(2, 0, 2, 0),
+				// Stepan: Currently we print "Days in transit".. or "Hours in transit",
+				// or "minutes in transit". And we should print it dynamically.
+				// SetDataTip(STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL, STR_NULL),
 			NWidget(NWID_SPACER), SetFill(1, 0), SetResize(1, 0),
 			NWidget(WWT_RESIZEBOX, COLOUR_BROWN, WID_CPR_RESIZE),
 		EndContainer(),

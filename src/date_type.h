@@ -28,7 +28,13 @@ typedef uint8  Day;   ///< Type for the day of the month, note: 1 based, first d
 
 // Stepan: "pace factor" is how many times game's clock
 // should go slower comparing to vanilla version.
-static const int PACE_FACTOR = 10;
+
+// Some pace factor values:
+// 1   - game day is equal to vanilla day
+// 4   - 4 times slower, game year is ~1 user's hour
+// 96  - game year is ~1 user's day
+// 672 - game year is ~1 user's week.
+static const int PACE_FACTOR = 672;
 
 static const int VANILLA_DAY_TICKS = 74; ///< ticks per vanilla day. Used as a primary time unit for animation.
 

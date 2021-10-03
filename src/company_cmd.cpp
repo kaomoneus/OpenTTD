@@ -555,8 +555,8 @@ Company *DoStartupNewCompany(bool is_ai, CompanyID company = INVALID_COMPANY)
 	ResetCompanyLivery(c);
 	_company_colours[c->index] = (Colours)c->colour;
 
-    // Stepan: initial_loan factor is 10
-    auto initial_loan = INITIAL_LOAN * 10;
+    // Stepan: initial_loan factor
+    auto initial_loan = INITIAL_LOAN * PACE_FACTOR;
 	c->money = c->current_loan = (std::min<int64>(initial_loan, _economy.max_loan) * _economy.inflation_prices >> 16) / 50000 * 50000;
 
 	c->share_owners[0] = c->share_owners[1] = c->share_owners[2] = c->share_owners[3] = INVALID_OWNER;
@@ -689,7 +689,8 @@ static void HandleBankruptcyTakeover(Company *c)
 
 	SetBit(c->bankrupt_asked, best->index);
 
-	c->bankrupt_timeout = TAKE_OVER_TIMEOUT;
+	// FIXME, Stepan: depends on day ticks, so fix type from int16 to int32
+	c->bankrupt_timeout = (int16)TAKE_OVER_TIMEOUT;
 	if (best->is_ai) {
 		AI::NewEvent(best->index, new ScriptEventCompanyAskMerger(c->index, ClampToI32(c->bankrupt_value)));
 	} else if (IsInteractiveCompany(best->index)) {

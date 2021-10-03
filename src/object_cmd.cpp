@@ -615,8 +615,8 @@ static void TileLoop_Object(TileIndex tile)
 		uint amt = GB(r, 0, 8) / 8 / 4 + 1;
 		if (EconomyIsInRecession()) amt = (amt + 1) >> 1;
 
-		// Stepan: increase amount 10 times
-		amt *= 10;
+		// Stepan: increase amount with PACE FACTOR times
+		amt *= PACE_FACTOR;
 
 		MoveGoodsToStation(CT_PASSENGERS, amt, ST_HEADQUARTERS, GetTileOwner(tile), stations.GetStations());
 	}
@@ -628,8 +628,8 @@ static void TileLoop_Object(TileIndex tile)
 		uint amt = GB(r, 8, 8) / 8 / 4 + 1;
 		if (EconomyIsInRecession()) amt = (amt + 1) >> 1;
 
-        // Stepan: increase amount 10 times
-        amt *= 10;
+		// Stepan: increase amount with PACE FACTOR times
+        amt *= PACE_FACTOR;
 
 		MoveGoodsToStation(CT_MAIL, amt, ST_HEADQUARTERS, GetTileOwner(tile), stations.GetStations());
 	}

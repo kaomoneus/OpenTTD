@@ -1315,7 +1315,7 @@ static ChangeInfoResult RailVehicleChangeInfo(uint engine, int numinfo, int prop
 				break;
 
 			case PROP_TRAIN_CARGO_AGE_PERIOD: // 0x2B Cargo aging period
-				ei->cargo_age_period = buf->ReadWord() * PACE_FACTOR;
+				ei->cargo_age_period = buf->ReadWord();
 				break;
 
 			case 0x2C:   // CTT refit include list
@@ -1505,7 +1505,7 @@ static ChangeInfoResult RoadVehicleChangeInfo(uint engine, int numinfo, int prop
 				break;
 
 			case PROP_ROADVEH_CARGO_AGE_PERIOD: // 0x22 Cargo aging period
-				ei->cargo_age_period = buf->ReadWord() * PACE_FACTOR;
+				ei->cargo_age_period = buf->ReadWord();
 				break;
 
 			case PROP_ROADVEH_SHORTEN_FACTOR: // 0x23 Shorter vehicle
@@ -1681,7 +1681,7 @@ static ChangeInfoResult ShipVehicleChangeInfo(uint engine, int numinfo, int prop
 				break;
 
 			case PROP_SHIP_CARGO_AGE_PERIOD: // 0x1D Cargo aging period
-				ei->cargo_age_period = buf->ReadWord() * PACE_FACTOR;
+				ei->cargo_age_period = buf->ReadWord();
 				break;
 
 			case 0x1E:   // CTT refit include list
@@ -1831,7 +1831,7 @@ static ChangeInfoResult AircraftVehicleChangeInfo(uint engine, int numinfo, int 
 				break;
 
 			case PROP_AIRCRAFT_CARGO_AGE_PERIOD: // 0x1C Cargo aging period
-				ei->cargo_age_period = buf->ReadWord() * PACE_FACTOR;
+				ei->cargo_age_period = buf->ReadWord();
 				break;
 
 			case 0x1D:   // CTT refit include list
@@ -9216,14 +9216,6 @@ static void FinaliseIndustriesArray()
 		if (!indsp->enabled) {
 			indsp->name = STR_NEWGRF_INVALID_INDUSTRYTYPE;
 		}
-	}
-
-    // Stepan: increase production rate 10 times.
-	for (uint j = 0; j < NUM_INDUSTRYTYPES; ++j) {
-        IndustrySpec *indsp = &_industry_specs[j];
-        if (indsp->enabled)
-            for (uint c = 0; c != INDUSTRY_NUM_OUTPUTS; ++c)
-                indsp->production_rate[c] *= 10;
 	}
 }
 

@@ -47,11 +47,15 @@ static const int STATION_LINKGRAPH_TICKS  = 504 * PACE_FACTOR; ///< cycle durati
 // depends in distance and visual vehicle speed.
 static const int CARGO_AGING_TICKS        = 185; ///< cycle duration for aging cargo
 
-// TODO: Consider not to scale intdustry produce ticks
-//   here and in industry_cmd, those actions almost cancel each other.
-static const int INDUSTRY_PRODUCE_TICKS   = 256 * PACE_FACTOR; ///< cycle duration for industry production
+// Stepan: we don't scale industry production ticks,
+// but monthly numbers will be increased of course.
+// Industry growth though depends on percent of transported
+// cargo, so not a problem for us.
+static const int INDUSTRY_PRODUCE_TICKS   = 256; ///< cycle duration for industry production
 static const int TOWN_GROWTH_TICKS        = 70;  ///< cycle duration for towns trying to grow. (this originates from the size of the town array in TTD
-static const int INDUSTRY_CUT_TREE_TICKS  = INDUSTRY_PRODUCE_TICKS * 2; ///< cycle duration for lumber mill's extra action
+
+// Stepan: Cutting trees should be associated with game's clock.
+static const int INDUSTRY_CUT_TREE_TICKS  = INDUSTRY_PRODUCE_TICKS * 2 * PACE_FACTOR; ///< cycle duration for lumber mill's extra action
 
 
 /*

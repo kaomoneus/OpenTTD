@@ -112,7 +112,7 @@ struct IndustrySpec {
 	IndustryType conflicting[3];                ///< Industries this industry cannot be close to
 	byte check_proc;                            ///< Index to a procedure to check for conflicting circumstances
 	CargoID produced_cargo[INDUSTRY_NUM_OUTPUTS];
-	uint16_t production_rate[INDUSTRY_NUM_OUTPUTS];
+	byte production_rate[INDUSTRY_NUM_OUTPUTS];
 	/**
 	 * minimum amount of cargo transported to the stations.
 	 * If the waiting cargo is less than this number, no cargo is moved to it.

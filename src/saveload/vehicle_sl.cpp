@@ -633,8 +633,7 @@ public:
 		SLEG_CONDVAR("cargo_count", _cargo_count,   SLE_UINT16,                   SL_MIN_VERSION,  SLV_68),
 		SLE_CONDREFLIST(Vehicle, cargo.packets,     REF_CARGO_PACKET,            SLV_68, SL_MAX_VERSION),
 		SLE_CONDARR(Vehicle, cargo.action_counts,   SLE_UINT, VehicleCargoList::NUM_MOVE_TO_ACTION, SLV_181, SL_MAX_VERSION),
-		SLE_CONDVAR(Vehicle, cargo_age_counter,     SLE_FILE_U16 | SLE_VAR_U32,                 SLV_162, SLV_STEPAN),
-		SLE_CONDVAR(Vehicle, cargo_age_counter,     SLE_UINT32,                 SLV_STEPAN, SL_MAX_VERSION),
+		SLE_CONDVAR(Vehicle, cargo_age_counter,     SLE_UINT16,                 SLV_162, SL_MAX_VERSION),
 
 		    SLE_VAR(Vehicle, day_counter,           SLE_UINT8),
 		    SLE_VAR(Vehicle, tick_counter,          SLE_UINT8),

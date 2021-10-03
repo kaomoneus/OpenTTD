@@ -1162,7 +1162,7 @@ static void TriggerIndustryProduction(Industry *i)
 			if (cargo_waiting == 0) continue;
 
 			for (uint ci_out = 0; ci_out < lengthof(i->produced_cargo_waiting); ci_out++) {
-				i->produced_cargo_waiting[ci_out] = std::min(i->produced_cargo_waiting[ci_out] + (cargo_waiting * indspec->input_cargo_multiplier[ci_in][ci_out] / 256), 0xFFFFu);
+				i->produced_cargo_waiting[ci_out] = i->produced_cargo_waiting[ci_out] + (cargo_waiting * indspec->input_cargo_multiplier[ci_in][ci_out] / 256);
 			}
 
 			i->incoming_cargo_waiting[ci_in] = 0;

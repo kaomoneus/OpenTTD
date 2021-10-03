@@ -70,7 +70,7 @@ struct Industry : IndustryPool::PoolItem<&_industry_pool> {
 	CargoID produced_cargo[INDUSTRY_NUM_OUTPUTS];          ///< 16 production cargo slots
 	uint32 produced_cargo_waiting[INDUSTRY_NUM_OUTPUTS];   ///< amount of cargo produced per cargo
 	uint32 incoming_cargo_waiting[INDUSTRY_NUM_INPUTS];    ///< incoming cargo waiting to be processed
-	uint16 production_rate[INDUSTRY_NUM_OUTPUTS];        ///< production rate for each cargo
+	byte production_rate[INDUSTRY_NUM_OUTPUTS];        ///< production rate for each cargo
 	byte prod_level;                                       ///< general production level
 	CargoID accepts_cargo[INDUSTRY_NUM_INPUTS];            ///< 16 input cargo slots
 	uint32 this_month_production[INDUSTRY_NUM_OUTPUTS];    ///< stats of this month's production per cargo
@@ -78,7 +78,7 @@ struct Industry : IndustryPool::PoolItem<&_industry_pool> {
 	byte last_month_pct_transported[INDUSTRY_NUM_OUTPUTS]; ///< percentage transported per cargo in the last full month
 	uint32 last_month_production[INDUSTRY_NUM_OUTPUTS];    ///< total units produced per cargo in the last full month
 	uint32 last_month_transported[INDUSTRY_NUM_OUTPUTS];   ///< total units transported per cargo in the last full month
-	uint32 counter;                                        ///< used for animation and/or production (if available cargo)
+	uint16 counter;                                        ///< used for animation and/or production (if available cargo)
 
 	IndustryType type;             ///< type of industry.
 	Owner owner;                   ///< owner of the industry.  Which SHOULD always be (imho) OWNER_NONE

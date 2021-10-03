@@ -876,9 +876,6 @@ void ShowCompanyValueGraph()
 /* PAYMENT RATES */
 /*****************/
 
-//TODO: Stepan: scale should depend on PACE_FACTOR
-//   for big PACE_FACTOR numbers you should have less days
-//   and opposite.
 struct PaymentRatesGraphWindow : BaseGraphWindow {
 	enum TransitUnits {
 		MINUTES, HOURS, DAYS

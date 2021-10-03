@@ -54,7 +54,7 @@ protected:
 	SortListFlags flags;                      ///< used to control sorting/resorting/etc.
 	uint8 sort_type;                          ///< what criteria to sort on
 	uint8 filter_type;                        ///< what criteria to filter on
-	uint16 resort_timer;                      ///< resort list after a given amount of ticks if set
+	uint32 resort_timer;                      ///< resort list after a given amount of ticks if set
 
 	/**
 	 * Check if the list is sortable

@@ -982,6 +982,15 @@ STR_GAME_OPTIONS_TOWN_NAME_ITALIAN                              :Italian
 STR_GAME_OPTIONS_TOWN_NAME_CATALAN                              :Catalan
 ############ end of townname region
 
+############ start of game pace dropdown
+STR_GAME_OPTIONS_GAMEYEAR_FRAME                                :{BLACK}Game year lasts:
+STR_GAME_OPTIONS_GAMEYEAR_DROPDOWN_TOOLTIP                     :{BLACK}Choose how fast game year goes in real time
+STR_GAME_OPTIONS_GAMEYEAR_DEFAULT                              :15 mins (original)
+STR_GAME_OPTIONS_GAMEYEAR_HOUR                                 :One hour
+STR_GAME_OPTIONS_GAMEYEAR_DAY                                  :One day
+STR_GAME_OPTIONS_GAMEYEAR_WEEK                                 :One week
+############ end of game pace dropdown
+
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Autosave
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Select interval between automatic game saves
 

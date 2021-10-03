@@ -98,6 +98,7 @@ static const NWidgetPart _nested_generate_landscape_widgets[] = {
 					NWidget(WWT_TEXT, COLOUR_ORANGE), SetDataTip(STR_MAPGEN_NUMBER_OF_TOWNS, STR_NULL), SetFill(1, 1),
 					NWidget(WWT_TEXT, COLOUR_ORANGE), SetDataTip(STR_MAPGEN_NUMBER_OF_INDUSTRIES, STR_NULL), SetFill(1, 1),
 					NWidget(WWT_TEXT, COLOUR_ORANGE), SetDataTip(STR_MAPGEN_BORDER_TYPE, STR_NULL), SetFill(1, 1),
+					NWidget(WWT_TEXT, COLOUR_ORANGE), SetDataTip(STR_GAME_OPTIONS_GAMEYEAR_FRAME, STR_NULL),  SetFill(1, 1),
 				EndContainer(),
 				/* Widgets at the right of the labels. */
 				NWidget(NWID_VERTICAL, NC_EQUALSIZE), SetPIP(0, 4, 0),
@@ -114,6 +115,7 @@ static const NWidgetPart _nested_generate_landscape_widgets[] = {
 					NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_TOWN_PULLDOWN), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
 					NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_INDUSTRY_PULLDOWN), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
 					NWidget(WWT_TEXTBTN, COLOUR_ORANGE, WID_GL_BORDERS_RANDOM), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
+					NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_GAMEYEAR_DROPDOWN), SetDataTip(STR_BLACK_STRING, STR_GAME_OPTIONS_GAMEYEAR_DROPDOWN_TOOLTIP), SetFill(1, 0),
 				EndContainer(),
 			EndContainer(),
 			NWidget(NWID_VERTICAL), SetPIP(0, 4, 0),
@@ -157,6 +159,7 @@ static const NWidgetPart _nested_generate_landscape_widgets[] = {
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREEN, WID_GL_GENERATE_BUTTON), SetMinimalSize(84, 0), SetDataTip(STR_MAPGEN_GENERATE, STR_NULL), SetFill(1, 1),
 			EndContainer(),
 		EndContainer(),
+		NWidget(NWID_SPACER), SetMinimalSize(0, 4),
 		NWidget(NWID_SPACER), SetMinimalSize(0, 4),
 		/* Map borders buttons for each edge. */
 		NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(10, 0, 10),
@@ -346,6 +349,15 @@ static DropDownList BuildTownNameDropDown()
 	return list;
 }
 
+static DropDownList BuildGameYearDropDown()
+{
+	DropDownList list;
+	for (uint i = 0; i < 4; i++) {
+		list.emplace_back(new DropDownListStringItem(STR_GAME_OPTIONS_GAMEYEAR_DEFAULT + i, i, false));
+	}
+
+	return list;
+}
 
 static const StringID _elevations[]  = {STR_TERRAIN_TYPE_VERY_FLAT, STR_TERRAIN_TYPE_FLAT, STR_TERRAIN_TYPE_HILLY, STR_TERRAIN_TYPE_MOUNTAINOUS, STR_TERRAIN_TYPE_ALPINIST, STR_TERRAIN_TYPE_CUSTOM, INVALID_STRING_ID};
 static const StringID _sea_lakes[]   = {STR_SEA_LEVEL_VERY_LOW, STR_SEA_LEVEL_LOW, STR_SEA_LEVEL_MEDIUM, STR_SEA_LEVEL_HIGH, STR_SEA_LEVEL_CUSTOM, INVALID_STRING_ID};
@@ -412,6 +424,12 @@ struct GenerateLandscapeWindow : public Window {
 				StringID name = gen < BUILTIN_TOWNNAME_GENERATOR_COUNT ?
 						STR_GAME_OPTIONS_TOWN_NAME_ORIGINAL_ENGLISH + gen :
 						GetGRFTownNameName(gen - BUILTIN_TOWNNAME_GENERATOR_COUNT);
+				SetDParam(0, name);
+				break;
+			}
+			case WID_GL_GAMEYEAR_DROPDOWN: {
+				uint gen = _settings_newgame.difficulty.year_pace_option;
+				StringID name = STR_GAME_OPTIONS_GAMEYEAR_DEFAULT + gen;
 				SetDParam(0, name);
 				break;
 			}
@@ -655,6 +673,10 @@ struct GenerateLandscapeWindow : public Window {
 				ShowDropDownList(this, BuildTownNameDropDown(), _settings_newgame.game_creation.town_name, WID_GL_TOWNNAME_DROPDOWN);
 				break;
 
+			case WID_GL_GAMEYEAR_DROPDOWN: // Game Year generator
+				ShowDropDownList(this, BuildGameYearDropDown(), _settings_newgame.difficulty.year_pace_option, WID_GL_GAMEYEAR_DROPDOWN);
+				break;
+
 			case WID_GL_INDUSTRY_PULLDOWN: // Number of industries
 				ShowDropDownMenu(this, _num_inds, _settings_newgame.difficulty.industry_density, WID_GL_INDUSTRY_PULLDOWN, 0, 0);
 				break;
@@ -867,6 +889,13 @@ struct GenerateLandscapeWindow : public Window {
 			case WID_GL_TOWNNAME_DROPDOWN: // Town names
 				if (_game_mode == GM_MENU || Town::GetNumItems() == 0) {
 					_settings_newgame.game_creation.town_name = index;
+					SetWindowDirty(WC_GAME_OPTIONS, WN_GAME_OPTIONS_GAME_OPTIONS);
+				}
+				break;
+
+			case WID_GL_GAMEYEAR_DROPDOWN: // Town names
+				if (_game_mode == GM_MENU || Town::GetNumItems() == 0) {
+					_settings_newgame.difficulty.year_pace_option = index;
 					SetWindowDirty(WC_GAME_OPTIONS, WN_GAME_OPTIONS_GAME_OPTIONS);
 				}
 				break;

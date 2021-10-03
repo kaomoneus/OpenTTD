@@ -28,6 +28,8 @@ typedef uint8  Day;   ///< Type for the day of the month, note: 1 based, first d
 
 // Stepan: "pace factor" is how many times game's clock
 // should go slower comparing to vanilla version.
+// TODO, Stepan: use _settings_game.difficulty.GetPaceFactor() _settings_game.difficulty.DayTicks()
+//    or even may be consider moving it into _settings_client
 
 // Some pace factor values:
 // 1   - game day is equal to vanilla day

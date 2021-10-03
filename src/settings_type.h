@@ -81,6 +81,19 @@ struct DifficultySettings {
 	bool   line_reverse_mode;                ///< reversing at stations or not
 	bool   disasters;                        ///< are disasters enabled
 	byte   town_council_tolerance;           ///< minimum required town ratings to be allowed to demolish stuff
+	uint16 year_pace_option;                 ///< game year speed, will be converted into pace factor
+
+	uint16 GetPaceFactor() const {
+		static const uint16 factors[] = {
+			// Game year lasts
+			1,          // same as vanilla year (~15 minutes)
+			4,          // 4 times slower (one hour)
+			4 * 24,     // 96 times slower (one day)
+			4 * 24 * 7, // 672 times slower (one week)
+		};
+
+		return factors[year_pace_option];
+	}
 };
 
 /** Settings relating to viewport/smallmap scrolling. */

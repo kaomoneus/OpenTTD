@@ -167,6 +167,11 @@ StandardTimeUnits GetStandardTimeUnitFor(Ticks span) {
 	return StandardTimeUnits::DAYS;
 }
 
+Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit) {
+	static const Ticks ticks[] {DAY_TICKS / 24 / 60, DAY_TICKS / 24, DAY_TICKS};
+	return ticks[(int)time_unit];
+}
+
 /** Functions used by the IncreaseDate function */
 
 extern void EnginesDailyLoop();

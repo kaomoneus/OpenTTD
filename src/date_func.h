@@ -34,6 +34,13 @@ Date ConvertYMDToDate(Year year, Month month, Day day);
 StandardTimeUnits GetStandardTimeUnitFor(Ticks span);
 
 /**
+ * Returns ticks or particular time unit in game (non-vanilla) scale
+ * @param time_unit
+ * @return
+ */
+Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit);
+
+/**
  * Checks whether the given year is a leap year or not.
  * @param yr The year to check.
  * @return True if \c yr is a leap year, otherwise false.

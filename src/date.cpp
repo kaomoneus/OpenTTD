@@ -157,6 +157,16 @@ Date ConvertYMDToDate(Year year, Month month, Day day)
 	return DAYS_TILL(year) + days;
 }
 
+StandardTimeUnits GetStandardTimeUnitFor(Ticks span) {
+	if (span < 60)
+		return StandardTimeUnits::MINUTES;
+
+	if (span < 60 * 24)
+		return StandardTimeUnits::HOURS;
+
+	return StandardTimeUnits::DAYS;
+}
+
 /** Functions used by the IncreaseDate function */
 
 extern void EnginesDailyLoop();

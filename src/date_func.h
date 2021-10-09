@@ -18,9 +18,20 @@ extern Date      _date;
 extern DateFract _date_fract;
 extern uint32 _tick_counter;
 
+enum struct StandardTimeUnits {
+	MINUTES, HOURS, DAYS, length
+};
+
 void SetDate(Date date, DateFract fract);
 void ConvertDateToYMD(Date date, YearMonthDay *ymd);
 Date ConvertYMDToDate(Year year, Month month, Day day);
+
+/**
+ * Returns maximal standard time unit which is smaller than span
+ * @param span A given time span in ticks
+ * @return standard time unit
+ */
+StandardTimeUnits GetStandardTimeUnitFor(Ticks span);
 
 /**
  * Checks whether the given year is a leap year or not.

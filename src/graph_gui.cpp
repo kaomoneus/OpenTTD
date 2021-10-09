@@ -877,10 +877,6 @@ void ShowCompanyValueGraph()
 /*****************/
 
 struct PaymentRatesGraphWindow : BaseGraphWindow {
-	enum TransitUnits {
-		MINUTES, HOURS, DAYS
-	};
-
 	struct TransitUnitDesc {
 		// Stepan: for slow pace mode we reduce max amount
 		// of transit days, by dividing it by PACE FACTOR.
@@ -894,7 +890,6 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		// Just because PACE_FACTOR might be > 200, we need to measure it in
 		// smaller units.
 
-		TransitUnits unit_type;
 		uint step_in_x_units;
 		StringID label_id;
 	};
@@ -1096,30 +1091,26 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 	static TransitUnitDesc GetTransitUnits() {
 		uint width_in_minutes = 200 * 24 * 60 / PACE_FACTOR;
 		uint step_in_minutes = width_in_minutes / 20;
-		uint step_in_x_units;
+		auto transit_unit_type = GetStandardTimeUnitFor((Ticks)step_in_minutes);
 
-		TransitUnits transit_unit_type;
-		StringID label_id;
-
-		if (step_in_minutes < 60) {
-			transit_unit_type = MINUTES;
-			step_in_x_units = step_in_minutes;
-			label_id = STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_MINUTES;
-		} else if (step_in_minutes < 60 * 24) {
-			transit_unit_type = HOURS;
-			step_in_x_units = step_in_minutes / 60;
-			label_id = STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_HOURS;
-		} else {
-			transit_unit_type = DAYS;
-			step_in_x_units = step_in_minutes / (60 * 24);
-			label_id = STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL;
+		switch (transit_unit_type) {
+			case StandardTimeUnits::MINUTES:
+				return TransitUnitDesc {
+					step_in_minutes,
+					STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_MINUTES
+				};
+			case StandardTimeUnits::HOURS:
+				return TransitUnitDesc {
+					step_in_minutes / 60,
+					STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_HOURS
+				};
+			case StandardTimeUnits::DAYS:
+			default:
+				return TransitUnitDesc {
+					step_in_minutes / (60 * 24),
+					STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL
+				};
 		}
-
-		return TransitUnitDesc{
-				transit_unit_type,
-				step_in_x_units,
-				label_id,
-		};
 	}
 };
 

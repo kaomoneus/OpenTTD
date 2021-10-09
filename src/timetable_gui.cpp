@@ -48,8 +48,11 @@ void SetTimetableParams(int param1, int param2, Ticks ticks)
 		SetDParam(param1, STR_TIMETABLE_TICKS);
 		SetDParam(param2, ticks);
 	} else {
-		SetDParam(param1, STR_TIMETABLE_DAYS);
-		SetDParam(param2, ticks / DAY_TICKS);
+		auto time_unit = GetStandardTimeUnitFor(VANILLA_DAY_TICKS);
+		auto time_unit_ticks = GetStandardTimeUnitTicks(time_unit);
+		auto units = ticks / time_unit_ticks;
+		SetDParam(param1, STR_TIMETABLE_MINUTES + (int)time_unit);
+		SetDParam(param2, units);
 	}
 }
 

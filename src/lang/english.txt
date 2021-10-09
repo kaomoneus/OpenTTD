@@ -4169,6 +4169,8 @@ STR_TIMETABLE_STAY_FOR_ESTIMATED                                :(stay for {STRI
 STR_TIMETABLE_AND_TRAVEL_FOR_ESTIMATED                          :(travel for {STRING1}, not timetabled)
 STR_TIMETABLE_STAY_FOR                                          :and stay for {STRING1}
 STR_TIMETABLE_AND_TRAVEL_FOR                                    :and travel for {STRING1}
+STR_TIMETABLE_MINUTES                                           :{COMMA}{NBSP}minute{P "" s}
+STR_TIMETABLE_HOURS                                             :{COMMA}{NBSP}hour{P "" s}
 STR_TIMETABLE_DAYS                                              :{COMMA}{NBSP}day{P "" s}
 STR_TIMETABLE_TICKS                                             :{COMMA}{NBSP}tick{P "" s}
 

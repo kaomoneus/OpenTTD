@@ -158,10 +158,10 @@ Date ConvertYMDToDate(Year year, Month month, Day day)
 }
 
 StandardTimeUnits GetStandardTimeUnitFor(Ticks span) {
-	if (span < 60)
+	if (span < DAY_TICKS / 24)
 		return StandardTimeUnits::MINUTES;
 
-	if (span < 60 * 24)
+	if (span < DAY_TICKS)
 		return StandardTimeUnits::HOURS;
 
 	return StandardTimeUnits::DAYS;

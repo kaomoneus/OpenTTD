@@ -260,7 +260,7 @@ static bool VehicleTimetableSorter(Vehicle * const &a, Vehicle * const &b)
  * @param p2 Various bitstuffed elements
  * - p2 = (bit 0-19) - Vehicle ID.
  * - p2 = (bit 20)   - Set to 1 to set timetable start for all vehicles sharing this order
- * @param p2 The timetable start date.
+ * @param p2 The timetable start date. Given in amount of vanilla days.
  * @param text Not used.
  * @return The error or cost of the operation.
  */
@@ -305,7 +305,7 @@ CommandCost CmdSetTimetableStart(TileIndex tile, DoCommandFlag flags, uint32 p1,
 			w->lateness_counter = 0;
 			ClrBit(w->vehicle_flags, VF_TIMETABLE_STARTED);
 			/* Do multiplication, then division to reduce rounding errors. */
-			w->timetable_start = start_date + idx * total_duration / num_vehs / DAY_TICKS;
+			w->timetable_start = start_date + idx * total_duration / num_vehs / VANILLA_DAY_TICKS;
 			SetWindowDirty(WC_VEHICLE_TIMETABLE, w->index);
 			++idx;
 		}
@@ -402,7 +402,15 @@ void UpdateVehicleTimetable(Vehicle *v, bool travelling)
 		just_started = !HasBit(v->vehicle_flags, VF_TIMETABLE_STARTED);
 
 		if (v->timetable_start != 0) {
-			v->lateness_counter = (_date - v->timetable_start) * DAY_TICKS + _date_fract;
+
+			auto date_in_vanilla_days =
+					_date * DAY_TICKS / VANILLA_DAY_TICKS + _date_fract / VANILLA_DAY_TICKS;
+			auto vanilla_date_fract = _date_fract % VANILLA_DAY_TICKS;
+
+			v->lateness_counter =
+				(date_in_vanilla_days - v->timetable_start) * VANILLA_DAY_TICKS
+				+ vanilla_date_fract;
+
 			v->timetable_start = 0;
 		}
 
@@ -436,7 +444,7 @@ void UpdateVehicleTimetable(Vehicle *v, bool travelling)
 		 * the timetable entry like is done for road vehicles/ships.
 		 * Thus always make sure at least one tick is used between the
 		 * processing of different orders when filling the timetable. */
-		uint time_to_set = CeilDiv(std::max(time_taken, 1U), DAY_TICKS) * DAY_TICKS;
+		uint time_to_set = CeilDiv(std::max(time_taken, 1U), VANILLA_DAY_TICKS) * VANILLA_DAY_TICKS;
 
 		if (travelling && (autofilling || !real_current_order->IsTravelTimetabled())) {
 			ChangeTimetable(v, v->cur_real_order_index, time_to_set, MTF_TRAVEL_TIME, autofilling);

@@ -881,7 +881,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		// Stepan: for slow pace mode we reduce max amount
 		// of transit days, by dividing it by PACE FACTOR.
 		// It might happen that days is to large unit to draw an informative
-		// graph, perhaps we need to measure it in hours or even in minutes.
+		// graph, perhaps we need to measure it in hours or even in minute.
 		//
 		// In another words:
 		//
@@ -910,7 +910,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		// Stepan: in this graph we about to go over 200 vanilla days
 		//    and draw prices lines for them.
 		//    For the user though we should display game days,
-		//    or hours, or minutes and it depends in PACE FACTOR.
+		//    or hours, or minute and it depends in PACE FACTOR.
 
 		this->x_values_start     = transit_units.step_in_x_units * 1;
 		this->x_values_increment = transit_units.step_in_x_units;
@@ -1149,7 +1149,7 @@ static const NWidgetPart _nested_cargo_payment_rates_widgets[] = {
 			NWidget(WWT_TEXT, COLOUR_BROWN, WID_CPR_FOOTER),
 				SetMinimalSize(0, 6), SetPadding(2, 0, 2, 0),
 				// Stepan: Currently we print "Days in transit".. or "Hours in transit",
-				// or "minutes in transit". And we should print it dynamically.
+				// or "minute in transit". And we should print it dynamically.
 				// SetDataTip(STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL, STR_NULL),
 			NWidget(NWID_SPACER), SetFill(1, 0), SetResize(1, 0),
 			NWidget(WWT_RESIZEBOX, COLOUR_BROWN, WID_CPR_RESIZE),

@@ -15,6 +15,10 @@ enum SetDateWidgets {
 	WID_SD_DAY,      ///< Dropdown for the day.
 	WID_SD_MONTH,    ///< Dropdown for the month.
 	WID_SD_YEAR,     ///< Dropdown for the year.
+	WID_SD_HOUR_MINUTE_PANEL, ///< Possiblity to hide minutes and hours
+	WID_SD_HOUR,     ///< Dropdown for hour.
+	WID_SD_MINUTE,   ///< Dropdown for minute.
+	WID_SD_MINUTE_PANEL, ///< Possibiltiy to hide minutes
 	WID_SD_SET_DATE, ///< Actually set the date.
 };
 

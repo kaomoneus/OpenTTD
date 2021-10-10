@@ -25,6 +25,8 @@
 struct SetDateWindow : Window {
 	SetDateCallback *callback; ///< Callback to call when a date has been selected
 	YearMonthDay date; ///< The currently selected date
+	uint8 hour;        ///< The currently selected hour
+	uint8 minute;      ///< The currently selected minute
 	Year min_year;     ///< The minimum year in the year dropdown
 	Year max_year;     ///< The maximum year (inclusive) in the year dropdown
 
@@ -51,6 +53,22 @@ struct SetDateWindow : Window {
 		if (initial_date == 0) initial_date = _date;
 		ConvertDateToYMD(initial_date, &this->date);
 		this->date.year = Clamp(this->date.year, min_year, max_year);
+
+		this->SetupHourMinuteWidgets();
+	}
+
+	void SetupHourMinuteWidgets() {
+		// Stepan: Disable minute and hour dropdown if we don't need it.
+
+		auto time_unit = GetStandardTimeUnitFor(VANILLA_DAY_TICKS);
+
+		this->GetWidget<NWidgetStacked>(WID_SD_HOUR_MINUTE_PANEL)->SetDisplayedPlane(
+			time_unit > StandardTimeUnits::HOURS ? SZSP_NONE : 0
+		);
+
+		this->GetWidget<NWidgetStacked>(WID_SD_MINUTE_PANEL)->SetDisplayedPlane(
+			time_unit > StandardTimeUnits::MINUTES ? SZSP_NONE : 0
+		);
 	}
 
 	Point OnInitialPosition(int16 sm_width, int16 sm_height, int window_number) override
@@ -70,6 +88,23 @@ struct SetDateWindow : Window {
 
 		switch (widget) {
 			default: NOT_REACHED();
+
+			case WID_SD_MINUTE:
+				for (int i = 0; i < 60; i++) {
+					// FIXME: Do same as we do with year.
+					auto minute_str = std::to_string(i);
+					list.emplace_back(new DropDownListCharStringItem(minute_str, i, false));
+				}
+				selected = this->minute;
+				break;
+
+			case WID_SD_HOUR:
+				for (int i = 0; i < 24; i++) {
+					auto hour_str = std::to_string(i);
+					list.emplace_back(new DropDownListCharStringItem(hour_str, i, false));
+				}
+				selected = this->minute;
+				break;
 
 			case WID_SD_DAY:
 				for (uint i = 0; i < 31; i++) {
@@ -103,6 +138,17 @@ struct SetDateWindow : Window {
 		Dimension d = {0, 0};
 		switch (widget) {
 			default: return;
+			case WID_SD_MINUTE:
+				for (uint i = 0; i < 60; i++) {
+					d = maxdim(d, GetStringBoundingBox(std::to_string(i)));
+				}
+				break;
+
+			case WID_SD_HOUR:
+				for (uint i = 0; i < 24; i++) {
+					d = maxdim(d, GetStringBoundingBox(std::to_string(i)));
+				}
+				break;
 
 			case WID_SD_DAY:
 				for (uint i = 0; i < 31; i++) {
@@ -130,6 +176,10 @@ struct SetDateWindow : Window {
 	void SetStringParameters(int widget) const override
 	{
 		switch (widget) {
+			case WID_SD_MINUTE:
+			case WID_SD_HOUR:
+			    // Do nothing
+				break;
 			case WID_SD_DAY:   SetDParam(0, this->date.day - 1 + STR_DAY_NUMBER_1ST); break;
 			case WID_SD_MONTH: SetDParam(0, this->date.month + STR_MONTH_JAN); break;
 			case WID_SD_YEAR:  SetDParam(0, this->date.year); break;
@@ -139,6 +189,8 @@ struct SetDateWindow : Window {
 	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
+			case WID_SD_MINUTE:
+			case WID_SD_HOUR:
 			case WID_SD_DAY:
 			case WID_SD_MONTH:
 			case WID_SD_YEAR:
@@ -155,6 +207,14 @@ struct SetDateWindow : Window {
 	void OnDropdownSelect(int widget, int index) override
 	{
 		switch (widget) {
+			case WID_SD_MINUTE:
+				this->minute = index;
+				break;
+
+			case WID_SD_HOUR:
+				this->hour = index;
+				break;
+
 			case WID_SD_DAY:
 				this->date.day = index;
 				break;
@@ -183,6 +243,14 @@ static const NWidgetPart _nested_set_date_widgets[] = {
 				NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_SD_DAY), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_DATE_DAY_TOOLTIP),
 				NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_SD_MONTH), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_DATE_MONTH_TOOLTIP),
 				NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_SD_YEAR), SetFill(1, 0), SetDataTip(STR_JUST_INT, STR_DATE_YEAR_TOOLTIP),
+			EndContainer(),
+			NWidget(NWID_SELECTION, INVALID_COLOUR, WID_SD_HOUR_MINUTE_PANEL),
+				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(6, 6, 6),
+					NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_SD_HOUR), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_DATE_MINUTE_TOOLTIP),
+					NWidget(NWID_SELECTION, INVALID_COLOUR, WID_SD_MINUTE_PANEL),
+						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_SD_MINUTE), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_DATE_HOUR_TOOLTIP),
+					EndContainer(),
+				EndContainer(),
 			EndContainer(),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(NWID_SPACER), SetFill(1, 0),

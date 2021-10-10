@@ -6278,7 +6278,11 @@ bool GetGlobalVariable(byte param, uint32 *value, const GRFFile *grffile)
 			return true;
 
 		case 0x09: // date fraction
-			*value = _date_fract * 885;
+		    // FIXME: Stepan: We should return _date_fract of vanilla day
+		    //    or should be return _date_fract is our day would be vanilla?
+		    //    Let's assume fraction of vanilla game day expected (which is used
+		    //    for animation)
+			*value = 885 * (_date * DAY_TICKS + _date_fract) % VANILLA_DAY_TICKS;
 			return true;
 
 		case 0x0A: // animation counter

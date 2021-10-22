@@ -404,12 +404,10 @@ void UpdateVehicleTimetable(Vehicle *v, bool travelling)
 
 		if (v->timetable_start != 0) {
 
-			auto date_in_vanilla_days =
-					_date * DAY_TICKS / VANILLA_DAY_TICKS + _date_fract / VANILLA_DAY_TICKS;
-			auto vanilla_date_fract = _date_fract % VANILLA_DAY_TICKS;
+			auto [vanilla_date, vanilla_date_fract] = GameDateToVanillaDate(_date, _date_fract);
 
 			v->lateness_counter =
-				(date_in_vanilla_days - v->timetable_start) * VANILLA_DAY_TICKS
+				(vanilla_date - v->timetable_start) * VANILLA_DAY_TICKS
 				+ vanilla_date_fract;
 
 			v->timetable_start = 0;

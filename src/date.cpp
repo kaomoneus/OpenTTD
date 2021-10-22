@@ -173,12 +173,13 @@ std::tuple<uint8, uint8> GetHoursAndMinutes(DateFract date_fract) {
 	return std::tuple(hm.quot, hm.rem);
 }
 
-Date GameDateToVanillaDate(Date d, DateFract fract) {
-	return (Date)( ((uint64)d * DAY_TICKS + fract) / VANILLA_DAY_TICKS );
+std::tuple<Date, DateFract> GameDateToVanillaDate(Date d, DateFract fract) {
+	auto x = std::div((long)d * DAY_TICKS + fract, (long)VANILLA_DAY_TICKS);
+	return {x.quot, x.rem};
 }
 
-std::tuple<Date, DateFract> VanillaDateToGameDate(Date d) {
-	long x = (long)d * VANILLA_DAY_TICKS;
+std::tuple<Date, DateFract> VanillaDateToGameDate(Date d, DateFract fract) {
+	long x = (long)d * VANILLA_DAY_TICKS + fract;
 	auto dd = std::div(x, (long) DAY_TICKS);
 	return {dd.quot, dd.rem};
 }

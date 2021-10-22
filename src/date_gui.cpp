@@ -211,7 +211,7 @@ struct SetDateWindow : Window {
 						  this->hour * GetStandardTimeUnitTicks(StandardTimeUnits::HOURS)
 						+ this->minute * GetStandardTimeUnitTicks(StandardTimeUnits::MINUTES);
 
-				auto vanilla_date = GameDateToVanillaDate(game_date, game_fract);
+				auto [vanilla_date, _] = GameDateToVanillaDate(game_date, game_fract);
 
 				if (this->callback != nullptr) this->callback(this, vanilla_date);
 				this->Close();

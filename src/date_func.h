@@ -44,8 +44,8 @@ constexpr Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit) {
 };
 
 
-Date GameDateToVanillaDate(Date d, DateFract);
-std::tuple<Date, DateFract> VanillaDateToGameDate(Date d);
+std::tuple<Date, DateFract> GameDateToVanillaDate(Date d, DateFract fract = 0);
+std::tuple<Date, DateFract> VanillaDateToGameDate(Date d, DateFract fract = 0);
 
 /**
  * For given date fract returns hours and minutes reminder

@@ -4182,6 +4182,7 @@ STR_TIMETABLE_STATUS_LATE                                       :{BLACK}This veh
 STR_TIMETABLE_STATUS_EARLY                                      :{BLACK}This vehicle is currently running {STRING1} early
 STR_TIMETABLE_STATUS_NOT_STARTED                                :{BLACK}This timetable has not yet started
 STR_TIMETABLE_STATUS_START_AT                                   :{BLACK}This timetable will start at {STRING1}
+STR_TIMETABLE_STATUS_START_AT_DATETIME                          :{BLACK}This timetable will start at {STRING2}
 
 STR_TIMETABLE_STARTING_DATE                                     :{BLACK}Start date
 STR_TIMETABLE_STARTING_DATE_TOOLTIP                             :{BLACK}Select a date as starting point of this timetable. Ctrl+Click sets the starting point of this timetable and distributes all vehicles sharing this order evenly based on their relative order, if the order is completely timetabled
@@ -5145,6 +5146,8 @@ STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
 STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:RAW_STRING}-{0:RAW_STRING}
 
+STR_FORMAT_TIME_TINY                                            :{RAW_STRING}h {RAW_STRING}m
+
 STR_FORMAT_BUOY_NAME                                            :{TOWN} Buoy
 STR_FORMAT_BUOY_NAME_SERIAL                                     :{TOWN} Buoy #{COMMA}
 STR_FORMAT_COMPANY_NUM                                          :(Company {COMMA})
@@ -5210,6 +5213,7 @@ STR_JUST_DATE_TINY                                              :{DATE_TINY}
 STR_JUST_DATE_SHORT                                             :{DATE_SHORT}
 STR_JUST_DATE_LONG                                              :{DATE_LONG}
 STR_JUST_DATE_ISO                                               :{DATE_ISO}
+STR_JUST_DATE_TIME_TINY                                         :{DATE_TINY} {TIME_TINY}
 STR_JUST_STRING                                                 :{STRING}
 STR_JUST_STRING_STRING                                          :{STRING}{STRING}
 STR_JUST_RAW_STRING                                             :{RAW_STRING}

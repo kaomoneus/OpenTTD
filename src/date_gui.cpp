@@ -40,9 +40,19 @@ struct SetDateWindow : Window {
 	 * @param max_year the maximum year (inclusive) to show in the year dropdown
 	 * @param callback the callback to call once a date has been selected
 	 */
-	SetDateWindow(WindowDesc *desc, WindowNumber window_number, Window *parent, Date initial_date, Year min_year, Year max_year, SetDateCallback *callback) :
+	SetDateWindow(
+		WindowDesc *desc,
+		WindowNumber window_number,
+		Window *parent,
+		Date initial_date,
+		uint8 initial_hour, uint8 initial_minute,
+		Year min_year, Year max_year,
+		SetDateCallback *callback
+	) :
 			Window(desc),
 			callback(callback),
+			hour(initial_hour),
+			minute(initial_minute),
 			min_year(std::max(MIN_YEAR, min_year)),
 			max_year(std::min(MAX_YEAR, max_year))
 	{
@@ -91,19 +101,20 @@ struct SetDateWindow : Window {
 
 			case WID_SD_MINUTE:
 				for (int i = 0; i < 60; i++) {
-					// FIXME: Do same as we do with year.
-					auto minute_str = std::to_string(i);
-					list.emplace_back(new DropDownListCharStringItem(minute_str, i, false));
+					auto *item = new DropDownListParamStringItem(STR_JUST_INT, i, false);
+					item->SetParam(0, i);
+					list.emplace_back(item);
 				}
 				selected = this->minute;
 				break;
 
 			case WID_SD_HOUR:
 				for (int i = 0; i < 24; i++) {
-					auto hour_str = std::to_string(i);
-					list.emplace_back(new DropDownListCharStringItem(hour_str, i, false));
+					auto *item = new DropDownListParamStringItem(STR_JUST_INT, i, false);
+					item->SetParam(0, i);
+					list.emplace_back(item);
 				}
-				selected = this->minute;
+				selected = this->hour;
 				break;
 
 			case WID_SD_DAY:
@@ -139,15 +150,13 @@ struct SetDateWindow : Window {
 		switch (widget) {
 			default: return;
 			case WID_SD_MINUTE:
-				for (uint i = 0; i < 60; i++) {
-					d = maxdim(d, GetStringBoundingBox(std::to_string(i)));
-				}
+				SetDParamMaxValue(0, 59);
+				d = maxdim(d, GetStringBoundingBox(STR_JUST_INT));
 				break;
 
 			case WID_SD_HOUR:
-				for (uint i = 0; i < 24; i++) {
-					d = maxdim(d, GetStringBoundingBox(std::to_string(i)));
-				}
+				SetDParamMaxValue(0, 23);
+				d = maxdim(d, GetStringBoundingBox(STR_JUST_INT));
 				break;
 
 			case WID_SD_DAY:
@@ -176,10 +185,8 @@ struct SetDateWindow : Window {
 	void SetStringParameters(int widget) const override
 	{
 		switch (widget) {
-			case WID_SD_MINUTE:
-			case WID_SD_HOUR:
-			    // Do nothing
-				break;
+			case WID_SD_MINUTE: SetDParam(0, this->minute); break;
+			case WID_SD_HOUR: SetDParam(0, this->hour); break;
 			case WID_SD_DAY:   SetDParam(0, this->date.day - 1 + STR_DAY_NUMBER_1ST); break;
 			case WID_SD_MONTH: SetDParam(0, this->date.month + STR_MONTH_JAN); break;
 			case WID_SD_YEAR:  SetDParam(0, this->date.year); break;
@@ -197,10 +204,19 @@ struct SetDateWindow : Window {
 				ShowDateDropDown(widget);
 				break;
 
-			case WID_SD_SET_DATE:
-				if (this->callback != nullptr) this->callback(this, ConvertYMDToDate(this->date.year, this->date.month, this->date.day));
+			case WID_SD_SET_DATE: {
+				// Convert datetime into vanilla days
+				auto game_date = ConvertYMDToDate(this->date.year, this->date.month, this->date.day);
+				auto game_fract =
+						  this->hour * GetStandardTimeUnitTicks(StandardTimeUnits::HOURS)
+						+ this->minute * GetStandardTimeUnitTicks(StandardTimeUnits::MINUTES);
+
+				auto vanilla_date = GameDateToVanillaDate(game_date, game_fract);
+
+				if (this->callback != nullptr) this->callback(this, vanilla_date);
 				this->Close();
 				break;
+			}
 		}
 	}
 
@@ -246,9 +262,9 @@ static const NWidgetPart _nested_set_date_widgets[] = {
 			EndContainer(),
 			NWidget(NWID_SELECTION, INVALID_COLOUR, WID_SD_HOUR_MINUTE_PANEL),
 				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(6, 6, 6),
-					NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_SD_HOUR), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_DATE_MINUTE_TOOLTIP),
+					NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_SD_HOUR), SetFill(1, 0), SetDataTip(STR_JUST_INT, STR_DATE_MINUTE_TOOLTIP),
 					NWidget(NWID_SELECTION, INVALID_COLOUR, WID_SD_MINUTE_PANEL),
-						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_SD_MINUTE), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_DATE_HOUR_TOOLTIP),
+						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_SD_MINUTE), SetFill(1, 0), SetDataTip(STR_JUST_INT, STR_DATE_HOUR_TOOLTIP),
 					EndContainer(),
 				EndContainer(),
 			EndContainer(),
@@ -278,8 +294,25 @@ static WindowDesc _set_date_desc(
  * @param max_year the maximum year (inclusive) to show in the year dropdown
  * @param callback the callback to call once a date has been selected
  */
-void ShowSetDateWindow(Window *parent, int window_number, Date initial_date, Year min_year, Year max_year, SetDateCallback *callback)
+void ShowSetDateWindow(
+	Window *parent,
+	int window_number,
+	Date initial_date,
+	uint8 initial_hour, uint8 initial_minute,
+	Year min_year,
+	Year max_year,
+	SetDateCallback *callback
+)
 {
 	CloseWindowByClass(WC_SET_DATE);
-	new SetDateWindow(&_set_date_desc, window_number, parent, initial_date, min_year, max_year, callback);
+
+	new SetDateWindow(
+		&_set_date_desc,
+		window_number,
+		parent,
+		initial_date,
+		initial_hour, initial_minute,
+		min_year, max_year,
+		callback
+	);
 }

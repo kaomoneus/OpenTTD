@@ -275,9 +275,10 @@ CommandCost CmdSetTimetableStart(TileIndex tile, DoCommandFlag flags, uint32 p1,
 
 	/* Don't let a timetable start more than 15 years into the future or 1 year in the past. */
 	Date start_date = (Date)p2;
-	if (start_date < 0 || start_date > MAX_DAY) return CMD_ERROR;
-	if (start_date - _date > 15 * DAYS_IN_LEAP_YEAR) return CMD_ERROR;
-	if (_date - start_date > DAYS_IN_LEAP_YEAR) return CMD_ERROR;
+	auto [game_start_date, _] = VanillaDateToGameDate(start_date);
+	if (game_start_date < 0 || start_date > MAX_DAY) return CMD_ERROR;
+	if (game_start_date - _date > 15 * DAYS_IN_LEAP_YEAR) return CMD_ERROR;
+	if (_date - game_start_date > DAYS_IN_LEAP_YEAR) return CMD_ERROR;
 	if (timetable_all && !v->orders.list->IsCompleteTimetable()) return CMD_ERROR;
 
 	if (flags & DC_EXEC) {

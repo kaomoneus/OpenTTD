@@ -457,6 +457,21 @@ static char *FormatTinyOrISODate(char *buff, Date date, StringID str, const char
 	return FormatString(buff, GetStringPtr(str), &tmp_params, last);
 }
 
+static char *FormatTinyTime(char *buff, DateFract date_fract, StringID str, const char *last)
+{
+	auto [hh, mm] = GetHoursAndMinutes(date_fract);
+
+	char hour[3];
+	char minute[3];
+	/* We want to zero-pad the days and months */
+	seprintf(hour,   lastof(hour),   "%02i", hh);
+	seprintf(minute, lastof(minute), "%02i", mm);
+
+	int64 args[] = {(int64)(size_t)hour, (int64)(size_t)minute};
+	StringParameters tmp_params(args);
+	return FormatString(buff, GetStringPtr(str), &tmp_params, last);
+}
+
 static char *FormatGenericCurrency(char *buff, const CurrencySpec *spec, Money number, bool compact, const char *last)
 {
 	/* We are going to make number absolute for printing, so
@@ -1212,6 +1227,10 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 
 			case SCC_DATE_TINY: // {DATE_TINY}
 				buff = FormatTinyOrISODate(buff, args->GetInt32(SCC_DATE_TINY), STR_FORMAT_DATE_TINY, last);
+				break;
+
+			case SCC_TIME_TINY: // {TIME_TINY}
+				buff = FormatTinyTime(buff, args->GetInt32(SCC_TIME_TINY), STR_FORMAT_TIME_TINY, last);
 				break;
 
 			case SCC_DATE_SHORT: // {DATE_SHORT}

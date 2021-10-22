@@ -38,7 +38,21 @@ StandardTimeUnits GetStandardTimeUnitFor(Ticks span);
  * @param time_unit
  * @return
  */
-Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit);
+constexpr Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit) {
+	constexpr Ticks ticks[] {DAY_TICKS / 24 / 60, DAY_TICKS / 24, DAY_TICKS};
+	return ticks[(int)time_unit];
+};
+
+
+Date GameDateToVanillaDate(Date d, DateFract);
+std::tuple<Date, DateFract> VanillaDateToGameDate(Date d);
+
+/**
+ * For given date fract returns hours and minutes reminder
+ * @param date_fract - source date fracture
+ * @return tuple with two items: hour, minute
+ */
+std::tuple<uint8, uint8> GetHoursAndMinutes(DateFract date_fract);
 
 /**
  * Checks whether the given year is a leap year or not.

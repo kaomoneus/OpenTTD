@@ -167,9 +167,20 @@ StandardTimeUnits GetStandardTimeUnitFor(Ticks span) {
 	return StandardTimeUnits::DAYS;
 }
 
-Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit) {
-	static const Ticks ticks[] {DAY_TICKS / 24 / 60, DAY_TICKS / 24, DAY_TICKS};
-	return ticks[(int)time_unit];
+std::tuple<uint8, uint8> GetHoursAndMinutes(DateFract date_fract) {
+	auto fract_in_minutes = date_fract / GetStandardTimeUnitTicks(StandardTimeUnits::MINUTES);
+	auto hm = std::div(fract_in_minutes, 60);
+	return std::tuple(hm.quot, hm.rem);
+}
+
+Date GameDateToVanillaDate(Date d, DateFract fract) {
+	return (Date)( ((uint64)d * DAY_TICKS + fract) / VANILLA_DAY_TICKS );
+}
+
+std::tuple<Date, DateFract> VanillaDateToGameDate(Date d) {
+	long x = (long)d * VANILLA_DAY_TICKS;
+	auto dd = std::div(x, (long) DAY_TICKS);
+	return {dd.quot, dd.rem};
 }
 
 /** Functions used by the IncreaseDate function */

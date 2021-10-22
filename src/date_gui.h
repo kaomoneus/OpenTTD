@@ -20,6 +20,14 @@
  */
 typedef void SetDateCallback(const Window *w, Date date);
 
-void ShowSetDateWindow(Window *parent, int window_number, Date initial_date, Year min_year, Year max_year, SetDateCallback *callback);
+void ShowSetDateWindow(
+	Window *parent,
+	int window_number,
+	Date initial_date,
+	uint8 intial_hour, uint8 initial_minute,
+	Year min_year,
+	Year max_year,
+	SetDateCallback *callback
+);
 
 #endif /* DATE_GUI_H */

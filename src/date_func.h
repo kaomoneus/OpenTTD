@@ -19,7 +19,7 @@ extern DateFract _date_fract;
 extern uint32 _tick_counter;
 
 enum struct StandardTimeUnits {
-	MINUTES, HOURS, DAYS, length
+	MINUTES, HOURS, DAYS, length, VANILLA_DAY_MAX_UNITS = length
 };
 
 void SetDate(Date date, DateFract fract);
@@ -38,10 +38,10 @@ StandardTimeUnits GetStandardTimeUnitFor(Ticks span);
  * @param time_unit
  * @return
  */
-constexpr Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit) {
-	constexpr Ticks ticks[] {DAY_TICKS / 24 / 60, DAY_TICKS / 24, DAY_TICKS};
-	return ticks[(int)time_unit];
-};
+Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit);
+
+int TicksToTimeUnits(Ticks ticks, StandardTimeUnits time_unit = StandardTimeUnits::VANILLA_DAY_MAX_UNITS);
+Ticks TimeUnitsToTicks(int ticks, StandardTimeUnits time_unit = StandardTimeUnits::VANILLA_DAY_MAX_UNITS);
 
 
 std::tuple<Date, DateFract> GameDateToVanillaDate(Date d, DateFract fract = 0);

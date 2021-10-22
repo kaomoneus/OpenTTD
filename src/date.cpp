@@ -167,6 +167,27 @@ StandardTimeUnits GetStandardTimeUnitFor(Ticks span) {
 	return StandardTimeUnits::DAYS;
 }
 
+Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit) {
+	Ticks ticks[] {DAY_TICKS / 24 / 60, DAY_TICKS / 24, DAY_TICKS};
+	return ticks[(int)time_unit];
+};
+
+int TicksToTimeUnits(Ticks ticks, StandardTimeUnits time_unit) {
+	if (time_unit == StandardTimeUnits::VANILLA_DAY_MAX_UNITS)
+		time_unit = GetStandardTimeUnitFor(VANILLA_DAY_TICKS);
+
+	auto ticks_per_unit = GetStandardTimeUnitTicks(time_unit);
+	return ticks / ticks_per_unit;
+}
+
+Ticks TimeUnitsToTicks(int units, StandardTimeUnits time_unit) {
+	if (time_unit == StandardTimeUnits::VANILLA_DAY_MAX_UNITS)
+		time_unit = GetStandardTimeUnitFor(VANILLA_DAY_TICKS);
+
+	auto ticks_per_unit = GetStandardTimeUnitTicks(time_unit);
+	return units * ticks_per_unit;
+}
+
 std::tuple<uint8, uint8> GetHoursAndMinutes(DateFract date_fract) {
 	auto fract_in_minutes = date_fract / GetStandardTimeUnitTicks(StandardTimeUnits::MINUTES);
 	auto hm = std::div(fract_in_minutes, 60);

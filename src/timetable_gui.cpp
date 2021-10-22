@@ -49,8 +49,7 @@ void SetTimetableParams(int param1, int param2, Ticks ticks)
 		SetDParam(param2, ticks);
 	} else {
 		auto time_unit = GetStandardTimeUnitFor(VANILLA_DAY_TICKS);
-		auto time_unit_ticks = GetStandardTimeUnitTicks(time_unit);
-		auto units = ticks / time_unit_ticks;
+		auto units = TicksToTimeUnits(ticks, time_unit);
 		SetDParam(param1, STR_TIMETABLE_MINUTES + (int)time_unit);
 		SetDParam(param2, units);
 	}
@@ -582,7 +581,8 @@ struct TimetableWindow : Window {
 
 				if (order != nullptr) {
 					uint time = (selected % 2 == 1) ? order->GetTravelTime() : order->GetWaitTime();
-					if (!_settings_client.gui.timetable_in_ticks) time /= DAY_TICKS;
+					if (!_settings_client.gui.timetable_in_ticks)
+						time = TicksToTimeUnits((Ticks)time);
 
 					if (time != 0) {
 						SetDParam(0, time);
@@ -663,7 +663,8 @@ struct TimetableWindow : Window {
 		if (this->query_is_speed_query) {
 			val = ConvertDisplaySpeedToKmhishSpeed(val);
 		} else {
-			if (!_settings_client.gui.timetable_in_ticks) val *= DAY_TICKS;
+			if (!_settings_client.gui.timetable_in_ticks)
+				val = TimeUnitsToTicks((int)val);
 		}
 
 		uint32 p2 = std::min<uint32>(val, UINT16_MAX);

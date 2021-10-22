@@ -76,6 +76,17 @@ static bool DrawScrollingStatusText(const NewsItem *ni, int scroll_pos, int left
 	return (_current_text_dir == TD_RTL) ? (pos < right - left) : (pos + width > 0);
 }
 
+
+static StringID GetWhiteDateTimeStringID() {
+	return IsTimeRequired() ? STR_WHITE_DATE_TIME_LONG : STR_WHITE_DATE_LONG;
+}
+
+static void SetDateTimeParams() {
+	SetDParam(0, _date);
+	if (IsTimeRequired())
+		SetDParam(1, _date_fract);
+}
+
 struct StatusBarWindow : Window {
 	bool saving;
 	int ticker_scroll;
@@ -115,7 +126,8 @@ struct StatusBarWindow : Window {
 		switch (widget) {
 			case WID_S_LEFT:
 				SetDParamMaxValue(0, MAX_YEAR * DAYS_IN_YEAR);
-				d = GetStringBoundingBox(STR_WHITE_DATE_LONG);
+				SetDParamMaxValue(1, DAY_TICKS);
+				d = GetStringBoundingBox(GetWhiteDateTimeStringID());
 				break;
 
 			case WID_S_RIGHT: {
@@ -142,8 +154,8 @@ struct StatusBarWindow : Window {
 		switch (widget) {
 			case WID_S_LEFT:
 				/* Draw the date */
-				SetDParam(0, _date);
-				DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, text_top, STR_WHITE_DATE_LONG, TC_FROMSTRING, SA_HOR_CENTER);
+				SetDateTimeParams();
+				DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, text_top, GetWhiteDateTimeStringID(), TC_FROMSTRING, SA_HOR_CENTER);
 				break;
 
 			case WID_S_RIGHT: {

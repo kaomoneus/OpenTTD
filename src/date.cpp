@@ -304,11 +304,15 @@ static void OnNewDay()
 	DisasterDailyLoop();
 	IndustryDailyLoop();
 
-	SetWindowWidgetDirty(WC_STATUS_BAR, 0, WID_S_LEFT);
 	EnginesDailyLoop();
 
 	/* Refresh after possible snowline change */
 	SetWindowClassesDirty(WC_TOWN_VIEW);
+}
+
+void UpdateStatusBarIfNeeded() {
+	if (TicksToTimeUnits(_date_fract) != TicksToTimeUnits(_date_fract-1))
+		SetWindowWidgetDirty(WC_STATUS_BAR, 0, WID_S_LEFT);
 }
 
 /**
@@ -323,6 +327,10 @@ void IncreaseDate()
 	if (_game_mode == GM_MENU) return;
 
 	_date_fract++;
+
+	/* Update date and time in status bar */
+	UpdateStatusBarIfNeeded();
+
 	if (_date_fract < DAY_TICKS) return;
 	_date_fract = 0;
 

@@ -147,14 +147,12 @@ static void ChangeTimetableStartCallback(const Window *w, Date date)
 	DoCommandP(0, w->window_number, date, CMD_SET_TIMETABLE_START | CMD_MSG(STR_ERROR_CAN_T_TIMETABLE_VEHICLE));
 }
 
-#define NEED_TIME (VANILLA_DAY_TICKS < DAY_TICKS)
-
 static StringID GetDateTimeStringID() {
-	return NEED_TIME ? STR_JUST_DATE_TIME_TINY : STR_JUST_DATE_TINY;
+	return IsTimeRequired() ? STR_JUST_DATE_TIME_TINY : STR_JUST_DATE_TINY;
 }
 
 static void SetDateTimeParams(uint start_n, Date game_date, DateFract game_date_fract) {
-	if (!NEED_TIME) {
+	if (!IsTimeRequired()) {
 		SetDParam(start_n, game_date);
 		return;
 	}

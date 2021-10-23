@@ -29,6 +29,8 @@ Date      _date;       ///< Current date in days (day counter)
 DateFract _date_fract; ///< Fractional part of the day.
 uint32 _tick_counter;  ///< Ever incrementing (and sometimes wrapping) tick counter for setting off various events
 
+
+
 /**
  * Set the date.
  * @param date  New date
@@ -189,9 +191,20 @@ Ticks TimeUnitsToTicks(int units, StandardTimeUnits time_unit) {
 }
 
 std::tuple<uint8, uint8> GetHoursAndMinutes(DateFract date_fract) {
-	auto fract_in_minutes = date_fract / GetStandardTimeUnitTicks(StandardTimeUnits::MINUTES);
-	auto hm = std::div(fract_in_minutes, 60);
-	return std::tuple(hm.quot, hm.rem);
+	auto minute_ticks = GetStandardTimeUnitTicks(StandardTimeUnits::MINUTES);
+	if (minute_ticks) {
+		auto fract_in_minutes = date_fract / minute_ticks;
+		auto hm = std::div(fract_in_minutes, 60);
+		return {hm.quot, hm.rem};
+	}
+
+	auto hour_ticks = GetStandardTimeUnitTicks(StandardTimeUnits::HOURS);
+	if (hour_ticks) {
+		auto fract_in_hours = date_fract / hour_ticks;
+		return {fract_in_hours, 0};
+	}
+
+	return {0, 0};
 }
 
 std::tuple<Date, DateFract> GameDateToVanillaDate(Date d, DateFract fract) {

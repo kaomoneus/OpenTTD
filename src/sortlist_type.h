@@ -71,8 +71,8 @@ protected:
 	 */
 	void ResetResortTimer()
 	{
-		/* Resort every 10 days */
-		this->resort_timer = DAY_TICKS * 10;
+		/* Resort every 10 vanilla days */
+		this->resort_timer = VANILLA_DAY_TICKS * 10;
 	}
 
 public:

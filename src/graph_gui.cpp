@@ -1380,7 +1380,7 @@ struct PerformanceRatingDetailWindow : Window {
 			UpdateCompanyRatingAndValue(c, false);
 		}
 
-		this->timeout = DAY_TICKS * 5;
+		this->timeout = VANILLA_DAY_TICKS * 5;
 	}
 
 	uint score_info_left;

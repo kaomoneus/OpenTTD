@@ -1089,7 +1089,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 	}
 
 	static TransitUnitDesc GetTransitUnits() {
-		uint width_in_minutes = 200 * 24 * 60 / PACE_FACTOR;
+		uint width_in_minutes = 200 * 24 * 60 / GetPaceFactor();
 		uint step_in_minutes = width_in_minutes / 20;
 		auto transit_unit_type = GetStandardTimeUnitFor((Ticks)step_in_minutes);
 

@@ -556,7 +556,7 @@ Company *DoStartupNewCompany(bool is_ai, CompanyID company = INVALID_COMPANY)
 	_company_colours[c->index] = (Colours)c->colour;
 
     // Stepan: initial_loan factor
-    auto initial_loan = INITIAL_LOAN * PACE_FACTOR;
+    auto initial_loan = INITIAL_LOAN * GetPaceFactor();
 	c->money = c->current_loan = (std::min<int64>(initial_loan, _economy.max_loan) * _economy.inflation_prices >> 16) / 50000 * 50000;
 
 	c->share_owners[0] = c->share_owners[1] = c->share_owners[2] = c->share_owners[3] = INVALID_OWNER;

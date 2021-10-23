@@ -754,7 +754,7 @@ void RecomputePrices()
 	_economy.max_loan = ((uint64)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / 50000 * 50000;
 
 	// Stepan: I was here...
-	_economy.max_loan *= PACE_FACTOR;
+	_economy.max_loan *= GetPaceFactor();
 
 	/* Setup price bases */
 	for (Price i = PR_BEGIN; i < PR_END; i++) {
@@ -803,7 +803,7 @@ void RecomputePrices()
 		}
 
         // Stepan: and here as well:
-        price *= PACE_FACTOR;
+        price *= GetPaceFactor();
 
 		/* Store value */
 		_price[i] = price;

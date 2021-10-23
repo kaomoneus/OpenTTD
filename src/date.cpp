@@ -160,17 +160,22 @@ Date ConvertYMDToDate(Year year, Month month, Day day)
 }
 
 StandardTimeUnits GetStandardTimeUnitFor(Ticks span) {
-	if (span < DAY_TICKS / 24)
+	auto day_ticks = GetDayTicks();
+
+	if (span < day_ticks / 24)
 		return StandardTimeUnits::MINUTES;
 
-	if (span < DAY_TICKS)
+	if (span < day_ticks)
 		return StandardTimeUnits::HOURS;
 
 	return StandardTimeUnits::DAYS;
 }
 
 Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit) {
-	Ticks ticks[] {DAY_TICKS / 24 / 60, DAY_TICKS / 24, DAY_TICKS};
+	// TODO: consider caching it somewhere in game_creation
+	auto day_ticks = GetDayTicks();
+
+	Ticks ticks[] {day_ticks / 24 / 60, day_ticks / 24, day_ticks};
 	return ticks[(int)time_unit];
 };
 
@@ -208,13 +213,13 @@ std::tuple<uint8, uint8> GetHoursAndMinutes(DateFract date_fract) {
 }
 
 std::tuple<Date, DateFract> GameDateToVanillaDate(Date d, DateFract fract) {
-	auto x = std::div((long)d * DAY_TICKS + fract, (long)VANILLA_DAY_TICKS);
+	auto x = std::div((long)d * GetDayTicks() + fract, (long)VANILLA_DAY_TICKS);
 	return {x.quot, x.rem};
 }
 
 std::tuple<Date, DateFract> VanillaDateToGameDate(Date d, DateFract fract) {
 	long x = (long)d * VANILLA_DAY_TICKS + fract;
-	auto dd = std::div(x, (long) DAY_TICKS);
+	auto dd = std::div(x, (long) GetDayTicks());
 	return {dd.quot, dd.rem};
 }
 

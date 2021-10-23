@@ -1820,8 +1820,8 @@ static void DoCreateTown(Town *t, TileIndex tile, uint32 townnameparts, TownSize
 	t->cache.population = 0;
 	/* Spread growth across ticks so even if there are many
 	 * similar towns they're unlikely to grow all in one tick */
-	t->grow_counter = PACE_FACTOR * t->index % TOWN_GROWTH_TICKS;
-	t->growth_rate = PACE_FACTOR * TownTicksToGameTicks(250);
+	t->grow_counter = GetPaceFactor() * t->index % TOWN_GROWTH_TICKS;
+	t->growth_rate = GetPaceFactor() * TownTicksToGameTicks(250);
 	t->show_zone = false;
 
 	_town_kdtree.Insert(t->index);

@@ -5,6 +5,7 @@ on:
   push:
     branches:
     - master
+    - pace_slowdown
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1

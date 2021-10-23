@@ -1,7 +1,10 @@
 /.vs
 /build*
+cmake-build-*/**
+.idea
 CMakeSettings.json
 docs/aidocs/*
 docs/gamedocs/*
 docs/source/*
 /out
+run-cmake.sh

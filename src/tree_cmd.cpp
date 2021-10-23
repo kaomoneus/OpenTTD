@@ -826,6 +826,9 @@ void OnTick_Trees()
 	/* Don't spread trees if that's not allowed */
 	if (_settings_game.construction.extra_tree_placement == ETP_NO_SPREAD || _settings_game.construction.extra_tree_placement == ETP_NO_GROWTH_NO_SPREAD) return;
 
+	if ((_date_fract % PACE_FACTOR) != 0)
+		return;
+
 	uint32 r;
 	TileIndex tile;
 	TreeType tree;

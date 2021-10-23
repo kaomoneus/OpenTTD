@@ -638,7 +638,7 @@ public:
 		    SLE_VAR(Vehicle, day_counter,           SLE_UINT8),
 		    SLE_VAR(Vehicle, tick_counter,          SLE_UINT8),
 		SLE_CONDVAR(Vehicle, running_ticks,         SLE_FILE_U8 | SLE_VAR_U32, SLV_88, SLV_STEPAN),
-		SLE_CONDVAR(Vehicle, running_ticks,         SLE_VAR_U32,                    SLV_STEPAN, SL_MAX_VERSION),
+		SLE_CONDVAR(Vehicle, running_ticks,         SLE_UINT32,                        SLV_STEPAN, SL_MAX_VERSION),
 
 		    SLE_VAR(Vehicle, cur_implicit_order_index,  SLE_UINT8),
 		SLE_CONDVAR(Vehicle, cur_real_order_index,  SLE_UINT8,                  SLV_158, SL_MAX_VERSION),

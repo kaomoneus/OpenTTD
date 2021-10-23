@@ -428,7 +428,7 @@ struct GenerateLandscapeWindow : public Window {
 				break;
 			}
 			case WID_GL_GAMEYEAR_DROPDOWN: {
-				uint gen = _settings_newgame.difficulty.year_pace_option;
+				uint gen = _settings_newgame.game_creation.year_pace_option;
 				StringID name = STR_GAME_OPTIONS_GAMEYEAR_DEFAULT + gen;
 				SetDParam(0, name);
 				break;
@@ -674,7 +674,7 @@ struct GenerateLandscapeWindow : public Window {
 				break;
 
 			case WID_GL_GAMEYEAR_DROPDOWN: // Game Year generator
-				ShowDropDownList(this, BuildGameYearDropDown(), _settings_newgame.difficulty.year_pace_option, WID_GL_GAMEYEAR_DROPDOWN);
+				ShowDropDownList(this, BuildGameYearDropDown(), _settings_newgame.game_creation.year_pace_option, WID_GL_GAMEYEAR_DROPDOWN);
 				break;
 
 			case WID_GL_INDUSTRY_PULLDOWN: // Number of industries
@@ -895,7 +895,7 @@ struct GenerateLandscapeWindow : public Window {
 
 			case WID_GL_GAMEYEAR_DROPDOWN: // Town names
 				if (_game_mode == GM_MENU || Town::GetNumItems() == 0) {
-					_settings_newgame.difficulty.year_pace_option = index;
+					_settings_newgame.game_creation.year_pace_option = index;
 					SetWindowDirty(WC_GAME_OPTIONS, WN_GAME_OPTIONS_GAME_OPTIONS);
 				}
 				break;

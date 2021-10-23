@@ -81,19 +81,6 @@ struct DifficultySettings {
 	bool   line_reverse_mode;                ///< reversing at stations or not
 	bool   disasters;                        ///< are disasters enabled
 	byte   town_council_tolerance;           ///< minimum required town ratings to be allowed to demolish stuff
-	uint16 year_pace_option;                 ///< game year speed, will be converted into pace factor
-
-	uint16 GetPaceFactor() const {
-		static const uint16 factors[] = {
-			// Game year lasts
-			1,          // same as vanilla year (~15 minutes)
-			4,          // 4 times slower (one hour)
-			4 * 24,     // 96 times slower (one day)
-			4 * 24 * 7, // 672 times slower (one week)
-		};
-
-		return factors[year_pace_option];
-	}
 };
 
 /** Settings relating to viewport/smallmap scrolling. */
@@ -329,6 +316,7 @@ struct GameCreationSettings {
 	byte   min_river_length;                 ///< the minimum river length
 	byte   river_route_random;               ///< the amount of randomicity for the route finding
 	byte   amount_of_rivers;                 ///< the amount of rivers
+	byte   year_pace_option;                 ///< game year speed, will be converted into pace factor
 };
 
 /** Settings related to construction in-game */
@@ -620,6 +608,16 @@ extern VehicleDefaultSettings _old_vds;
 static inline GameSettings &GetGameSettings()
 {
 	return (_game_mode == GM_MENU) ? _settings_newgame : _settings_game;
+}
+
+int GetPaceFactor();
+
+inline int GetDayTicks() {
+	return GetPaceFactor() * VANILLA_DAY_TICKS;
+}
+
+inline bool IsTimeRequired() {
+	return (VANILLA_DAY_TICKS < GetDayTicks());
 }
 
 #endif /* SETTINGS_TYPE_H */

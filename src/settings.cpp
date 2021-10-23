@@ -2301,3 +2301,15 @@ static bool IsSignedVarMemType(VarType vt)
 	}
 	return false;
 }
+
+int GetPaceFactor() {
+	static const uint16 factors[] = {
+			// Game year lasts
+			1,          // same as vanilla year (~15 minutes)
+			4,          // 4 times slower (one hour)
+			4 * 24,     // 96 times slower (one day)
+			4 * 24 * 7, // 672 times slower (one week)
+		};
+
+	return factors[_settings_game.game_creation.year_pace_option];
+}

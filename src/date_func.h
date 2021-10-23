@@ -54,11 +54,6 @@ std::tuple<Date, DateFract> VanillaDateToGameDate(Date d, DateFract fract = 0);
  */
 std::tuple<uint8, uint8> GetHoursAndMinutes(DateFract date_fract);
 
-
-inline bool IsTimeRequired() {
-	return (VANILLA_DAY_TICKS < DAY_TICKS);
-}
-
 /**
  * Checks whether the given year is a leap year or not.
  * @param yr The year to check.

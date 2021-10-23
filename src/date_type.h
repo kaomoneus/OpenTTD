@@ -38,11 +38,14 @@ typedef uint8  Minute;   ///< Type for the minute of hour, note: 0 based
 // 4   - 4 times slower, game year is ~1 user's hour
 // 96  - game year is ~1 user's day
 // 672 - game year is ~1 user's week.
-static const int PACE_FACTOR = 672;
+
+// FIXME: may be define extern  GetPaceFactor and GetDayTicks here as well?
+
+#define PACE_FACTOR ::GetPaceFactor()
+#define DAY_TICKS ::GetDayTicks()
 
 static const int VANILLA_DAY_TICKS = 74; ///< ticks per vanilla day. Used as a primary time unit for animation.
 
-static const int DAY_TICKS         = VANILLA_DAY_TICKS * PACE_FACTOR; ///< ticks per day
 static const int DAYS_IN_YEAR      = 365; ///< days per year
 static const int DAYS_IN_LEAP_YEAR = 366; ///< sometimes, you need one day more...
 static const int MONTHS_IN_YEAR    =  12; ///< months per year
@@ -52,8 +55,8 @@ static const int MONTHS_IN_YEAR    =  12; ///< months per year
 // So it should happen with same rate from user perspective.
 static const int STATION_RATING_TICKS     = 185; ///< cycle duration for updating station rating
 
-static const int STATION_ACCEPTANCE_TICKS = 250 * PACE_FACTOR; ///< cycle duration for updating station acceptance
-static const int STATION_LINKGRAPH_TICKS  = 504 * PACE_FACTOR; ///< cycle duration for cleaning dead links
+#define STATION_ACCEPTANCE_TICKS (250 * PACE_FACTOR) ///< cycle duration for updating station acceptance
+#define STATION_LINKGRAPH_TICKS  (504 * PACE_FACTOR) ///< cycle duration for cleaning dead links
 
 // Stepan: also prevent cargo aging from scale, here it rather
 // depends in distance and visual vehicle speed.

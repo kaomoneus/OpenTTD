@@ -82,10 +82,10 @@ struct Town : TownPool::PoolItem<&_town_pool> {
 
 	StationList stations_near;       ///< NOSAVE: List of nearby stations.
 
-	uint16 time_until_rebuild;       ///< time until we rebuild a house
+	uint32 time_until_rebuild;       ///< time until we rebuild a house
 
-	uint16 grow_counter;             ///< counter to count when to grow, value is smaller than or equal to growth_rate
-	uint16 growth_rate;              ///< town growth rate
+	uint32 grow_counter;             ///< counter to count when to grow, value is smaller than or equal to growth_rate
+	uint32 growth_rate;              ///< town growth rate
 
 	byte fund_buildings_months;      ///< fund buildings program in action?
 	byte road_build_months;          ///< fund road reconstruction in action?

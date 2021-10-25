@@ -1,5 +1,6 @@
 /.vs
 /build*
+cmake-build-*
 cmake-build-*/**
 .idea
 CMakeSettings.json

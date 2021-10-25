@@ -264,6 +264,70 @@ jobs:
         path: build/bundles/*.tar.xz
         retention-days: 5
 
+  emscripten:
+    name: Emscripten
+    needs: source
+
+    runs-on: ubuntu-20.04
+    container:
+      # If you change this version, change the number in the cache step too.
+      image: emscripten/emsdk:2.0.10
+
+    steps:
+    - name: Download source
+      uses: actions/download-artifact@v2
+      with:
+        name: internal-source
+
+    - name: Unpack source
+      run: |
+        tar -xf source.tar.gz --strip-components=1
+
+    - name: Build (host tools)
+      run: |
+        mkdir build-host
+        cd build-host
+
+        echo "::group::CMake"
+        cmake .. -DOPTION_TOOLS_ONLY=ON
+        echo "::endgroup::"
+
+        echo "::group::Build"
+        echo "Running on $(nproc) cores"
+        cmake --build . -j $(nproc) --target tools
+        echo "::endgroup::"
+
+    - name: Install GCC problem matcher
+      uses: ammaraskar/gcc-problem-matcher@master
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+
+        echo "::group::CMake"
+        emcmake cmake .. -DHOST_BINARY_DIR=../build-host -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/build/install
+        echo "::endgroup::"
+
+        echo "::group::Build"
+        echo "Running on $(nproc) cores"
+        cmake --build . -j $(nproc)
+        echo "::endgroup::"
+
+    - name: Install
+      run: |
+        cd ${GITHUB_WORKSPACE}/build
+        echo "::group::Install"
+        cmake --build . --target install -j $(nproc)
+        echo "::endgroup::"
+
+    - name: Store bundles
+      uses: actions/upload-artifact@v2
+      with:
+        name: openttd-linux-generic
+        path: build/install
+        retention-days: 5
+
   linux:
     name: Linux (Generic)
     needs: source
@@ -847,140 +911,3 @@ jobs:
         name: openttd-windows-${{ matrix.arch }}
         path: build/bundles
         retention-days: 5
-
-  upload:
-    name: Upload (AWS)
-    needs:
-    - source
-    - docs
-    - linux
-    - linux-distro
-    - macos
-    - windows
-
-    # The 'linux' job can be skipped if it is a nightly. That normally causes
-    # this job to be skipped too, unless we have this length boy :)
-    # "always()" is important here, it is the keyword to use to stop skipping
-    # this job if any dependency is skipped. It looks a bit silly, but it is
-    # how GitHub Actions work ;)
-    if: always() && needs.source.result == 'success' && needs.docs.result == 'success' && needs.linux.result == 'success' && (needs.linux-distro.result == 'success' || needs.linux-distro.result == 'skipped') && needs.macos.result == 'success' && needs.windows.result == 'success'
-
-    runs-on: ubuntu-20.04
-
-    steps:
-    - name: Download all bundles
-      uses: actions/download-artifact@v2
-
-    - name: Calculate checksums
-      run: |
-        echo "::group::Move bundles to a single folder"
-        mkdir bundles
-        mv openttd-*/* bundles/
-        cd bundles
-        echo "::group::Build"
-
-        for i in $(ls openttd-*); do
-          echo "::group::Calculating checksums for ${i}"
-          openssl dgst -r -md5 -hex $i > $i.md5sum
-          openssl dgst -r -sha1 -hex $i > $i.sha1sum
-          openssl dgst -r -sha256 -hex $i > $i.sha256sum
-          echo "::endgroup::"
-        done
-
-    - name: Upload bundles to AWS
-      run: |
-        aws s3 cp --recursive --only-show-errors bundles/ s3://${{ secrets.CDN_S3_BUCKET }}/${{ needs.source.outputs.folder }}/${{ needs.source.outputs.version }}/
-
-        # We do not invalidate the CloudFront distribution here. The trigger
-        # for "New OpenTTD release" first updated the manifest files and
-        # creates an index.html. We invalidate after that, so everything
-        # becomes visible at once.
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-
-    - name: Trigger 'New OpenTTD release'
-      uses: peter-evans/repository-dispatch@v1
-      with:
-        token: ${{ secrets.DEPLOYMENT_TOKEN }}
-        repository: OpenTTD/workflows
-        event-type: ${{ needs.source.outputs.trigger_type }}
-        client-payload: '{"version": "${{ needs.source.outputs.version }}", "folder": "${{ needs.source.outputs.folder }}"}'
-
-  upload-steam:
-    name: Upload (Steam)
-    needs:
-    - source
-    - linux
-    - macos
-    - windows
-
-    if: needs.source.outputs.trigger_type == 'new-master' || needs.source.outputs.trigger_type == 'new-tag'
-
-    runs-on: ubuntu-20.04
-
-    steps:
-    - name: Download all bundles
-      uses: actions/download-artifact@v2
-
-    - name: Setup steamcmd
-      uses: CyberAndrii/setup-steamcmd@v1
-
-    - name: Generate Steam auth code
-      id: steam-totp
-      uses: CyberAndrii/steam-totp@v1
-      with:
-        shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
-
-    - name: Upload to Steam
-      run: |
-        echo "::group::Extracting source"
-        mkdir source
-        (
-          cd source
-          tar -xf ../internal-source/source.tar.gz --strip-components=1
-        )
-        echo "::endgroup::"
-
-        mkdir steam
-        (
-          cd steam
-
-          echo "::group::Prepare Win32"
-          unzip ../openttd-windows-x86/openttd-*-windows-win32.zip
-          mv openttd-*-windows-win32 steam-win32
-          echo "::endgroup::"
-
-          echo "::group::Prepare Win64"
-          unzip ../openttd-windows-x64/openttd-*-windows-win64.zip
-          mv openttd-*-windows-win64 steam-win64
-          echo "::endgroup::"
-
-          echo "::group::Prepare macOS"
-          mkdir steam-macos
-          (
-            cd steam-macos
-            unzip ../../openttd-macos-universal/openttd-*-macos-universal.zip
-          )
-          echo "::endgroup::"
-
-          echo "::group::Prepare Linux"
-          tar xvf ../openttd-linux-generic/openttd-*-linux-generic-amd64.tar.xz
-          mv openttd-*-linux-generic-amd64 steam-linux
-          echo "::endgroup::"
-
-          echo "::group::Preparing build file"
-          if [ "${{ needs.source.outputs.trigger_type }}" = "new-tag" ]; then
-            BRANCH="testing"
-          else
-            BRANCH="nightly"
-          fi
-          cat ../source/os/steam/release.vdf | sed 's/@@DESCRIPTION@@/openttd-${{ needs.source.outputs.version }}/;s/@@BRANCH@@/'${BRANCH}'/' > release.vdf
-          cat release.vdf
-          echo "::endgroup::"
-
-          echo "::group::Upload to Steam"
-          steamcmd +login ${{ secrets.STEAM_USERNAME }} ${{ secrets.STEAM_PASSWORD }} ${{ steps.steam-totp.outputs.code }} +run_app_build $(pwd)/release.vdf +quit
-          echo "::endgroup::"
-        )

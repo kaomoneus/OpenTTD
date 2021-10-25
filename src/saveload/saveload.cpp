@@ -216,7 +216,7 @@ struct SaveLoadParams {
 
 static SaveLoadParams _sl; ///< Parameters used for/at saveload.
 
-static const std::vector<ChunkHandler> &ChunkHandlers()
+static const std::vector<ChunkHandlerRef> &ChunkHandlers()
 {
 	/* These define the chunks */
 	extern const ChunkHandlerTable _gamelog_chunk_handlers;
@@ -290,7 +290,7 @@ static const std::vector<ChunkHandler> &ChunkHandlers()
 		_persistent_storage_chunk_handlers,
 	};
 
-	static std::vector<ChunkHandler> _chunk_handlers;
+	static std::vector<ChunkHandlerRef> _chunk_handlers;
 
 	if (_chunk_handlers.empty()) {
 		for (auto &chunk_handler_table : _chunk_handler_tables) {
@@ -313,11 +313,9 @@ static void SlNullPointers()
 	 * pointers from other pools. */
 	_sl_version = SAVEGAME_VERSION;
 
-	for (auto &ch : ChunkHandlers()) {
-		if (ch.ptrs_proc != nullptr) {
-			Debug(sl, 3, "Nulling pointers for {:c}{:c}{:c}{:c}", ch.id >> 24, ch.id >> 16, ch.id >> 8, ch.id);
-			ch.ptrs_proc();
-		}
+	for (const ChunkHandler &ch : ChunkHandlers()) {
+		Debug(sl, 3, "Nulling pointers for {:c}{:c}{:c}{:c}", ch.id >> 24, ch.id >> 16, ch.id >> 8, ch.id);
+		ch.FixPointers();
 	}
 
 	assert(_sl.action == SLA_NULL);
@@ -1920,7 +1918,8 @@ std::vector<SaveLoad> SlTableHeader(const SaveLoadTable &slt)
 
 				auto sld_it = key_lookup.find(key);
 				if (sld_it == key_lookup.end()) {
-					Debug(sl, 2, "Field '{}' of type 0x{:02x} not found, skipping", key, type);
+					/* SLA_LOADCHECK triggers this debug statement a lot and is perfectly normal. */
+					Debug(sl, _sl.action == SLA_LOAD ? 2 : 6, "Field '{}' of type 0x{:02x} not found, skipping", key, type);
 
 					std::shared_ptr<SaveLoadHandler> handler = nullptr;
 					SaveLoadType slt;
@@ -2114,6 +2113,25 @@ void SlAutolength(AutolengthProc *proc, void *arg)
 	if (offs != _sl.dumper->GetSize()) SlErrorCorrupt("Invalid chunk size");
 }
 
+void ChunkHandler::LoadCheck(size_t len) const
+{
+	switch (_sl.block_mode) {
+		case CH_TABLE:
+		case CH_SPARSE_TABLE:
+			SlTableHeader({});
+			FALLTHROUGH;
+		case CH_ARRAY:
+		case CH_SPARSE_ARRAY:
+			SlSkipArray();
+			break;
+		case CH_RIFF:
+			SlSkipBytes(len);
+			break;
+		default:
+			NOT_REACHED();
+	}
+}
+
 /**
  * Load a chunk of data (eg vehicles, stations, etc.)
  * @param ch The chunkhandler that will be used for the operation
@@ -2129,7 +2147,7 @@ static void SlLoadChunk(const ChunkHandler &ch)
 	_sl.expect_table_header = (_sl.block_mode == CH_TABLE || _sl.block_mode == CH_SPARSE_TABLE);
 
 	/* The header should always be at the start. Read the length; the
-	 * load_proc() should as first action process the header. */
+	 * Load() should as first action process the header. */
 	if (_sl.expect_table_header) {
 		SlIterateArray();
 	}
@@ -2138,12 +2156,12 @@ static void SlLoadChunk(const ChunkHandler &ch)
 		case CH_TABLE:
 		case CH_ARRAY:
 			_sl.array_index = 0;
-			ch.load_proc();
+			ch.Load();
 			if (_next_offs != 0) SlErrorCorrupt("Invalid array length");
 			break;
 		case CH_SPARSE_TABLE:
 		case CH_SPARSE_ARRAY:
-			ch.load_proc();
+			ch.Load();
 			if (_next_offs != 0) SlErrorCorrupt("Invalid array length");
 			break;
 		case CH_RIFF:
@@ -2152,7 +2170,7 @@ static void SlLoadChunk(const ChunkHandler &ch)
 			len += SlReadUint16();
 			_sl.obj_len = len;
 			endoffs = _sl.reader->GetSize() + len;
-			ch.load_proc();
+			ch.Load();
 			if (_sl.reader->GetSize() != endoffs) SlErrorCorrupt("Invalid chunk size");
 			break;
 		default:
@@ -2179,9 +2197,8 @@ static void SlLoadCheckChunk(const ChunkHandler &ch)
 	_sl.expect_table_header = (_sl.block_mode == CH_TABLE || _sl.block_mode == CH_SPARSE_TABLE);
 
 	/* The header should always be at the start. Read the length; the
-	 * load_check_proc() should as first action process the header. */
-	if (_sl.expect_table_header && ch.load_check_proc != nullptr) {
-		/* If load_check_proc() is nullptr, SlSkipArray() will already skip the header. */
+	 * LoadCheck() should as first action process the header. */
+	if (_sl.expect_table_header) {
 		SlIterateArray();
 	}
 
@@ -2189,19 +2206,11 @@ static void SlLoadCheckChunk(const ChunkHandler &ch)
 		case CH_TABLE:
 		case CH_ARRAY:
 			_sl.array_index = 0;
-			if (ch.load_check_proc != nullptr) {
-				ch.load_check_proc();
-			} else {
-				SlSkipArray();
-			}
+			ch.LoadCheck();
 			break;
 		case CH_SPARSE_TABLE:
 		case CH_SPARSE_ARRAY:
-			if (ch.load_check_proc != nullptr) {
-				ch.load_check_proc();
-			} else {
-				SlSkipArray();
-			}
+			ch.LoadCheck();
 			break;
 		case CH_RIFF:
 			/* Read length */
@@ -2209,11 +2218,7 @@ static void SlLoadCheckChunk(const ChunkHandler &ch)
 			len += SlReadUint16();
 			_sl.obj_len = len;
 			endoffs = _sl.reader->GetSize() + len;
-			if (ch.load_check_proc) {
-				ch.load_check_proc();
-			} else {
-				SlSkipBytes(len);
-			}
+			ch.LoadCheck(len);
 			if (_sl.reader->GetSize() != endoffs) SlErrorCorrupt("Invalid chunk size");
 			break;
 		default:
@@ -2233,9 +2238,6 @@ static void SlSaveChunk(const ChunkHandler &ch)
 {
 	if (ch.type == CH_READONLY) return;
 
-	ChunkSaveLoadProc *proc = ch.save_proc;
-	assert(proc != nullptr);
-
 	SlWriteUint32(ch.id);
 	Debug(sl, 2, "Saving chunk {:c}{:c}{:c}{:c}", ch.id >> 24, ch.id >> 16, ch.id >> 8, ch.id);
 
@@ -2246,19 +2248,19 @@ static void SlSaveChunk(const ChunkHandler &ch)
 
 	switch (_sl.block_mode) {
 		case CH_RIFF:
-			proc();
+			ch.Save();
 			break;
 		case CH_TABLE:
 		case CH_ARRAY:
 			_sl.last_array_index = 0;
 			SlWriteByte(_sl.block_mode);
-			proc();
+			ch.Save();
 			SlWriteArrayLength(0); // Terminate arrays
 			break;
 		case CH_SPARSE_TABLE:
 		case CH_SPARSE_ARRAY:
 			SlWriteByte(_sl.block_mode);
-			proc();
+			ch.Save();
 			SlWriteArrayLength(0); // Terminate arrays
 			break;
 		default: NOT_REACHED();
@@ -2286,7 +2288,7 @@ static void SlSaveChunks()
  */
 static const ChunkHandler *SlFindChunkHandler(uint32 id)
 {
-	for (auto &ch : ChunkHandlers()) if (ch.id == id) return &ch;
+	for (const ChunkHandler &ch : ChunkHandlers()) if (ch.id == id) return &ch;
 	return nullptr;
 }
 
@@ -2325,11 +2327,9 @@ static void SlFixPointers()
 {
 	_sl.action = SLA_PTRS;
 
-	for (auto &ch : ChunkHandlers()) {
-		if (ch.ptrs_proc != nullptr) {
-			Debug(sl, 3, "Fixing pointers for {:c}{:c}{:c}{:c}", ch.id >> 24, ch.id >> 16, ch.id >> 8, ch.id);
-			ch.ptrs_proc();
-		}
+	for (const ChunkHandler &ch : ChunkHandlers()) {
+		Debug(sl, 3, "Fixing pointers for {:c}{:c}{:c}{:c}", ch.id >> 24, ch.id >> 16, ch.id >> 8, ch.id);
+		ch.FixPointers();
 	}
 
 	assert(_sl.action == SLA_PTRS);
@@ -3322,6 +3322,29 @@ SaveOrLoadResult SaveOrLoad(const std::string &filename, SaveLoadOperation fop, 
 		return (fop == SLO_LOAD) ? SL_REINIT : SL_ERROR;
 	}
 }
+
+/**
+ * Create an autosave or netsave.
+ * @param counter A reference to the counter variable to be used for rotating the file name.
+ * @param netsave Indicates if this is a regular autosave or a netsave.
+ */
+void DoAutoOrNetsave(FiosNumberedSaveName &counter)
+{
+	char buf[MAX_PATH];
+
+	if (_settings_client.gui.keep_all_autosave) {
+		GenerateDefaultSaveName(buf, lastof(buf));
+		strecat(buf, counter.Extension().c_str(), lastof(buf));
+	} else {
+		strecpy(buf, counter.Filename().c_str(), lastof(buf));
+	}
+
+	Debug(sl, 2, "Autosaving to '{}'", buf);
+	if (SaveOrLoad(buf, SLO_SAVE, DFT_GAME_FILE, AUTOSAVE_DIR) != SL_OK) {
+		ShowErrorMessage(STR_ERROR_AUTOSAVE_FAILED, INVALID_STRING_ID, WL_ERROR);
+	}
+}
+
 
 /** Do a save when exiting the game (_settings_client.gui.autosave_on_exit) */
 void DoExitSave()

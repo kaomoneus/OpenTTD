@@ -29,29 +29,34 @@ static const SaveLoad _subsidies_desc[] = {
 	SLE_CONDVAR(Subsidy, dst,        SLE_UINT16,                                      SLV_5, SL_MAX_VERSION),
 };
 
-static void Save_SUBS()
-{
-	SlTableHeader(_subsidies_desc);
+struct SUBSChunkHandler : ChunkHandler {
+	SUBSChunkHandler() : ChunkHandler('SUBS', CH_TABLE) {}
 
-	for (Subsidy *s : Subsidy::Iterate()) {
-		SlSetArrayIndex(s->index);
-		SlObject(s, _subsidies_desc);
+	void Save() const override
+	{
+		SlTableHeader(_subsidies_desc);
+
+		for (Subsidy *s : Subsidy::Iterate()) {
+			SlSetArrayIndex(s->index);
+			SlObject(s, _subsidies_desc);
+		}
 	}
-}
 
-static void Load_SUBS()
-{
-	const std::vector<SaveLoad> slt = SlCompatTableHeader(_subsidies_desc, _subsidies_sl_compat);
+	void Load() const override
+	{
+		const std::vector<SaveLoad> slt = SlCompatTableHeader(_subsidies_desc, _subsidies_sl_compat);
 
-	int index;
-	while ((index = SlIterateArray()) != -1) {
-		Subsidy *s = new (index) Subsidy();
-		SlObject(s, slt);
+		int index;
+		while ((index = SlIterateArray()) != -1) {
+			Subsidy *s = new (index) Subsidy();
+			SlObject(s, slt);
+		}
 	}
-}
+};
 
-static const ChunkHandler subsidy_chunk_handlers[] = {
-	{ 'SUBS', Save_SUBS, Load_SUBS, nullptr, nullptr, CH_TABLE },
+static const SUBSChunkHandler SUBS;
+static const ChunkHandlerRef subsidy_chunk_handlers[] = {
+	SUBS,
 };
 
 extern const ChunkHandlerTable _subsidy_chunk_handlers(subsidy_chunk_handlers);

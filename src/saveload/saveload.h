@@ -11,6 +11,7 @@
 #define SAVELOAD_H
 
 #include "../fileio_type.h"
+#include "../fios.h"
 #include "../strings_type.h"
 #include "../core/span_type.hpp"
 #include <optional>
@@ -335,6 +336,10 @@ enum SaveLoadVersion : uint16 {
 	SLV_RIFF_TO_ARRAY,                      ///< 294  PR#9375 Changed many CH_RIFF chunks to CH_ARRAY chunks.
 
 	SLV_TABLE_CHUNKS,                       ///< 295  PR#9322 Introduction of CH_TABLE and CH_SPARSE_TABLE.
+	SLV_SCRIPT_INT64,                       ///< 296  PR#9415 SQInteger is 64bit but was saved as 32bit.
+	SLV_LINKGRAPH_TRAVEL_TIME,              ///< 297  PR#9457 v12.0-RC1  Store travel time in the linkgraph.
+	SLV_DOCK_DOCKINGTILES,                  ///< 298  PR#9578 All tiles around docks may be docking tiles.
+	SLV_REPAIR_OBJECT_DOCKING_TILES,        ///< 299  PR#9594 v12.0  Fixing issue with docking tiles overlapping objects.
 	SLV_STEPAN,
 
 	SL_MAX_VERSION,                         ///< Highest possible saveload version
@@ -381,10 +386,11 @@ void WaitTillSaved();
 void ProcessAsyncSaveFinish();
 void DoExitSave();
 
+void DoAutoOrNetsave(FiosNumberedSaveName &counter);
+
 SaveOrLoadResult SaveWithFilter(struct SaveFilter *writer, bool threaded);
 SaveOrLoadResult LoadWithFilter(struct LoadFilter *reader);
 
-typedef void ChunkSaveLoadProc();
 typedef void AutolengthProc(void *arg);
 
 /** Type of a chunk. */
@@ -402,15 +408,45 @@ enum ChunkType {
 /** Handlers and description of chunk. */
 struct ChunkHandler {
 	uint32 id;                          ///< Unique ID (4 letters).
-	ChunkSaveLoadProc *save_proc;       ///< Save procedure of the chunk.
-	ChunkSaveLoadProc *load_proc;       ///< Load procedure of the chunk.
-	ChunkSaveLoadProc *ptrs_proc;       ///< Manipulate pointers in the chunk.
-	ChunkSaveLoadProc *load_check_proc; ///< Load procedure for game preview.
 	ChunkType type;                     ///< Type of the chunk. @see ChunkType
+
+	ChunkHandler(uint32 id, ChunkType type) : id(id), type(type) {}
+
+	virtual ~ChunkHandler() {}
+
+	/**
+	 * Save the chunk.
+	 * Must be overridden, unless Chunk type is CH_READONLY.
+	 */
+	virtual void Save() const { NOT_REACHED(); }
+
+	/**
+	 * Load the chunk.
+	 * Must be overridden.
+	 */
+	virtual void Load() const = 0;
+
+	/**
+	 * Fix the pointers.
+	 * Pointers are saved using the index of the pointed object.
+	 * On load, pointers are filled with indices and need to be fixed to point to the real object.
+	 * Must be overridden if the chunk saves any pointer.
+	 */
+	virtual void FixPointers() const {}
+
+	/**
+	 * Load the chunk for game preview.
+	 * Default implementation just skips the data.
+	 * @param len Number of bytes to skip.
+	 */
+	virtual void LoadCheck(size_t len = 0) const;
 };
 
+/** A reference to ChunkHandler. */
+using ChunkHandlerRef = std::reference_wrapper<const ChunkHandler>;
+
 /** A table of ChunkHandler entries. */
-using ChunkHandlerTable = span<const ChunkHandler>;
+using ChunkHandlerTable = span<const ChunkHandlerRef>;
 
 /** A table of SaveLoad entries. */
 using SaveLoadTable = span<const struct SaveLoad>;

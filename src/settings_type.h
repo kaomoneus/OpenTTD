@@ -14,12 +14,13 @@
 #include "economy_type.h"
 #include "town_type.h"
 #include "transport_type.h"
-#include "network/core/config.h"
+#include "network/network_type.h"
 #include "company_type.h"
 #include "cargotype.h"
 #include "linkgraph/linkgraph_type.h"
 #include "zoom_type.h"
 #include "openttd.h"
+#include "rail_gui.h"
 
 /* Used to validate sizes of "max" value in settings. */
 const size_t MAX_SLE_UINT8 = UINT8_MAX;
@@ -57,6 +58,13 @@ enum IndustryDensity {
 	ID_HIGH,      ///< Many industries at game start.
 
 	ID_END,       ///< Number of industry density settings.
+};
+
+/** Possible values for "userelayservice" setting. */
+enum UseRelayService {
+	URS_NEVER = 0,
+	URS_ASK,
+	URS_ALLOW,
 };
 
 /** Settings related to the difficulty of the game */
@@ -136,7 +144,8 @@ struct GUISettings {
 	bool   timetable_arrival_departure;      ///< show arrivals and departures in vehicle timetables
 	bool   right_mouse_wnd_close;            ///< close window with right click
 	bool   pause_on_newgame;                 ///< whether to start new games paused or not
-	bool   enable_signal_gui;                ///< show the signal GUI when the signal button is pressed
+	SignalGUISettings signal_gui_mode;       ///< select which signal types are shown in the signal GUI
+	SignalCycleSettings cycle_signal_types;  ///< Which signal types to cycle with the build signal tool.
 	Year   coloured_news_year;               ///< when does newspaper become coloured?
 	bool   timetable_in_ticks;               ///< whether to show the timetable in ticks rather than days
 	bool   quick_goto;                       ///< Allow quick access to 'goto button' in vehicle orders window
@@ -146,8 +155,6 @@ struct GUISettings {
 	Year   semaphore_build_before;           ///< build semaphore signals automatically before this year
 	byte   news_message_timeout;             ///< how much longer than the news message "age" should we keep the message in the history
 	bool   show_track_reservation;           ///< highlight reserved tracks.
-	uint8  default_signal_type;              ///< the signal type to build by default.
-	uint8  cycle_signal_types;               ///< what signal types to cycle with the build signal tool.
 	byte   station_numtracks;                ///< the number of platforms to default on for rail stations
 	byte   station_platlength;               ///< the platform length, in tiles, for rail stations
 	bool   station_dragdrop;                 ///< whether drag and drop is enabled for stations
@@ -266,11 +273,13 @@ struct NetworkSettings {
 	uint16      server_port;                              ///< port the server listens on
 	uint16      server_admin_port;                        ///< port the server listens on for the admin network
 	bool        server_admin_chat;                        ///< allow private chat for the server to be distributed to the admin network
+	ServerGameType server_game_type;                      ///< Server type: local / public / invite-only.
+	std::string server_invite_code;                       ///< Invite code to use when registering as server.
+	std::string server_invite_code_secret;                ///< Secret to proof we got this invite code from the Game Coordinator.
 	std::string server_name;                              ///< name of the server
 	std::string server_password;                          ///< password for joining this server
 	std::string rcon_password;                            ///< password for rconsole (server side)
 	std::string admin_password;                           ///< password for the admin network
-	bool        server_advertise;                         ///< advertise the server to the masterserver
 	std::string client_name;                              ///< name of the player (as client)
 	std::string default_company_pass;                     ///< default password for new companies in encrypted form
 	std::string connect_to_ip;                            ///< default for the "Add server" query
@@ -281,12 +290,12 @@ struct NetworkSettings {
 	uint8       autoclean_novehicles;                     ///< remove companies with no vehicles after this many months
 	uint8       max_companies;                            ///< maximum amount of companies
 	uint8       max_clients;                              ///< maximum amount of clients
-	uint8       max_spectators;                           ///< maximum amount of spectators
 	Year        restart_game_year;                        ///< year the server restarts
 	uint8       min_active_clients;                       ///< minimum amount of active clients to unpause the game
 	bool        reload_cfg;                               ///< reload the config file before restarting
 	std::string last_joined;                              ///< Last joined server
 	bool        no_http_content_downloads;                ///< do not do content downloads over HTTP
+	UseRelayService use_relay_service;                        ///< Use relay service?
 };
 
 /** Settings related to the creation of games. */

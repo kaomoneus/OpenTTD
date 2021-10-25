@@ -5,7 +5,7 @@ if(NOT BINARY_NAME)
 endif()
 
 project(${BINARY_NAME}
-    VERSION 1.12.0
+    VERSION 13.0
 )
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
@@ -76,7 +76,6 @@ add_custom_target(find_version
                 -DCPACK_BINARY_DIR=${CMAKE_BINARY_DIR}
                 -DREV_MAJOR=${PROJECT_VERSION_MAJOR}
                 -DREV_MINOR=${PROJECT_VERSION_MINOR}
-                -DREV_BUILD=${PROJECT_VERSION_PATCH}
                 -DWINDOWS=${WIN32}
                 -P "${CMAKE_SOURCE_DIR}/cmake/scripts/FindVersion.cmake"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -306,7 +305,7 @@ if(EMSCRIPTEN)
     add_definitions(-s DISABLE_EXCEPTION_CATCHING=0)
 
     # Export functions to Javascript.
-    target_link_libraries(WASM::WASM INTERFACE "-s EXPORTED_FUNCTIONS='[\"_main\", \"_em_openttd_add_server\"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
+    target_link_libraries(WASM::WASM INTERFACE "-s EXPORTED_FUNCTIONS='[\"_main\", \"_em_openttd_add_server\"]' -s EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
 
     # Preload all the files we generate during build.
     # As we do not compile with FreeType / FontConfig, we also have no way to

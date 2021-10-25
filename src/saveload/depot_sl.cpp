@@ -29,41 +29,46 @@ static const SaveLoad _depot_desc[] = {
 	 SLE_CONDVAR(Depot, build_date, SLE_INT32,                SLV_142, SL_MAX_VERSION),
 };
 
-static void Save_DEPT()
-{
-	SlTableHeader(_depot_desc);
+struct DEPTChunkHandler : ChunkHandler {
+	DEPTChunkHandler() : ChunkHandler('DEPT', CH_TABLE) {}
 
-	for (Depot *depot : Depot::Iterate()) {
-		SlSetArrayIndex(depot->index);
-		SlObject(depot, _depot_desc);
+	void Save() const override
+	{
+		SlTableHeader(_depot_desc);
+
+		for (Depot *depot : Depot::Iterate()) {
+			SlSetArrayIndex(depot->index);
+			SlObject(depot, _depot_desc);
+		}
 	}
-}
 
-static void Load_DEPT()
-{
-	const std::vector<SaveLoad> slt = SlCompatTableHeader(_depot_desc, _depot_sl_compat);
+	void Load() const override
+	{
+		const std::vector<SaveLoad> slt = SlCompatTableHeader(_depot_desc, _depot_sl_compat);
 
-	int index;
+		int index;
 
-	while ((index = SlIterateArray()) != -1) {
-		Depot *depot = new (index) Depot();
-		SlObject(depot, slt);
+		while ((index = SlIterateArray()) != -1) {
+			Depot *depot = new (index) Depot();
+			SlObject(depot, slt);
 
-		/* Set the town 'pointer' so we can restore it later. */
-		if (IsSavegameVersionBefore(SLV_141)) depot->town = (Town *)(size_t)_town_index;
+			/* Set the town 'pointer' so we can restore it later. */
+			if (IsSavegameVersionBefore(SLV_141)) depot->town = (Town *)(size_t)_town_index;
+		}
 	}
-}
 
-static void Ptrs_DEPT()
-{
-	for (Depot *depot : Depot::Iterate()) {
-		SlObject(depot, _depot_desc);
-		if (IsSavegameVersionBefore(SLV_141)) depot->town = Town::Get((size_t)depot->town);
+	void FixPointers() const override
+	{
+		for (Depot *depot : Depot::Iterate()) {
+			SlObject(depot, _depot_desc);
+			if (IsSavegameVersionBefore(SLV_141)) depot->town = Town::Get((size_t)depot->town);
+		}
 	}
-}
+};
 
-static const ChunkHandler depot_chunk_handlers[] = {
-	{ 'DEPT', Save_DEPT, Load_DEPT, Ptrs_DEPT, nullptr, CH_TABLE },
+static const DEPTChunkHandler DEPT;
+static const ChunkHandlerRef depot_chunk_handlers[] = {
+	DEPT,
 };
 
 extern const ChunkHandlerTable _depot_chunk_handlers(depot_chunk_handlers);

@@ -917,7 +917,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_CPR_MATRIX_SCROLLBAR);
-		this->vscroll->SetCount(_sorted_standard_cargo_specs_size);
+		this->vscroll->SetCount(static_cast<int>(_sorted_standard_cargo_specs.size()));
 
 		// Stepan: setup footer hint dynamically depending in PACE FACTOR value.
 		this->GetWidget<NWidgetLeaf>(WID_CPR_FOOTER)->SetDataTip(
@@ -941,8 +941,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		this->excluded_data = 0;
 
 		int i = 0;
-		const CargoSpec *cs;
-		FOR_ALL_SORTED_STANDARD_CARGOSPECS(cs) {
+		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 			if (HasBit(_legend_excluded_cargo, cs->Index())) SetBit(this->excluded_data, i);
 			i++;
 		}
@@ -955,8 +954,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 			return;
 		}
 
-		const CargoSpec *cs;
-		FOR_ALL_SORTED_STANDARD_CARGOSPECS(cs) {
+		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 			SetDParam(0, cs->name);
 			Dimension d = GetStringBoundingBox(STR_GRAPH_CARGO_PAYMENT_CARGO);
 			d.width += this->legend_width + 4; // colour field
@@ -988,15 +986,14 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		int pos = this->vscroll->GetPosition();
 		int max = pos + this->vscroll->GetCapacity();
 
-		const CargoSpec *cs;
-		FOR_ALL_SORTED_STANDARD_CARGOSPECS(cs) {
+		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 			if (pos-- > 0) continue;
 			if (--max < 0) break;
 
 			bool lowered = !HasBit(_legend_excluded_cargo, cs->Index());
 
 			/* Redraw box if lowered */
-			if (lowered) DrawFrameRect(r.left, y, r.right, y + this->line_height - 1, COLOUR_BROWN, lowered ? FR_LOWERED : FR_NONE);
+			if (lowered) DrawFrameRect(r.left, y, r.right, y + this->line_height - 1, COLOUR_BROWN, FR_LOWERED);
 
 			byte clk_dif = lowered ? 1 : 0;
 			int rect_x = clk_dif + (rtl ? r.right - this->legend_width - WD_FRAMERECT_RIGHT : r.left + WD_FRAMERECT_LEFT);
@@ -1023,8 +1020,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 			case WID_CPR_DISABLE_CARGOES: {
 				/* Add all cargoes to the excluded lists. */
 				int i = 0;
-				const CargoSpec *cs;
-				FOR_ALL_SORTED_STANDARD_CARGOSPECS(cs) {
+				for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 					SetBit(_legend_excluded_cargo, cs->Index());
 					SetBit(this->excluded_data, i);
 					i++;
@@ -1037,8 +1033,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 				uint row = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_CPR_MATRIX);
 				if (row >= this->vscroll->GetCount()) return;
 
-				const CargoSpec *cs;
-				FOR_ALL_SORTED_STANDARD_CARGOSPECS(cs) {
+				for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 					if (row-- > 0) continue;
 
 					ToggleBit(_legend_excluded_cargo, cs->Index());
@@ -1077,8 +1072,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		this->UpdateExcludedData();
 
 		int i = 0;
-		const CargoSpec *cs;
-		FOR_ALL_SORTED_STANDARD_CARGOSPECS(cs) {
+		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 			this->colours[i] = cs->legend_colour;
 			for (uint j = 0; j != 20; j++) {
 				this->cost[i][j] = GetTransportedGoodsIncome(10, 20, j * 4 + 4, cs->Index());

@@ -1332,6 +1332,7 @@ static uint GetWindowZPriority(WindowClass wc)
 
 		case WC_ERRMSG:
 		case WC_CONFIRM_POPUP_QUERY:
+		case WC_NETWORK_ASK_RELAY:
 		case WC_MODAL_PROGRESS:
 		case WC_NETWORK_STATUS_WINDOW:
 		case WC_SAVE_PRESET:
@@ -2583,6 +2584,22 @@ EventState Window::HandleEditBoxKey(int wid, WChar key, uint16 keycode)
 	}
 
 	return ES_HANDLED;
+}
+
+/**
+ * Handle Toolbar hotkey events - can come from a source like the MacBook Touch Bar.
+ * @param hotkey Hotkey code
+ */
+void HandleToolbarHotkey(int hotkey)
+{
+	assert(HasModalProgress() || IsLocalCompany());
+
+	Window *w = FindWindowById(WC_MAIN_TOOLBAR, 0);
+	if (w != nullptr) {
+		if (w->window_desc->hotkeys != nullptr) {
+			if (hotkey >= 0 && w->OnHotkey(hotkey) == ES_HANDLED) return;
+		}
+	}
 }
 
 /**

@@ -38,7 +38,7 @@
 #include "strings_func.h"
 #include "date_func.h"
 #include "string_func.h"
-#include "network/network.h"
+#include "network/core/config.h"
 #include <map>
 #include "smallmap_gui.h"
 #include "genworld.h"
@@ -80,7 +80,6 @@ static uint32 _ttdpatch_flags[8];
 GRFLoadedFeatures _loaded_newgrf_features;
 
 static const uint MAX_SPRITEGROUP = UINT8_MAX; ///< Maximum GRF-local ID for a spritegroup.
-static const uint MAX_GRF_COUNT = 128; ///< Maximum number of NewGRF files that could be loaded.
 
 /** Temporary data during loading of GRFs */
 struct GrfProcessingState {
@@ -961,8 +960,7 @@ static bool ReadSpriteLayout(ByteReader *buf, uint num_building_sprites, bool us
 static CargoTypes TranslateRefitMask(uint32 refit_mask)
 {
 	CargoTypes result = 0;
-	uint8 bit;
-	FOR_EACH_SET_BIT(bit, refit_mask) {
+	for (uint8 bit : SetBitIterator(refit_mask)) {
 		CargoID cargo = GetCargoTranslation(bit, _cur.grffile, true);
 		if (cargo != CT_INVALID) SetBit(result, cargo);
 	}
@@ -1332,6 +1330,10 @@ static ChangeInfoResult RailVehicleChangeInfo(uint engine, int numinfo, int prop
 				}
 				break;
 			}
+
+			case PROP_TRAIN_CURVE_SPEED_MOD: // 0x2E Curve speed modifier
+				rvi->curve_speed_mod = buf->ReadWord();
+				break;
 
 			default:
 				ret = CommonVehicleChangeInfo(ei, prop, buf);
@@ -4083,8 +4085,8 @@ static ChangeInfoResult ObjectChangeInfo(uint id, int numinfo, int prop, ByteRea
 
 			case 0x0C: // Size
 				spec->size = buf->ReadByte();
-				if ((spec->size & 0xF0) == 0 || (spec->size & 0x0F) == 0) {
-					grfmsg(1, "ObjectChangeInfo: Invalid object size requested (%u) for object id %u. Ignoring.", spec->size, id + i);
+				if (GB(spec->size, 0, 4) == 0 || GB(spec->size, 4, 4) == 0) {
+					grfmsg(0, "ObjectChangeInfo: Invalid object size requested (0x%x) for object id %u. Ignoring.", spec->size, id + i);
 					spec->size = 0x11; // 1x1
 				}
 				break;
@@ -5165,6 +5167,11 @@ static void NewSpriteGroup(ByteReader *buf)
 
 					grfmsg(6, "NewSpriteGroup: New SpriteGroup 0x%02X, %u loaded, %u loading",
 							setid, num_loaded, num_loading);
+
+					if (num_loaded + num_loading == 0) {
+						grfmsg(1, "NewSpriteGroup: no result, skipping invalid RealSpriteGroup");
+						break;
+					}
 
 					if (num_loaded + num_loading == 1) {
 						/* Avoid creating 'Real' sprite group if only one option. */
@@ -8909,8 +8916,7 @@ static void CalculateRefitMasks()
 			if (cargo_map_for_first_refittable != nullptr) {
 				/* Use first refittable cargo from cargo translation table */
 				byte best_local_slot = 0xFF;
-				CargoID cargo_type;
-				FOR_EACH_SET_CARGO_ID(cargo_type, ei->refit_mask) {
+				for (CargoID cargo_type : SetCargoBitIterator(ei->refit_mask)) {
 					byte local_slot = cargo_map_for_first_refittable[cargo_type];
 					if (local_slot < best_local_slot) {
 						best_local_slot = local_slot;
@@ -9862,12 +9868,6 @@ void LoadNewGRF(uint load_index, uint num_baseset)
 				num_non_static++;
 			}
 
-			if (num_grfs >= MAX_GRF_COUNT) {
-				Debug(grf, 0, "'{}' is not loaded as the maximum number of file slots has been reached", c->filename);
-				c->status = GCS_DISABLED;
-				c->error  = new GRFError(STR_NEWGRF_ERROR_MSG_FATAL, STR_NEWGRF_ERROR_TOO_MANY_NEWGRFS_LOADED);
-				continue;
-			}
 			num_grfs++;
 
 			LoadNewGRFFile(c, stage, subdir, false);

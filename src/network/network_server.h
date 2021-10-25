@@ -25,7 +25,6 @@ class ServerNetworkGameSocketHandler : public NetworkClientSocketPool::PoolItem<
 protected:
 	NetworkRecvStatus Receive_CLIENT_JOIN(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_GAME_INFO(Packet *p) override;
-	NetworkRecvStatus Receive_CLIENT_COMPANY_INFO(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_GAME_PASSWORD(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_COMPANY_PASSWORD(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_GETMAP(Packet *p) override;
@@ -42,7 +41,6 @@ protected:
 	NetworkRecvStatus Receive_CLIENT_MOVE(Packet *p) override;
 
 	NetworkRecvStatus SendGameInfo();
-	NetworkRecvStatus SendCompanyInfo();
 	NetworkRecvStatus SendNewGRFCheck();
 	NetworkRecvStatus SendWelcome();
 	NetworkRecvStatus SendNeedGamePassword();
@@ -95,6 +93,7 @@ public:
 	NetworkRecvStatus SendClientInfo(NetworkClientInfo *ci);
 	NetworkRecvStatus SendError(NetworkErrorCode error, const std::string &reason = {});
 	NetworkRecvStatus SendChat(NetworkAction action, ClientID client_id, bool self_send, const std::string &msg, int64 data);
+	NetworkRecvStatus SendExternalChat(const std::string &source, TextColour colour, const std::string &user, const std::string &msg);
 	NetworkRecvStatus SendJoin(ClientID client_id);
 	NetworkRecvStatus SendFrame();
 	NetworkRecvStatus SendSync();

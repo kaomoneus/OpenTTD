@@ -280,55 +280,54 @@ static const SaveLoad _town_desc[] = {
 	SLEG_CONDSTRUCTLIST("acceptance_matrix", SlTownAcceptanceMatrix,   SLV_166, SLV_REMOVE_TOWN_CARGO_CACHE),
 };
 
-static void Save_HIDS()
-{
-	Save_NewGRFMapping(_house_mngr);
-}
+struct HIDSChunkHandler : NewGRFMappingChunkHandler {
+	HIDSChunkHandler() : NewGRFMappingChunkHandler('HIDS', _house_mngr) {}
+};
 
-static void Load_HIDS()
-{
-	Load_NewGRFMapping(_house_mngr);
-}
+struct CITYChunkHandler : ChunkHandler {
+	CITYChunkHandler() : ChunkHandler('CITY', CH_TABLE) {}
 
-static void Save_TOWN()
-{
-	SlTableHeader(_town_desc);
+	void Save() const override
+	{
+		SlTableHeader(_town_desc);
 
-	for (Town *t : Town::Iterate()) {
-		SlSetArrayIndex(t->index);
-		SlObject(t, _town_desc);
-	}
-}
-
-static void Load_TOWN()
-{
-	const std::vector<SaveLoad> slt = SlCompatTableHeader(_town_desc, _town_sl_compat);
-
-	int index;
-
-	while ((index = SlIterateArray()) != -1) {
-		Town *t = new (index) Town();
-		SlObject(t, slt);
-
-		if (t->townnamegrfid == 0 && !IsInsideMM(t->townnametype, SPECSTR_TOWNNAME_START, SPECSTR_TOWNNAME_LAST + 1) && GetStringTab(t->townnametype) != TEXT_TAB_OLD_CUSTOM) {
-			SlErrorCorrupt("Invalid town name generator");
+		for (Town *t : Town::Iterate()) {
+			SlSetArrayIndex(t->index);
+			SlObject(t, _town_desc);
 		}
 	}
-}
 
-/** Fix pointers when loading town data. */
-static void Ptrs_TOWN()
-{
-	if (IsSavegameVersionBefore(SLV_161)) return;
+	void Load() const override
+	{
+		const std::vector<SaveLoad> slt = SlCompatTableHeader(_town_desc, _town_sl_compat);
 
-	for (Town *t : Town::Iterate()) {
-		SlObject(t, _town_desc);
+		int index;
+
+		while ((index = SlIterateArray()) != -1) {
+			Town *t = new (index) Town();
+			SlObject(t, slt);
+
+			if (t->townnamegrfid == 0 && !IsInsideMM(t->townnametype, SPECSTR_TOWNNAME_START, SPECSTR_TOWNNAME_LAST + 1) && GetStringTab(t->townnametype) != TEXT_TAB_OLD_CUSTOM) {
+				SlErrorCorrupt("Invalid town name generator");
+			}
+		}
 	}
-}
 
-static const ChunkHandler town_chunk_handlers[] = {
-	{ 'HIDS', Save_HIDS, Load_HIDS, nullptr,   nullptr, CH_TABLE },
-	{ 'CITY', Save_TOWN, Load_TOWN, Ptrs_TOWN, nullptr, CH_TABLE },
+	void FixPointers() const override
+	{
+		if (IsSavegameVersionBefore(SLV_161)) return;
+
+		for (Town *t : Town::Iterate()) {
+			SlObject(t, _town_desc);
+		}
+	}
+};
+
+static const HIDSChunkHandler HIDS;
+static const CITYChunkHandler CITY;
+static const ChunkHandlerRef town_chunk_handlers[] = {
+	HIDS,
+	CITY,
 };
 
 extern const ChunkHandlerTable _town_chunk_handlers(town_chunk_handlers);

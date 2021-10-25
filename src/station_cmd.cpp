@@ -2359,7 +2359,7 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 		InvalidateWindowData(WC_STATION_VIEW, st->index, -1);
 
 		if (_settings_game.economy.station_noise_level) {
-			SetWindowDirty(WC_TOWN_VIEW, st->town->index);
+			SetWindowDirty(WC_TOWN_VIEW, nearest->index);
 		}
 	}
 
@@ -2407,6 +2407,10 @@ static CommandCost RemoveAirport(TileIndex tile, DoCommandFlag flags)
 		uint dist;
 		Town *nearest = AirportGetNearestTown(as, it, dist);
 		nearest->noise_reached -= GetAirportNoiseLevelForDistance(as, dist);
+
+		if (_settings_game.economy.station_noise_level) {
+			SetWindowDirty(WC_TOWN_VIEW, nearest->index);
+		}
 	}
 
 	for (TileIndex tile_cur : st->airport) {
@@ -2434,10 +2438,6 @@ static CommandCost RemoveAirport(TileIndex tile, DoCommandFlag flags)
 		st->facilities &= ~FACIL_AIRPORT;
 
 		InvalidateWindowData(WC_STATION_VIEW, st->index, -1);
-
-		if (_settings_game.economy.station_noise_level) {
-			SetWindowDirty(WC_TOWN_VIEW, st->town->index);
-		}
 
 		Company::Get(st->owner)->infrastructure.airport--;
 
@@ -2635,23 +2635,15 @@ void ClearDockingTilesCheckingNeighbours(TileIndex tile)
 /**
  * Check if a dock tile can be docked from the given direction.
  * @param t Tile index of dock.
- * @param d DiagDirection adjacent to dock being tested.
+ * @param d DiagDirection adjacent to dock being tested. (unused)
  * @return True iff the dock can be docked from the given direction.
  */
 bool IsValidDockingDirectionForDock(TileIndex t, DiagDirection d)
 {
 	assert(IsDockTile(t));
 
-	/** Bitmap of valid directions for each dock tile part. */
-	static const uint8 _valid_docking_tile[] = {
-		0, 0, 0, 0,                        // No docking against the slope part.
-		1 << DIAGDIR_NE | 1 << DIAGDIR_SW, // Docking permitted at the end
-		1 << DIAGDIR_NW | 1 << DIAGDIR_SE, // of the flat piers.
-	};
-
 	StationGfx gfx = GetStationGfx(t);
-	assert(gfx < lengthof(_valid_docking_tile));
-	return HasBit(_valid_docking_tile[gfx], d);
+	return gfx >= GFX_DOCK_BASE_WATER_PART;
 }
 
 /**
@@ -2720,19 +2712,24 @@ static CommandCost RemoveDock(TileIndex tile, DoCommandFlag flags)
 		ClearDockingTilesCheckingNeighbours(tile1);
 		ClearDockingTilesCheckingNeighbours(tile2);
 
-		/* All ships that were going to our station, can't go to it anymore.
-		 * Just clear the order, then automatically the next appropriate order
-		 * will be selected and in case of no appropriate order it will just
-		 * wander around the world. */
-		if (!(st->facilities & FACIL_DOCK)) {
-			for (Ship *s : Ship::Iterate()) {
-				if (s->current_order.IsType(OT_LOADING) && s->current_order.GetDestination() == st->index) {
-					s->LeaveStation();
-				}
+		for (Ship *s : Ship::Iterate()) {
+			/* Find all ships going to our dock. */
+			if (s->current_order.GetDestination() != st->index) {
+				continue;
+			}
 
-				if (s->current_order.IsType(OT_GOTO_STATION) && s->current_order.GetDestination() == st->index) {
-					s->SetDestTile(s->GetOrderStationLocation(st->index));
-				}
+			/* Find ships that are marked as "loading" but are no longer on a
+			 * docking tile. Force them to leave the station (as they were loading
+			 * on the removed dock). */
+			if (s->current_order.IsType(OT_LOADING) && !(IsDockingTile(s->tile) && IsShipDestinationTile(s->tile, st->index))) {
+				s->LeaveStation();
+			}
+
+			/* If we no longer have a dock, mark the order as invalid and send
+			 * the ship to the next order (or, if there is none, make it
+			 * wander the world). */
+			if (s->current_order.IsType(OT_GOTO_STATION) && !(st->facilities & FACIL_DOCK)) {
+				s->SetDestTile(s->GetOrderStationLocation(st->index));
 			}
 		}
 	}
@@ -2993,8 +2990,7 @@ draw_default_foundation:
 			/* Sprite layout which needs preprocessing */
 			bool separate_ground = HasBit(statspec->flags, SSF_SEPARATE_GROUND);
 			uint32 var10_values = layout->PrepareLayout(total_offset, rti->fallback_railtype, 0, 0, separate_ground);
-			uint8 var10;
-			FOR_EACH_SET_BIT(var10, var10_values) {
+			for (uint8 var10 : SetBitIterator(var10_values)) {
 				uint32 var10_relocation = GetCustomStationRelocation(statspec, st, ti->tile, var10);
 				layout->ProcessRegisters(var10, var10_relocation, separate_ground);
 			}
@@ -3689,8 +3685,11 @@ void DeleteStaleLinks(Station *from)
 					auto iter = vehicles.begin();
 					while (iter != vehicles.end()) {
 						Vehicle *v = *iter;
-
-						LinkRefresher::Run(v, false); // Don't allow merging. Otherwise lg might get deleted.
+						/* Do not refresh links of vehicles that have been stopped in depot for a long time. */
+						if (!v->IsStoppedInDepot() || static_cast<uint>(_date - v->date_of_last_service) <=
+								LinkGraph::STALE_LINK_DEPOT_TIMEOUT) {
+							LinkRefresher::Run(v, false); // Don't allow merging. Otherwise lg might get deleted.
+						}
 						if (edge.LastUpdate() == _date) {
 							updated = true;
 							break;
@@ -3738,7 +3737,7 @@ void DeleteStaleLinks(Station *from)
  * @param usage Usage to add to link stat.
  * @param mode Update mode to be applied.
  */
-void IncreaseStats(Station *st, CargoID cargo, StationID next_station_id, uint capacity, uint usage, EdgeUpdateMode mode)
+void IncreaseStats(Station *st, CargoID cargo, StationID next_station_id, uint capacity, uint usage, uint32 time, EdgeUpdateMode mode)
 {
 	GoodsEntry &ge1 = st->goods[cargo];
 	Station *st2 = Station::Get(next_station_id);
@@ -3780,7 +3779,7 @@ void IncreaseStats(Station *st, CargoID cargo, StationID next_station_id, uint c
 		}
 	}
 	if (lg != nullptr) {
-		(*lg)[ge1.node].UpdateEdge(ge2.node, capacity, usage, mode);
+		(*lg)[ge1.node].UpdateEdge(ge2.node, capacity, usage, time, mode);
 	}
 }
 
@@ -3790,7 +3789,7 @@ void IncreaseStats(Station *st, CargoID cargo, StationID next_station_id, uint c
  * @param front First vehicle in the consist.
  * @param next_station_id Station the consist will be travelling to next.
  */
-void IncreaseStats(Station *st, const Vehicle *front, StationID next_station_id)
+void IncreaseStats(Station *st, const Vehicle *front, StationID next_station_id, uint32 time)
 {
 	for (const Vehicle *v = front; v != nullptr; v = v->Next()) {
 		if (v->refit_cap > 0) {
@@ -3801,7 +3800,7 @@ void IncreaseStats(Station *st, const Vehicle *front, StationID next_station_id)
 			 * As usage is not such an important figure anyway we just
 			 * ignore the additional cargo then.*/
 			IncreaseStats(st, v->cargo_type, next_station_id, v->refit_cap,
-					std::min<uint>(v->refit_cap, v->cargo.StoredCount()), EUM_INCREASE);
+					std::min<uint>(v->refit_cap, v->cargo.StoredCount()), time, EUM_INCREASE);
 		}
 	}
 }
@@ -4081,7 +4080,7 @@ uint MoveGoodsToStation(CargoID type, uint amount, SourceType source_type, Sourc
 
 	/* If there is some cargo left due to rounding issues distribute it among the best rated stations. */
 	if (amount > moving) {
-		std::sort(used_stations.begin(), used_stations.end(), [type](const StationInfo &a, const StationInfo &b) {
+		std::stable_sort(used_stations.begin(), used_stations.end(), [type](const StationInfo &a, const StationInfo &b) {
 			return b.first->goods[type].rating < a.first->goods[type].rating;
 		});
 

@@ -28,7 +28,6 @@ extern NetworkCompanyState *_network_company_states;
 
 extern ClientID _network_own_client_id;
 extern ClientID _redirect_console_to_client;
-extern bool _network_need_advertise;
 extern uint8 _network_reconnect;
 extern StringList _network_bind_list;
 extern StringList _network_host_list;
@@ -40,6 +39,7 @@ bool NetworkValidateOurClientName();
 bool NetworkValidateClientName(std::string &client_name);
 bool NetworkValidateServerName(std::string &server_name);
 void NetworkUpdateClientName(const std::string &client_name);
+void NetworkUpdateServerGameType();
 bool NetworkCompanyHasClients(CompanyID company);
 std::string NetworkChangeCompanyPassword(CompanyID company_id, std::string password);
 void NetworkReboot();
@@ -60,7 +60,6 @@ void NetworkClientSendChat(NetworkAction action, DestType type, int dest, const 
 bool NetworkClientPreferTeamChat(const NetworkClientInfo *cio);
 bool NetworkCompanyIsPassworded(CompanyID company_id);
 bool NetworkMaxCompaniesReached();
-bool NetworkMaxSpectatorsReached();
 void NetworkPrintClients();
 void NetworkHandlePauseChange(PauseMode prev_mode, PauseMode changed_mode);
 
@@ -79,6 +78,7 @@ bool NetworkServerChangeClientName(ClientID client_id, const std::string &new_na
 void NetworkServerDoMove(ClientID client_id, CompanyID company_id);
 void NetworkServerSendRcon(ClientID client_id, TextColour colour_code, const std::string &string);
 void NetworkServerSendChat(NetworkAction action, DestType type, int dest, const std::string &msg, ClientID from_id, int64 data = 0, bool from_admin = false);
+void NetworkServerSendExternalChat(const std::string &source, TextColour colour, const std::string &user, const std::string &msg);
 
 void NetworkServerKickClient(ClientID client_id, const std::string &reason);
 uint NetworkServerKickOrBanIP(ClientID client_id, bool ban, const std::string &reason);

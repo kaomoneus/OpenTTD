@@ -443,14 +443,19 @@ jobs:
         include:
         - container_image: "ubuntu:18.04"
           bundle_name: "bionic"
+          compiler: "g++-8"
         - container_image: "ubuntu:20.04"
           bundle_name: "focal"
+          compiler: "g++"
         - container_image: "ubuntu:20.10"
           bundle_name: "groovy"
+          compiler: "g++"
         - container_image: "debian:buster"
           bundle_name: "buster"
+          compiler: "g++"
         - container_image: "debian:bullseye"
           bundle_name: "bullseye"
+          compiler: "g++"
 
     runs-on: ubuntu-20.04
     container:
@@ -476,7 +481,7 @@ jobs:
         apt-get install -y --no-install-recommends \
           cmake \
           debhelper \
-          g++ \
+          ${{ matrix.compiler }} \
           git \
           make \
           openssl \
@@ -502,7 +507,7 @@ jobs:
         cd build
 
         echo "::group::CMake"
-        cmake ${GITHUB_WORKSPACE} \
+        CXX=${{ matrix.compiler }} cmake ${GITHUB_WORKSPACE} \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DCMAKE_INSTALL_PREFIX=/usr \
           # EOF
@@ -538,7 +543,7 @@ jobs:
     name: MacOS
     needs: source
 
-    runs-on: macos-10.15
+    runs-on: macos-11
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.14
 

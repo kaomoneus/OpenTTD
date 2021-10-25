@@ -306,7 +306,13 @@ jobs:
         cd build
 
         echo "::group::CMake"
-        emcmake cmake .. -DHOST_BINARY_DIR=../build-host -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/build/install
+
+        emcmake cmake .. \
+            -DHOST_BINARY_DIR=../build-host \
+            -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/build/install \
+            -DCMAKE_INSTALL_DATADIR=${GITHUB_WORKSPACE}/build/install \
+            -DCMAKE_INSTALL_BINDIR=${GITHUB_WORKSPACE}/build/install
+
         echo "::endgroup::"
 
         echo "::group::Build"
@@ -321,10 +327,10 @@ jobs:
         cmake --build . --target install -j $(nproc)
         echo "::endgroup::"
 
-    - name: Store bundles
+    - name: Store installation as artifact
       uses: actions/upload-artifact@v2
       with:
-        name: openttd-linux-generic
+        name: openttd-emscripten
         path: build/install
         retention-days: 5
 

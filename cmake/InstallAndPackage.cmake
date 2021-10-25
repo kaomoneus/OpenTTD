@@ -23,7 +23,8 @@ install(TARGETS openttd
             COMPONENT Runtime
         )
 
-install(DIRECTORY
+if (NOT EMSCRIPTEN)
+    install(DIRECTORY
                 ${CMAKE_BINARY_DIR}/lang
                 ${CMAKE_BINARY_DIR}/baseset
                 ${CMAKE_BINARY_DIR}/ai
@@ -32,9 +33,9 @@ install(DIRECTORY
         DESTINATION ${DATA_DESTINATION_DIR}
         COMPONENT language_files
         REGEX "ai/[^\.]+$" EXCLUDE # Ignore subdirs in ai dir
-)
+    )
 
-install(FILES
+    install(FILES
                 ${CMAKE_SOURCE_DIR}/COPYING.md
                 ${CMAKE_SOURCE_DIR}/README.md
                 ${CMAKE_SOURCE_DIR}/changelog.txt
@@ -42,6 +43,15 @@ install(FILES
                 ${CMAKE_SOURCE_DIR}/known-bugs.txt
         DESTINATION ${DOCS_DESTINATION_DIR}
         COMPONENT docs)
+else()
+    install(FILES
+        ${CMAKE_BINARY_DIR}/openttd.js
+        ${CMAKE_BINARY_DIR}/openttd.wasm
+        ${CMAKE_BINARY_DIR}/openttd.data
+        DESTINATION ${BINARY_DESTINATION_DIR}
+        COMPONENT Runtime
+    )
+endif()
 
 # A Linux manual only makes sense when using FHS. Otherwise it is a very odd
 # file with little context to what it is.
@@ -60,7 +70,7 @@ if(OPTION_INSTALL_FHS)
             COMPONENT manual)
 endif()
 
-if(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
     install(DIRECTORY
                     ${CMAKE_BINARY_DIR}/media/icons
                     ${CMAKE_BINARY_DIR}/media/pixmaps

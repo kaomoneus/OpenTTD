@@ -9,3 +9,4 @@ docs/gamedocs/*
 docs/source/*
 /out
 run-cmake.sh
+.DS_Store

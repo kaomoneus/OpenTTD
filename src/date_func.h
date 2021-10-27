@@ -33,13 +33,6 @@ Date ConvertYMDToDate(Year year, Month month, Day day);
  */
 StandardTimeUnits GetStandardTimeUnitFor(Ticks span);
 
-/**
- * Returns ticks or particular time unit in game (non-vanilla) scale
- * @param time_unit
- * @return
- */
-Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit);
-
 int TicksToTimeUnits(Ticks ticks, StandardTimeUnits time_unit = StandardTimeUnits::VANILLA_DAY_MAX_UNITS);
 Ticks TimeUnitsToTicks(int ticks, StandardTimeUnits time_unit = StandardTimeUnits::VANILLA_DAY_MAX_UNITS);
 
@@ -47,12 +40,19 @@ Ticks TimeUnitsToTicks(int ticks, StandardTimeUnits time_unit = StandardTimeUnit
 std::tuple<Date, DateFract> GameDateToVanillaDate(Date d, DateFract fract = 0);
 std::tuple<Date, DateFract> VanillaDateToGameDate(Date d, DateFract fract = 0);
 
+
 /**
- * For given date fract returns hours and minutes reminder
- * @param date_fract - source date fracture
+ * Converts hour and minute into ticks
+ */
+Ticks HourMinuteToTicks(uint8 hour, uint8 minute);
+
+
+/**
+ * Converts ticks into hour and minute
+ * @param ticks - source date fracture
  * @return tuple with two items: hour, minute
  */
-std::tuple<uint8, uint8> GetHoursAndMinutes(DateFract date_fract);
+std::tuple<uint8, uint8> TicksToHourMinute(Ticks ticks);
 
 /**
  * Checks whether the given year is a leap year or not.

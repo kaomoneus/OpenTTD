@@ -159,6 +159,9 @@ Date ConvertYMDToDate(Year year, Month month, Day day)
 	return DAYS_TILL(year) + days;
 }
 
+static const int HOURS_IN_DAY = 24;
+static const int MINUTES_IN_DAY = 24 * 60;
+
 StandardTimeUnits GetStandardTimeUnitFor(Ticks span) {
 	auto day_ticks = GetDayTicks();
 
@@ -171,45 +174,47 @@ StandardTimeUnits GetStandardTimeUnitFor(Ticks span) {
 	return StandardTimeUnits::DAYS;
 }
 
-Ticks GetStandardTimeUnitTicks(StandardTimeUnits time_unit) {
-	// TODO: consider caching it somewhere in game_creation
-	auto day_ticks = GetDayTicks();
-
-	Ticks ticks[] {day_ticks / 24 / 60, day_ticks / 24, day_ticks};
-	return ticks[(int)time_unit];
-};
-
 int TicksToTimeUnits(Ticks ticks, StandardTimeUnits time_unit) {
 	if (time_unit == StandardTimeUnits::VANILLA_DAY_MAX_UNITS)
 		time_unit = GetStandardTimeUnitFor(VANILLA_DAY_TICKS);
 
-	auto ticks_per_unit = GetStandardTimeUnitTicks(time_unit);
-	return ticks / ticks_per_unit;
+	switch (time_unit) {
+		case StandardTimeUnits::MINUTES:
+			return MINUTES_IN_DAY * ticks / GetDayTicks();
+		case StandardTimeUnits::HOURS:
+			return HOURS_IN_DAY * ticks / GetDayTicks();
+		case StandardTimeUnits::DAYS:
+			return ticks / GetDayTicks();
+		default:
+			NOT_REACHED();
+	}
 }
 
 Ticks TimeUnitsToTicks(int units, StandardTimeUnits time_unit) {
 	if (time_unit == StandardTimeUnits::VANILLA_DAY_MAX_UNITS)
 		time_unit = GetStandardTimeUnitFor(VANILLA_DAY_TICKS);
 
-	auto ticks_per_unit = GetStandardTimeUnitTicks(time_unit);
-	return units * ticks_per_unit;
+	switch (time_unit) {
+		case StandardTimeUnits::MINUTES:
+			return GetDayTicks() * units / MINUTES_IN_DAY;
+		case StandardTimeUnits::HOURS:
+			return GetDayTicks() * units / HOURS_IN_DAY;
+		case StandardTimeUnits::DAYS:
+			return GetDayTicks() * units;
+		default:
+			NOT_REACHED();
+	}
 }
 
-std::tuple<uint8, uint8> GetHoursAndMinutes(DateFract date_fract) {
-	auto minute_ticks = GetStandardTimeUnitTicks(StandardTimeUnits::MINUTES);
-	if (minute_ticks) {
-		auto fract_in_minutes = date_fract / minute_ticks;
-		auto hm = std::div(fract_in_minutes, 60);
-		return {hm.quot, hm.rem};
-	}
+Ticks HourMinuteToTicks(uint8 hour, uint8 minute) {
+	auto total_minutes = (uint16)hour * 60 + minute;
+	return GetDayTicks() * total_minutes / MINUTES_IN_DAY;
+}
 
-	auto hour_ticks = GetStandardTimeUnitTicks(StandardTimeUnits::HOURS);
-	if (hour_ticks) {
-		auto fract_in_hours = date_fract / hour_ticks;
-		return {fract_in_hours, 0};
-	}
-
-	return {0, 0};
+std::tuple<uint8, uint8> TicksToHourMinute(Ticks ticks) {
+	auto total_minutes = MINUTES_IN_DAY * ticks / GetDayTicks();
+	auto hm = std::div(total_minutes, 60);
+	return {hm.quot, hm.rem};
 }
 
 std::tuple<Date, DateFract> GameDateToVanillaDate(Date d, DateFract fract) {

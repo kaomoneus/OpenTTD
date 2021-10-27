@@ -207,10 +207,7 @@ struct SetDateWindow : Window {
 			case WID_SD_SET_DATE: {
 				// Convert datetime into vanilla days
 				auto game_date = ConvertYMDToDate(this->date.year, this->date.month, this->date.day);
-				auto game_fract =
-						  this->hour * GetStandardTimeUnitTicks(StandardTimeUnits::HOURS)
-						+ this->minute * GetStandardTimeUnitTicks(StandardTimeUnits::MINUTES);
-
+				auto game_fract = HourMinuteToTicks(this->hour, this->minute);
 				auto [vanilla_date, _] = GameDateToVanillaDate(game_date, game_fract);
 
 				if (this->callback != nullptr) this->callback(this, vanilla_date);

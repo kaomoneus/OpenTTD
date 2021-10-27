@@ -459,7 +459,7 @@ static char *FormatTinyOrISODate(char *buff, Date date, StringID str, const char
 
 static char *FormatTinyTime(char *buff, DateFract date_fract, StringID str, const char *last)
 {
-	auto [hh, mm] = GetHoursAndMinutes(date_fract);
+	auto [hh, mm] = TicksToHourMinute(date_fract);
 
 	char hour[3];
 	char minute[3];

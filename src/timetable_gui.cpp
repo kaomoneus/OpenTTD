@@ -555,7 +555,7 @@ struct TimetableWindow : Window {
 
 			case WID_VT_START_DATE: // Change the date that the timetable starts.
 			{
-				auto [hour, minute] = GetHoursAndMinutes(_date_fract);
+				auto [hour, minute] = TicksToHourMinute(_date_fract);
 				ShowSetDateWindow(
 					this,
 					v->index | (v->orders.list->IsCompleteTimetable() && _ctrl_pressed ? 1U << 20 : 0),

@@ -231,7 +231,7 @@ jobs:
           cd fluidsynth-2.1.6
           mkdir build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_FLAGS_INIT="-DRANDOM_DEBUG"
+          cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr
           cmake --build . -j $(nproc)
           cmake --install .
         )
@@ -249,6 +249,7 @@ jobs:
         cmake ${GITHUB_WORKSPACE} \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DOPTION_PACKAGE_DEPENDENCIES=ON \
+          -DCMAKE_CXX_FLAGS_INIT="-DRANDOM_DEBUG" \
           # EOF
         echo "::endgroup::"
 

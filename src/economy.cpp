@@ -80,7 +80,7 @@ typedef std::vector<Industry *> SmallIndustryList;
 /**
  * Score info, values used for computing the detailed performance rating.
  */
-// TODO: Stepan perhaps we should update it as well.
+// TODO Stepan: Perhaps it might be disbalanced by altering pace factor. Please check.
 const ScoreInfo _score_info[] = {
 	{     120, 100}, // SCORE_VEHICLES
 	{      80, 100}, // SCORE_STATIONS
@@ -976,7 +976,7 @@ Money GetPrice(Price index, uint cost_factor, const GRFFile *grf_file, int shift
 
 Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, CargoID cargo_type)
 {
-	// Stepan: here "days" mean vanilla days (in fact is "time units")
+	// Stepan: here "days" mean vanilla days
 	const CargoSpec *cs = CargoSpec::Get(cargo_type);
 	if (!cs->IsValid()) {
 		/* User changed newgrfs and some vehicle still carries some cargo which is no longer available. */
@@ -1162,7 +1162,10 @@ static void TriggerIndustryProduction(Industry *i)
 			if (cargo_waiting == 0) continue;
 
 			for (uint ci_out = 0; ci_out < lengthof(i->produced_cargo_waiting); ci_out++) {
-				i->produced_cargo_waiting[ci_out] = i->produced_cargo_waiting[ci_out] + (cargo_waiting * indspec->input_cargo_multiplier[ci_in][ci_out] / 256);
+				i->produced_cargo_waiting[ci_out] = (uint32)std::min<uint64>(
+						i->produced_cargo_waiting[ci_out] + (cargo_waiting * indspec->input_cargo_multiplier[ci_in][ci_out] / 256),
+						0xffffffff
+				);
 			}
 
 			i->incoming_cargo_waiting[ci_in] = 0;

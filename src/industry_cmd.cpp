@@ -1123,10 +1123,10 @@ static void ChopLumberMillTrees(Industry *i)
 
 	TileIndex tile = i->location.tile;
 	if (CircularTileSearch(&tile, 40, SearchLumberMillTrees, nullptr)) { // 40x40 tiles  to search.
-		// FIXME Stepan:
-		//    Should be: min<uint64>(0xffffffff, i->produced_cargo_waiting[0] + 45)
-		//    go over similar places in your patch and fix.
-		i->produced_cargo_waiting[0] = i->produced_cargo_waiting[0] + 45; // Found a tree, add according value to waiting cargo.
+		i->produced_cargo_waiting[0] = (uint32)std::min<uint64>(
+			0xffffffff,
+			i->produced_cargo_waiting[0] + 45 // Found a tree, add according value to waiting cargo.
+		);
 	}
 }
 
@@ -1158,7 +1158,10 @@ static void ProduceIndustryGoods(Industry *i)
 
 		IndustryBehaviour indbehav = indsp->behaviour;
 		for (size_t j = 0; j < lengthof(i->produced_cargo_waiting); j++) {
-			i->produced_cargo_waiting[j] = i->produced_cargo_waiting[j] + i->production_rate[j];
+			i->produced_cargo_waiting[j] = (uint32)std::min<uint64>(
+				0xffffffff,
+				i->produced_cargo_waiting[j] + i->production_rate[j]
+			);
 		}
 
 		if ((indbehav & INDUSTRYBEH_PLANT_FIELDS) != 0) {

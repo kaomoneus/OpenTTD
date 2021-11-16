@@ -10,6 +10,8 @@
 #ifndef BITMATH_FUNC_HPP
 #define BITMATH_FUNC_HPP
 
+// FIXME Stepan: keep in mind, that it returns uint, and might not work
+//   on x86 architectures for uint64 types.
 /**
  * Fetch \a n bits from \a x, started at bit \a s.
  *

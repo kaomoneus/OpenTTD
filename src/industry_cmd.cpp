@@ -48,7 +48,6 @@
 #include "table/build_industry.h"
 
 #include "safeguards.h"
-#include "network/network_internal.h"
 
 IndustryPool _industry_pool("Industry");
 INSTANTIATE_POOL_METHODS(Industry)
@@ -835,10 +834,7 @@ static void TileLoop_Industry(TileIndex tile)
 
 	if (_game_mode == GM_EDITOR) return;
 
-	bool tig_res = TransportIndustryGoods(tile);
-	Debug(random, 1, "fc: {:08x}, tig_res: {}", _frame_counter, tig_res);
-
-	if (tig_res && !StartStopIndustryTileAnimation(Industry::GetByTile(tile), IAT_INDUSTRY_DISTRIBUTES_CARGO)) {
+	if (TransportIndustryGoods(tile) && !StartStopIndustryTileAnimation(Industry::GetByTile(tile), IAT_INDUSTRY_DISTRIBUTES_CARGO)) {
 		uint newgfx = GetIndustryTileSpec(GetIndustryGfx(tile))->anim_production;
 
 		if (newgfx != INDUSTRYTILE_NOANIM) {
@@ -1127,6 +1123,9 @@ static void ChopLumberMillTrees(Industry *i)
 
 	TileIndex tile = i->location.tile;
 	if (CircularTileSearch(&tile, 40, SearchLumberMillTrees, nullptr)) { // 40x40 tiles  to search.
+		// FIXME Stepan:
+		//    Should be: min<uint64>(0xffffffff, i->produced_cargo_waiting[0] + 45)
+		//    go over similar places in your patch and fix.
 		i->produced_cargo_waiting[0] = i->produced_cargo_waiting[0] + 45; // Found a tree, add according value to waiting cargo.
 	}
 }

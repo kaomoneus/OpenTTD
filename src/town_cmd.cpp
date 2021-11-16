@@ -627,7 +627,7 @@ static void TileLoop_Town(TileIndex tile)
 			CanDeleteHouse(tile) &&
 			GetHouseAge(tile) >= hs->minimum_life &&
 			--t->time_until_rebuild == 0) {
-		t->time_until_rebuild = GB(r, 32, 16) + 192;
+		t->time_until_rebuild = GB(r, 16, 16) + 192;
 
 		ClearTownHouse(t, tile);
 

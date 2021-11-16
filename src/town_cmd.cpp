@@ -3481,7 +3481,7 @@ static void UpdateTownGrowthRate(Town *t)
 {
 	if (HasBit(t->flags, TOWN_CUSTOM_GROWTH)) return;
 	uint old_rate = t->growth_rate;
-	t->growth_rate = ::GetPaceFactor() * GetNormalGrowthRate(t);
+	t->growth_rate = GetPaceFactor() * GetNormalGrowthRate(t);
 	UpdateTownGrowCounter(t, old_rate);
 	SetWindowDirty(WC_TOWN_VIEW, t->index);
 }

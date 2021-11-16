@@ -19,7 +19,7 @@ typedef int32  Year;  ///< Type for the year, note: 0 based, i.e. starts at the 
 typedef uint8  Month; ///< Type for the month, note: 0 based, i.e. 0 = January, 11 = December.
 typedef uint8  Day;   ///< Type for the day of the month, note: 1 based, first day of a month is 1.
 typedef uint8  Hour;   ///< Type for the hour of day, note: 0 based, 0 12am
-typedef uint8  Minute;   ///< Type for the minute of hour, note: 0 based
+typedef uint8  Minute; ///< Type for the minute of hour, note: 0 based
 
 /**
  * 1 day is 74 ticks; _date_fract used to be uint16 and incremented by 885. On
@@ -30,8 +30,6 @@ typedef uint8  Minute;   ///< Type for the minute of hour, note: 0 based
 
 // Stepan: "pace factor" is how many times game's clock
 // should go slower comparing to vanilla version.
-// TODO, Stepan: use _settings_game.difficulty.GetPaceFactor() _settings_game.difficulty.DayTicks()
-//    or even may be consider moving it into _settings_client
 
 // Some pace factor values:
 // 1   - game day is equal to vanilla day
@@ -39,8 +37,8 @@ typedef uint8  Minute;   ///< Type for the minute of hour, note: 0 based
 // 96  - game year is ~1 user's day
 // 672 - game year is ~1 user's week.
 
-// FIXME: may be define extern  GetPaceFactor and GetDayTicks here as well?
-
+// We keep this pseudo-constant to reduce diffs with master branch.
+// Ideally e should replace it everywhere with GetDayTicks call.
 #define DAY_TICKS ::GetDayTicks()
 
 static const int VANILLA_DAY_TICKS = 74; ///< ticks per vanilla day. Used as a primary time unit for animation.

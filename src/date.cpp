@@ -29,8 +29,6 @@ Date      _date;       ///< Current date in days (day counter)
 DateFract _date_fract; ///< Fractional part of the day.
 uint32 _tick_counter;  ///< Ever incrementing (and sometimes wrapping) tick counter for setting off various events
 
-
-
 /**
  * Set the date.
  * @param date  New date

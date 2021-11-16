@@ -1042,7 +1042,7 @@ void NetworkGameLoop()
 
 	if (!NetworkReceive()) return;
 
-	bool log_desync = false;
+	int desync_level = 2;
 
 	if ((_date_fract % VANILLA_DAY_TICKS) == 0) {
 		/* We don't want to log multiple times if paused. */
@@ -1051,17 +1051,15 @@ void NetworkGameLoop()
 		if (last_log != _date || last_log_fract != _date_fract) {
 			last_log = _date;
 			last_log_fract = _date_fract;
-			log_desync = true;
+			desync_level = 1;
 		}
 	}
 
+	Debug(desync, desync_level, "sync, frame: {}", _frame_counter);
+	Debug(desync, desync_level, "sync: {:08x}; {:02x}; {:08x}; {:08x}", _date, _date_fract, _random.state[0], _random.state[1]);
+
 	if (_network_server) {
 		/* Log the sync state to check for in-syncedness of replays. */
-		if (log_desync) {
-			/* We don't want to log multiple times if paused. */
-			Debug(desync, 1, "sync, server, frame: {}", _frame_counter);
-			Debug(desync, 1, "sync: {:08x}; {:02x}; {:08x}; {:08x}", _date, _date_fract, _random.state[0], _random.state[1]);
-		}
 
 #ifdef DEBUG_DUMP_COMMANDS
 		/* Loading of the debug commands from -ddesync>=1 */
@@ -1192,9 +1190,6 @@ void NetworkGameLoop()
 		NetworkServer_Tick(send_frame);
 	} else {
 		/* Client */
-		if (log_desync) {
-			Debug(desync, 1, "sync, client, frame: {}", _frame_counter);
-		}
 
 		static int frame_drop_warn_counter = 0;
 

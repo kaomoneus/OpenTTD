@@ -48,6 +48,7 @@
 #include "table/build_industry.h"
 
 #include "safeguards.h"
+#include "network/network_internal.h"
 
 IndustryPool _industry_pool("Industry");
 INSTANTIATE_POOL_METHODS(Industry)
@@ -834,7 +835,10 @@ static void TileLoop_Industry(TileIndex tile)
 
 	if (_game_mode == GM_EDITOR) return;
 
-	if (TransportIndustryGoods(tile) && !StartStopIndustryTileAnimation(Industry::GetByTile(tile), IAT_INDUSTRY_DISTRIBUTES_CARGO)) {
+	bool tig_res = TransportIndustryGoods(tile);
+	Debug(random, 1, "fc: {:08x}, tig_res: {}", _frame_counter, tig_res);
+
+	if (tig_res && !StartStopIndustryTileAnimation(Industry::GetByTile(tile), IAT_INDUSTRY_DISTRIBUTES_CARGO)) {
 		uint newgfx = GetIndustryTileSpec(GetIndustryGfx(tile))->anim_production;
 
 		if (newgfx != INDUSTRYTILE_NOANIM) {

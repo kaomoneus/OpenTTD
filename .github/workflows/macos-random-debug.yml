@@ -262,27 +262,6 @@ jobs:
       # If this is run on a fork, there may not be a certificate set up - continue in this case
       continue-on-error: true
 
-    - name: Build arm64
-      run: |
-        mkdir build-arm64
-        cd build-arm64
-
-        echo "::group::CMake"
-        cmake ${GITHUB_WORKSPACE} \
-          -DCMAKE_OSX_ARCHITECTURES=arm64 \
-          -DVCPKG_TARGET_TRIPLET=arm64-osx \
-          -DCMAKE_TOOLCHAIN_FILE=/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake \
-          -DHOST_BINARY_DIR=${GITHUB_WORKSPACE}/build-host \
-          -DCMAKE_CXX_FLAGS_INIT="-DRANDOM_DEBUG" \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-          # EOF
-        echo "::endgroup::"
-
-        echo "::group::Build"
-        echo "Running on $(sysctl -n hw.logicalcpu) cores"
-        cmake --build . -j $(sysctl -n hw.logicalcpu)
-        echo "::endgroup::"
-
     - name: Build x64
       run: |
         mkdir build-x64

@@ -270,6 +270,7 @@ public:
 	Date age;                           ///< Age in days
 	Date max_age;                       ///< Maximum age
 	Date date_of_last_service;          ///< Last date the vehicle had a service at a depot.
+	DateFract fract_of_last_service;    ///< Last date fract the vehicle had a service at a depot.
 	uint16 reliability;                 ///< Reliability.
 	uint16 reliability_spd_dec;         ///< Reliability decrease speed.
 	byte breakdown_ctr;                 ///< Counter for managing breakdown events. @see Vehicle::HandleBreakdown
@@ -365,6 +366,8 @@ public:
 	void GetConsistFreeCapacities(SmallMap<CargoID, uint> &capacities) const;
 
 	uint GetConsistTotalCapacity() const;
+
+	void SetLastServiceNow();
 
 	/**
 	 * Marks the vehicles to be redrawn and updates cached variables
@@ -539,6 +542,11 @@ public:
 	 * @return is this vehicle still valid?
 	 */
 	virtual bool Tick() { return true; };
+
+	/**
+	 * Calls the new vanilla day handler of the vehicle
+	 */
+	virtual void OnNewVanillaDay() {};
 
 	/**
 	 * Calls the new day handler of the vehicle

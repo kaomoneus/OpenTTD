@@ -165,7 +165,7 @@ void VehicleServiceInDepot(Vehicle *v)
 	SetWindowDirty(WC_VEHICLE_DETAILS, v->index); // ensure that last service date and reliability are updated
 
 	do {
-		v->date_of_last_service = _date;
+		v->SetLastServiceNow();
 		v->breakdowns_since_last_service = 0;
 		v->reliability = v->GetEngine()->reliability;
 		/* Prevent vehicles from breaking down directly after exiting the depot. */
@@ -189,10 +189,16 @@ bool Vehicle::NeedsServicing() const
 
 	/* Are we ready for the next service cycle? */
 	const Company *c = Company::Get(this->owner);
-	if (this->ServiceIntervalIsPercent() ?
-			(this->reliability >= this->GetEngine()->reliability * (100 - this->GetServiceInterval()) / 100) :
-			(this->date_of_last_service + this->GetServiceInterval() >= _date)) {
-		return false;
+
+	if (this->ServiceIntervalIsPercent()) {
+		if (this->reliability >= this->GetEngine()->reliability * (100 - this->GetServiceInterval()) / 100)
+			return false;
+	} else {
+		uint64 next_service_datetime_tick = this->date_of_last_service * GetDayTicks() + this->fract_of_last_service;
+		next_service_datetime_tick += this->GetServiceInterval() * VANILLA_DAY_TICKS;
+		uint64 current_datetime_tick = _date * GetDayTicks() + _date_fract;
+		if (next_service_datetime_tick >= current_datetime_tick)
+			return false;
 	}
 
 	/* If we're servicing anyway, because we have not disabled servicing when
@@ -941,10 +947,30 @@ static void RunVehicleDayProc()
 	}
 }
 
+/**
+ * Calls 1-vanilla-day handlers.
+ */
+static void RunVehicleVanillaDayProc()
+{
+	if (_game_mode != GM_NORMAL) return;
+
+	auto [_, vanilla_day_fract] = GameDateToVanillaDate(_date, _date_fract);
+
+	/* Run the day_proc for every VANILLA_DAY_TICKS vehicle starting at vanilla_day_fract. */
+	for (size_t i = vanilla_day_fract; i < Vehicle::GetPoolSize(); i += VANILLA_DAY_TICKS) {
+		Vehicle *v = Vehicle::Get(i);
+		if (v == nullptr) continue;
+
+		/* This is called once per vanilla day for each vehicle, but not in the first tick of the day */
+		v->OnNewVanillaDay();
+	}
+}
+
 void CallVehicleTicks()
 {
 	_vehicles_to_autoreplace.clear();
 
+	RunVehicleVanillaDayProc();
 	RunVehicleDayProc();
 
 	{
@@ -2365,6 +2391,11 @@ uint Vehicle::GetConsistTotalCapacity() const
 		result += v->cargo_cap;
 	}
 	return result;
+}
+
+void Vehicle::SetLastServiceNow() {
+	this->date_of_last_service = _date;
+	this->fract_of_last_service = _date_fract;
 }
 
 /**

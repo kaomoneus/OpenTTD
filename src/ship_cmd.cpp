@@ -221,17 +221,19 @@ Money Ship::GetRunningCost() const
 	return GetPrice(PR_RUNNING_SHIP, cost_factor, e->GetGRF());
 }
 
+void Ship::OnNewVanillaDay() {
+	CheckVehicleBreakdown(this);
+	CheckIfShipNeedsService(this);
+	CheckOrders(this);
+}
+
 void Ship::OnNewDay()
 {
 	if ((++this->day_counter & 7) == 0) {
 		DecreaseVehicleValue(this);
 	}
 
-	CheckVehicleBreakdown(this);
 	AgeVehicle(this);
-	CheckIfShipNeedsService(this);
-
-	CheckOrders(this);
 
 	if (this->running_ticks == 0) return;
 
@@ -884,7 +886,7 @@ CommandCost CmdBuildShip(TileIndex tile, DoCommandFlag flags, const Engine *e, u
 		v->state = TRACK_BIT_DEPOT;
 
 		v->SetServiceInterval(Company::Get(_current_company)->settings.vehicle.servint_ships);
-		v->date_of_last_service = _date;
+		v->SetLastServiceNow();
 		v->build_year = _cur_year;
 		v->sprite_cache.sprite_seq.Set(SPR_IMG_QUERY);
 		v->random_bits = VehicleRandomBits();

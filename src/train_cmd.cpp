@@ -630,7 +630,7 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 
 		v->railtype = rvi->railtype;
 
-		v->date_of_last_service = _date;
+		v->SetLastServiceNow();
 		v->build_year = _cur_year;
 		v->sprite_cache.sprite_seq.Set(SPR_IMG_QUERY);
 		v->random_bits = VehicleRandomBits();
@@ -698,6 +698,7 @@ static void AddRearEngineToMultiheadedTrain(Train *v)
 	u->railtype = v->railtype;
 	u->engine_type = v->engine_type;
 	u->date_of_last_service = v->date_of_last_service;
+	u->fract_of_last_service = v->fract_of_last_service;
 	u->build_year = v->build_year;
 	u->sprite_cache.sprite_seq.Set(SPR_IMG_QUERY);
 	u->random_bits = VehicleRandomBits();
@@ -763,7 +764,7 @@ CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 		_new_vehicle_id = v->index;
 
 		v->SetServiceInterval(Company::Get(_current_company)->settings.vehicle.servint_trains);
-		v->date_of_last_service = _date;
+		v->SetLastServiceNow();
 		v->build_year = _cur_year;
 		v->sprite_cache.sprite_seq.Set(SPR_IMG_QUERY);
 		v->random_bits = VehicleRandomBits();
@@ -3993,13 +3994,7 @@ static void CheckIfTrainNeedsService(Train *v)
 	SetWindowWidgetDirty(WC_VEHICLE_VIEW, v->index, WID_VV_START_STOP);
 }
 
-/** Update day counters of the train vehicle. */
-void Train::OnNewDay()
-{
-	AgeVehicle(this);
-
-	if ((++this->day_counter & 7) == 0) DecreaseVehicleValue(this);
-
+void Train::OnNewVanillaDay() {
 	if (this->IsFrontEngine()) {
 		CheckVehicleBreakdown(this);
 
@@ -4012,7 +4007,17 @@ void Train::OnNewDay()
 			TileIndex tile = Station::Get(this->current_order.GetDestination())->train_station.tile;
 			if (tile != INVALID_TILE) this->dest_tile = tile;
 		}
+	}
+}
 
+/** Update day counters of the train vehicle. */
+void Train::OnNewDay()
+{
+	AgeVehicle(this);
+
+	if ((++this->day_counter & 7) == 0) DecreaseVehicleValue(this);
+
+	if (this->IsFrontEngine()) {
 		if (this->running_ticks != 0) {
 			/* running costs */
 			CommandCost cost(EXPENSES_TRAIN_RUN, this->GetRunningCost() * this->running_ticks / (DAYS_IN_YEAR  * DAY_TICKS));

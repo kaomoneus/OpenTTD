@@ -432,6 +432,7 @@ void AddArticulatedParts(Vehicle *first)
 		v->y_pos = first->y_pos;
 		v->z_pos = first->z_pos;
 		v->date_of_last_service = first->date_of_last_service;
+		v->fract_of_last_service = first->fract_of_last_service;
 		v->build_year = first->build_year;
 		v->vehstatus = first->vehstatus & ~VS_STOPPED;
 

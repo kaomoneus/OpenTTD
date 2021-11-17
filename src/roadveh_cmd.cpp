@@ -298,7 +298,7 @@ CommandCost CmdBuildRoadVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 
 		v->SetServiceInterval(Company::Get(v->owner)->settings.vehicle.servint_roadveh);
 
-		v->date_of_last_service = _date;
+		v->SetLastServiceNow();
 		v->build_year = _cur_year;
 
 		v->sprite_cache.sprite_seq.Set(SPR_IMG_QUERY);
@@ -1700,6 +1700,14 @@ static void CheckIfRoadVehNeedsService(RoadVehicle *v)
 	SetWindowWidgetDirty(WC_VEHICLE_VIEW, v->index, WID_VV_START_STOP);
 }
 
+void RoadVehicle::OnNewVanillaDay() {
+	if (!this->IsFrontEngine()) return;
+	if (this->blocked_ctr == 0) CheckVehicleBreakdown(this);
+
+	CheckIfRoadVehNeedsService(this);
+	CheckOrders(this);
+}
+
 void RoadVehicle::OnNewDay()
 {
 	AgeVehicle(this);
@@ -1707,11 +1715,6 @@ void RoadVehicle::OnNewDay()
 	if (!this->IsFrontEngine()) return;
 
 	if ((++this->day_counter & 7) == 0) DecreaseVehicleValue(this);
-	if (this->blocked_ctr == 0) CheckVehicleBreakdown(this);
-
-	CheckIfRoadVehNeedsService(this);
-
-	CheckOrders(this);
 
 	if (this->running_ticks == 0) return;
 

@@ -441,17 +441,21 @@ Money Aircraft::GetRunningCost() const
 	return GetPrice(PR_RUNNING_AIRCRAFT, cost_factor, e->GetGRF());
 }
 
+void Aircraft::OnNewVanillaDay() {
+	if (!this->IsNormalAircraft()) return;
+
+	CheckOrders(this);
+	CheckVehicleBreakdown(this);
+	CheckIfAircraftNeedsService(this);
+}
+
 void Aircraft::OnNewDay()
 {
 	if (!this->IsNormalAircraft()) return;
 
 	if ((++this->day_counter & 7) == 0) DecreaseVehicleValue(this);
 
-	CheckOrders(this);
-
-	CheckVehicleBreakdown(this);
 	AgeVehicle(this);
-	CheckIfAircraftNeedsService(this);
 
 	if (this->running_ticks == 0) return;
 

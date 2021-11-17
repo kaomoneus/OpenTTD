@@ -3686,7 +3686,8 @@ void DeleteStaleLinks(Station *from)
 					while (iter != vehicles.end()) {
 						Vehicle *v = *iter;
 						/* Do not refresh links of vehicles that have been stopped in depot for a long time. */
-						if (!v->IsStoppedInDepot() || static_cast<uint>(_date - v->date_of_last_service) <=
+						auto [vanilla_days_stopped, _] = GameDateToVanillaDate(_date - v->date_of_last_service);
+						if (!v->IsStoppedInDepot() || static_cast<uint>(vanilla_days_stopped) <=
 								LinkGraph::STALE_LINK_DEPOT_TIMEOUT) {
 							LinkRefresher::Run(v, false); // Don't allow merging. Otherwise lg might get deleted.
 						}

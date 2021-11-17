@@ -3155,6 +3155,12 @@ bool AfterLoadGame()
 		for (Station *st : Station::Iterate()) UpdateStationAcceptance(st, false);
 	}
 
+	if (IsSavegameVersionBefore(SLV_STEPAN)) {
+		for (Vehicle *v : Vehicle::Iterate()) {
+			v->fract_of_last_service = 0;
+		}
+	}
+
 	/* Road stops is 'only' updating some caches */
 	AfterLoadRoadStops();
 	AfterLoadLabelMaps();

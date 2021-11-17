@@ -135,6 +135,7 @@ struct RoadVehicle FINAL : public GroundVehicle<RoadVehicle, VEH_ROAD> {
 	int GetDisplayImageWidth(Point *offset = nullptr) const;
 	bool IsInDepot() const { return this->state == RVSB_IN_DEPOT; }
 	bool Tick();
+	void OnNewVanillaDay();
 	void OnNewDay();
 	uint Crash(bool flooded = false);
 	Trackdir GetVehicleTrackdir() const;

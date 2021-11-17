@@ -1743,6 +1743,8 @@ void CheckOrders(const Vehicle *v)
 	if (v->FirstShared() != v) return;
 
 	/* Only check every 20 days, so that we don't flood the message log */
+	// TODO Stepan: in slow pace mode it might be called several times per day.
+	//    need another method to avoid flooding.
 	if (v->owner == _local_company && v->day_counter % 20 == 0) {
 		StringID message = INVALID_STRING_ID;
 

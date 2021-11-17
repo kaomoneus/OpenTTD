@@ -39,6 +39,8 @@
 
 #include "safeguards.h"
 
+// TODO Stepan: Update "Last Service" string to show time as well.
+//   Also update service period selection to use hours and minutes if needed.
 
 BaseVehicleListWindow::GroupBy _grouping[VLT_END][VEH_COMPANY_END];
 Sorting _sorting[BaseVehicleListWindow::GB_END];

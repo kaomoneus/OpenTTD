@@ -47,6 +47,7 @@ struct Ship FINAL : public SpecializedVehicle<Ship, VEH_SHIP> {
 	Money GetRunningCost() const;
 	bool IsInDepot() const { return this->state == TRACK_BIT_DEPOT; }
 	bool Tick();
+	void OnNewVanillaDay();
 	void OnNewDay();
 	Trackdir GetVehicleTrackdir() const;
 	TileIndex GetOrderStationLocation(StationID station);

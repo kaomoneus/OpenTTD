@@ -1,0 +1,36 @@
+name: Feature
+description: Ready to propose new feature?
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe new features here.
+  - type: input
+    id: version
+    attributes:
+      label: Version of OpenTTD this feature is to be implemented.
+      description: Fill in below in what version of OpenTTD you propose to introduce this feature.
+      placeholder: ex. 1.11.2, Windows 10
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please describe new feature.
+      placeholder: |
+        Let's make flying trains!
+    validations:
+      required: true
+  - type: textarea
+    id: implementation-description
+    attributes:
+      label: Implementation description
+      description: Describe how do you think it might be implemented.
+      placeholder: |
+        1. We could make special sort of airplanes which are chained with each other.
+        2. ?
+        3. Profit
+    validations:
+      required: false

@@ -2380,6 +2380,7 @@ struct VehicleDetailsWindow : Window {
 
 			case WID_VD_SERVICING_INTERVAL:
 				/* Draw service interval text */
+				// TODO Stepan: here like in graph_gui
 				SetDParam(0, v->GetServiceInterval());
 				SetDParam(1, v->date_of_last_service);
 				DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, r.top + (r.bottom - r.top + 1 - FONT_HEIGHT_NORMAL) / 2,

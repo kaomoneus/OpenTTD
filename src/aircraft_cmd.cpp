@@ -1370,7 +1370,11 @@ static void MaybeCrashAirplane(Aircraft *v)
 		prob = (0x4000 << _settings_game.vehicle.plane_crashes) / 1500;
 	}
 
-	if (GB(Random(), 0, 22) > prob) return;
+	// Fixes kaomoneus/OpenTTD#5
+	prob <<= 8;
+	prob /= GetPaceFactor();
+
+	if (GB(Random(), 0, 30) > prob) return;
 
 	/* Crash the airplane. Remove all goods stored at the station. */
 	for (CargoID i = 0; i < NUM_CARGO; i++) {

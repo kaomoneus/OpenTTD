@@ -4200,6 +4200,8 @@ STR_VEHICLE_INFO_CAPACITY_CAPACITY                              :{BLACK}Capacity
 
 STR_VEHICLE_INFO_FEEDER_CARGO_VALUE                             :{BLACK}Transfer Credits: {LTBLUE}{CURRENCY_LONG}
 
+STR_VEHICLE_DETAILS_SERVICING_INTERVAL_MINUTES                  :{BLACK}Servicing interval: {LTBLUE}{COMMA}{NBSP}minutes{BLACK}   Last service: {LTBLUE}{DATE_LONG} {TIME_TINY}
+STR_VEHICLE_DETAILS_SERVICING_INTERVAL_HOURS                    :{BLACK}Servicing interval: {LTBLUE}{COMMA}{NBSP}hours{BLACK}   Last service: {LTBLUE}{DATE_LONG} {TIME_TINY}
 STR_VEHICLE_DETAILS_SERVICING_INTERVAL_DAYS                     :{BLACK}Servicing interval: {LTBLUE}{COMMA}{NBSP}days{BLACK}   Last service: {LTBLUE}{DATE_LONG}
 STR_VEHICLE_DETAILS_SERVICING_INTERVAL_PERCENT                  :{BLACK}Servicing interval: {LTBLUE}{COMMA}%{BLACK}   Last service: {LTBLUE}{DATE_LONG}
 STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP         :{BLACK}Increase servicing interval by 10. Ctrl+Click increases servicing interval by 5
@@ -4207,6 +4209,8 @@ STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP         :{BLACK}Decrease
 
 STR_SERVICE_INTERVAL_DROPDOWN_TOOLTIP                           :{BLACK}Change servicing interval type
 STR_VEHICLE_DETAILS_DEFAULT                                     :Default
+STR_VEHICLE_DETAILS_MINUTES                                     :Minutes
+STR_VEHICLE_DETAILS_HOURS                                       :Hours
 STR_VEHICLE_DETAILS_DAYS                                        :Days
 STR_VEHICLE_DETAILS_PERCENT                                     :Percentage
 

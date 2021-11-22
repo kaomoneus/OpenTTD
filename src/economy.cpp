@@ -51,6 +51,7 @@
 
 #include "table/strings.h"
 #include "table/pricebase.h"
+#include "economy_type.h"
 
 #include "safeguards.h"
 
@@ -99,6 +100,11 @@ Economy _economy;
 Prices _price;
 Money _additional_cash_required;
 static PriceMultipliers _price_base_multiplier;
+
+int GetLoanInterval() {
+	return VANILLA_LOAN_INTERVAL * GetPaceFactor();
+}
+
 
 /**
  * Calculate the value of the company. That is the value of all

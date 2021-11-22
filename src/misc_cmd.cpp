@@ -28,7 +28,7 @@
 #include "safeguards.h"
 
 /* Make sure we can discard lower 2 bits of 64bit amount when passing it to Cmd[In|De]creaseLoan() */
-static_assert((LOAN_INTERVAL & 3) == 0);
+static_assert((VANILLA_LOAN_INTERVAL & 3) == 0);
 
 /**
  * Increase the loan of your company.

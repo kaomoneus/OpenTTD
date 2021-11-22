@@ -195,7 +195,15 @@ struct PriceBaseSpec {
 };
 
 /** The "steps" in loan size, in British Pounds! */
-static const int LOAN_INTERVAL = 10000;
+#define LOAN_INTERVAL GetLoanInterval()
+static const int VANILLA_LOAN_INTERVAL = 10000;
+
+/**
+ * Loan interval per given pace factor settings
+ * @return Loan interval per given pace factor settings
+ */
+int GetLoanInterval();
+
 /** The size of loan for a new company, in British Pounds! */
 static const int64 INITIAL_LOAN = 100000;
 

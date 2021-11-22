@@ -26,6 +26,7 @@
 #include "company_base.h"
 #include "order_backup.h"
 #include "cheat_type.h"
+#include "date_func.h"
 
 #include "table/strings.h"
 
@@ -1742,10 +1743,9 @@ void CheckOrders(const Vehicle *v)
 	/* do nothing we we're not the first vehicle in a share-chain */
 	if (v->FirstShared() != v) return;
 
-	/* Only check every 20 days, so that we don't flood the message log */
-	// TODO Stepan: in slow pace mode it might be called several times per day.
-	//    need another method to avoid flooding.
-	if (v->owner == _local_company && v->day_counter % 20 == 0) {
+	/* Only check every 20 vanilla days, so that we don't flood the message log */
+	auto [vanilla_day_counter, _] = GameDateToVanillaDate(v->day_counter, _date_fract);
+	if (v->owner == _local_company && vanilla_day_counter % 20 == 0) {
 		StringID message = INVALID_STRING_ID;
 
 		/* Check the order list */

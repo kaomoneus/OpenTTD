@@ -17,14 +17,6 @@
 #include "../command_type.h"
 
 #ifdef RANDOM_DEBUG
-
-#if 0
-/*
- * Stepan: this is disabled on purpose.
- * If you want do enable desync debugging, please use it via cmake just like you do for RANDOM_DEBUG:
- * -DCMAKE_CXX_FLAGS_INIT="... -DENABLE_NETWORK_SYNC_EVERY_FRAME -DNETWORK_SEND_DOUBLE_SEED" \
- */
-
 /**
  * If this line is enable, every frame will have a sync test
  *  this is not needed in normal games. Normal is like 1 sync in 100
@@ -41,8 +33,6 @@
  *   so in theory, this next define can be left off.
  */
 #define NETWORK_SEND_DOUBLE_SEED
-#endif
-
 #endif /* RANDOM_DEBUG */
 
 /**

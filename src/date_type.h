@@ -28,7 +28,7 @@ typedef uint8  Minute; ///< Type for the minute of hour, note: 0 based
  * 1 day is thus about 2 seconds (74 * 30 = 2220) on a machine that can run OpenTTD normally
  */
 
-// Stepan: "pace factor" is how many times game's clock
+// SLOWPACE: "pace factor" is how many times game's clock
 // should go slower comparing to vanilla version.
 
 // Some pace factor values:
@@ -47,7 +47,7 @@ static const int DAYS_IN_YEAR      = 365; ///< days per year
 static const int DAYS_IN_LEAP_YEAR = 366; ///< sometimes, you need one day more...
 static const int MONTHS_IN_YEAR    =  12; ///< months per year
 
-// Stepan, NOTE: we don't scale station ratings
+// Slowpace, NOTE: we don't scale station ratings
 // ticks, because it is addicted to user's clock.
 // So it should happen with same rate from user perspective.
 static const int STATION_RATING_TICKS     = 185; ///< cycle duration for updating station rating
@@ -55,11 +55,11 @@ static const int STATION_RATING_TICKS     = 185; ///< cycle duration for updatin
 #define STATION_ACCEPTANCE_TICKS (250 * GetPaceFactor()) ///< cycle duration for updating station acceptance
 #define STATION_LINKGRAPH_TICKS  (504 * GetPaceFactor()) ///< cycle duration for cleaning dead links
 
-// Stepan: also prevent cargo aging from scale, here it rather
+// SLOWPACE: also prevent cargo aging from scale, here it rather
 // depends in distance and visual vehicle speed.
 static const int CARGO_AGING_TICKS        = 185; ///< cycle duration for aging cargo
 
-// Stepan: we don't scale industry production ticks,
+// SLOWPACE: we don't scale industry production ticks,
 // but monthly numbers will be increased of course.
 // Industry growth though depends on percent of transported
 // cargo, so not a problem for us.

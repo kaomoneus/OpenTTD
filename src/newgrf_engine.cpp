@@ -597,7 +597,7 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 		case 0x4B: // Long date of last service
 			return v->date_of_last_service;
 
-		// TODO Stepan: also return fract of last service
+		// TODO SLOWPACE: also return fract of last service
 
 		case 0x4C: // Current maximum speed in NewGRF units
 			if (!v->IsPrimaryVehicle()) return 0;
@@ -767,7 +767,7 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 			}
 			return (variable - 0x80) == 0x10 ? ticks : GB(ticks, 8, 8);
 		}
-		// TODO Stepan: we perhaps need to do something with fract_of_last_service
+		// TODO SLOWPACE: we perhaps need to do something with fract_of_last_service
 		case 0x12: return Clamp(v->date_of_last_service - DAYS_TILL_ORIGINAL_BASE_YEAR, 0, 0xFFFF);
 		case 0x13: return GB(Clamp(v->date_of_last_service - DAYS_TILL_ORIGINAL_BASE_YEAR, 0, 0xFFFF), 8, 8);
 		case 0x14: return v->GetServiceInterval();

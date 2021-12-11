@@ -3155,7 +3155,7 @@ bool AfterLoadGame()
 		for (Station *st : Station::Iterate()) UpdateStationAcceptance(st, false);
 	}
 
-	if (IsSavegameVersionBefore(SLV_STEPAN)) {
+	if (IsSavegameVersionBefore(SLV_SLOWPACE)) {
 		for (Vehicle *v : Vehicle::Iterate()) {
 			v->fract_of_last_service = 0;
 		}

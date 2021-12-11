@@ -637,8 +637,8 @@ public:
 
 		    SLE_VAR(Vehicle, day_counter,           SLE_UINT8),
 		    SLE_VAR(Vehicle, tick_counter,          SLE_UINT8),
-		SLE_CONDVAR(Vehicle, running_ticks,         SLE_FILE_U8 | SLE_VAR_U32, SLV_88, SLV_STEPAN),
-		SLE_CONDVAR(Vehicle, running_ticks,         SLE_UINT32,                        SLV_STEPAN, SL_MAX_VERSION),
+		SLE_CONDVAR(Vehicle, running_ticks,         SLE_FILE_U8 | SLE_VAR_U32, SLV_88, SLV_SLOWPACE),
+		SLE_CONDVAR(Vehicle, running_ticks,         SLE_UINT32,                        SLV_SLOWPACE, SL_MAX_VERSION),
 
 		    SLE_VAR(Vehicle, cur_implicit_order_index,  SLE_UINT8),
 		SLE_CONDVAR(Vehicle, cur_real_order_index,  SLE_UINT8,                  SLV_158, SL_MAX_VERSION),
@@ -672,7 +672,7 @@ public:
 		SLE_CONDVAR(Vehicle, max_age,               SLE_INT32,                   SLV_31, SL_MAX_VERSION),
 		SLE_CONDVAR(Vehicle, date_of_last_service,  SLE_FILE_U16 | SLE_VAR_I32,   SL_MIN_VERSION,  SLV_31),
 		SLE_CONDVAR(Vehicle, date_of_last_service,  SLE_INT32,                   SLV_31, SL_MAX_VERSION),
-		SLE_CONDVAR(Vehicle, fract_of_last_service, SLE_INT16,                   SLV_STEPAN, SL_MAX_VERSION),
+		SLE_CONDVAR(Vehicle, fract_of_last_service, SLE_INT16,                   SLV_SLOWPACE, SL_MAX_VERSION),
 		SLE_CONDVAR(Vehicle, service_interval,      SLE_UINT16,                   SL_MIN_VERSION,  SLV_31),
 		SLE_CONDVAR(Vehicle, service_interval,      SLE_FILE_U32 | SLE_VAR_U16,  SLV_31, SLV_180),
 		SLE_CONDVAR(Vehicle, service_interval,      SLE_UINT16,                 SLV_180, SL_MAX_VERSION),

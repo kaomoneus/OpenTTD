@@ -6285,7 +6285,7 @@ bool GetGlobalVariable(byte param, uint32 *value, const GRFFile *grffile)
 			return true;
 
 		case 0x09: { // date fraction
-		    // FIXME: Stepan: We should return _date_fract of vanilla day
+		    // FIXME: SLOWPACE: We should return _date_fract of vanilla day
 		    //    or should we return _date_fract of game day (normalized to 74 steps by 885)?
 		    //    Let's assume fraction of vanilla game day is expected (which is used
 		    //    for animation)

@@ -81,7 +81,7 @@ typedef std::vector<Industry *> SmallIndustryList;
 /**
  * Score info, values used for computing the detailed performance rating.
  */
-// TODO Stepan: Perhaps it might be disbalanced by altering pace factor. Please check.
+// TODO SLOWPACE: Perhaps it might be disbalanced by altering pace factor. Please check.
 const ScoreInfo _score_info[] = {
 	{     120, 100}, // SCORE_VEHICLES
 	{      80, 100}, // SCORE_STATIONS
@@ -104,7 +104,6 @@ static PriceMultipliers _price_base_multiplier;
 int GetLoanInterval() {
 	return VANILLA_LOAN_INTERVAL * GetPaceFactor();
 }
-
 
 /**
  * Calculate the value of the company. That is the value of all
@@ -759,7 +758,7 @@ void RecomputePrices()
 	/* Setup maximum loan */
 	_economy.max_loan = ((uint64)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / 50000 * 50000;
 
-	// Stepan: I was here...
+	// SLOWPACE: money scaling
 	_economy.max_loan *= GetPaceFactor();
 
 	/* Setup price bases */
@@ -808,7 +807,7 @@ void RecomputePrices()
 			assert(price != 0);
 		}
 
-        // Stepan: and here as well:
+        // SLOWPACE: money scaling
         price *= GetPaceFactor();
 
 		/* Store value */
@@ -982,7 +981,7 @@ Money GetPrice(Price index, uint cost_factor, const GRFFile *grf_file, int shift
 
 Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, CargoID cargo_type)
 {
-	// Stepan: here "days" mean vanilla days
+	// SLOWPACE: here "days" mean vanilla days
 	const CargoSpec *cs = CargoSpec::Get(cargo_type);
 	if (!cs->IsValid()) {
 		/* User changed newgrfs and some vehicle still carries some cargo which is no longer available. */

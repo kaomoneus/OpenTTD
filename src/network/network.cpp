@@ -1033,33 +1033,20 @@ void NetworkBackgroundLoop()
  *  Here we also have to do StateGameLoop if needed! */
 void NetworkGameLoop()
 {
-	static int network_loop_counter = 0;
-	if ((network_loop_counter++ % VANILLA_DAY_TICKS) == 0) {
-		Debug(desync, 2, "NetworkGameLoop counter: {}", network_loop_counter-1);
-	}
-
 	if (!_networking) return;
 
 	if (!NetworkReceive()) return;
 
-	int desync_level = 2;
-
-	if ((_date_fract % VANILLA_DAY_TICKS) == 0) {
-		/* We don't want to log multiple times if paused. */
-		static Date last_log;
-		static DateFract last_log_fract;
-		if (last_log != _date || last_log_fract != _date_fract) {
-			last_log = _date;
-			last_log_fract = _date_fract;
-			desync_level = 1;
-		}
-	}
-
-	Debug(desync, desync_level, "sync, frame: {}", _frame_counter);
-	Debug(desync, desync_level, "sync: {:08x}; {:02x}; {:08x}; {:08x}", _date, _date_fract, _random.state[0], _random.state[1]);
-
 	if (_network_server) {
 		/* Log the sync state to check for in-syncedness of replays. */
+		if (_date_fract == 0) {
+			/* We don't want to log multiple times if paused. */
+			static Date last_log;
+			if (last_log != _date) {
+				Debug(desync, 1, "sync: {:08x}; {:02x}; {:08x}; {:08x}", _date, _date_fract, _random.state[0], _random.state[1]);
+				last_log = _date;
+			}
+		}
 
 #ifdef DEBUG_DUMP_COMMANDS
 		/* Loading of the debug commands from -ddesync>=1 */
@@ -1191,11 +1178,8 @@ void NetworkGameLoop()
 	} else {
 		/* Client */
 
-		static int frame_drop_warn_counter = 0;
-
 		/* Make sure we are at the frame were the server is (quick-frames) */
 		if (_frame_counter_server > _frame_counter) {
-			frame_drop_warn_counter = 0;
 			/* Run a number of frames; when things go bad, get out. */
 			while (_frame_counter_server > _frame_counter) {
 				if (!ClientNetworkGameSocketHandler::GameLoop()) return;
@@ -1205,8 +1189,6 @@ void NetworkGameLoop()
 			if (_frame_counter_max > _frame_counter) {
 				/* Run one frame; if things went bad, get out. */
 				if (!ClientNetworkGameSocketHandler::GameLoop()) return;
-			} else if ((frame_drop_warn_counter++ % 50) == 0) {
-				Debug(net, 6, "We're too far ahead of server. Waiting...");
 			}
 		}
 	}

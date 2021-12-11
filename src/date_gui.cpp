@@ -68,7 +68,7 @@ struct SetDateWindow : Window {
 	}
 
 	void SetupHourMinuteWidgets() {
-		// Stepan: Disable minute and hour dropdown if we don't need it.
+		// SLOWPACE: Disable minute and hour dropdown if we don't need it.
 
 		auto time_unit = GetStandardTimeUnitFor(VANILLA_DAY_TICKS);
 

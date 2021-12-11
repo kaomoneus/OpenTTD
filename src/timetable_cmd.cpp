@@ -247,7 +247,7 @@ static bool VehicleTimetableSorter(Vehicle * const &a, Vehicle * const &b)
 	return b->unitnumber < a->unitnumber;
 }
 
-// FIXME, Stepan: for all commands we use vanilla days.
+// FIXME, SLOWPACE: for all commands we use vanilla days.
 //   Ideally as a timetable time unit we should use
 //   Greatest common divisor of vanilla day and game minimal time unit.
 //   Game minimal time unit might a day, hour or minute. It is in turn should be

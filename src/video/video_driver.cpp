@@ -34,12 +34,6 @@ void VideoDriver::GameLoop()
 	{
 		std::lock_guard<std::mutex> lock(this->game_state_mutex);
 
-		static int video_driver_loop_counter = 0;
-
-		if ((video_driver_loop_counter++ % VANILLA_DAY_TICKS) == 0) {
-			Debug(desync, 2, "sync, VideoDriver::GameLoop, counter: {}", video_driver_loop_counter-1);
-		}
-
 		::GameLoop();
 	}
 }

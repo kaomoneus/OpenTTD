@@ -66,9 +66,6 @@ struct CargoSpec {
 
 	bool is_freight;                 ///< Cargo type is considered to be freight (affects train freight multiplier).
 	TownEffect town_effect;          ///< The effect that delivering this cargo type has on towns. Also affects destination of subsidies.
-
-	// Stepan: how it is used? Perhaps we should scale it as well.
-	uint16 multipliertowngrowth;     ///< Size of the effect.
 	uint8 callback_mask;             ///< Bitmask of cargo callbacks that have to be called
 
 	StringID name;                   ///< Name of this type of cargo.

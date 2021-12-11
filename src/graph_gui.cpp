@@ -910,7 +910,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		// Stepan: in this graph we about to go over 200 vanilla days
 		//    and draw prices lines for them.
 		//    For the user though we should display game days,
-		//    or hours, or minute and it depends in PACE FACTOR.
+		//    or hours, or minute and it depends on PACE FACTOR.
 
 		this->x_values_start     = transit_units.step_in_x_units * 1;
 		this->x_values_increment = transit_units.step_in_x_units;

@@ -30,6 +30,11 @@
 
 #include "safeguards.h"
 
+// SLOWPACE NOTES:
+//   Timetable is bound to animation pace only:
+//      * It uses ticks to measure trip length, start and stop times
+//      * It uses vanilla days for lateness detection.
+
 /** Container for the arrival/departure dates of a vehicle */
 struct TimetableArrivalDeparture {
 	Ticks arrival;   ///< The arrival time

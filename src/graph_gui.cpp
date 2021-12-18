@@ -880,7 +880,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 	struct TransitUnitDesc {
 		// SLOWPACE: for slow pace mode we reduce max amount
 		// of transit days, by dividing it by PACE FACTOR.
-		// It might happen that days is to large unit to draw an informative
+		// It might happen that "day" is too rough unit to draw an informative
 		// graph, perhaps we need to measure it in hours or even in minute.
 		//
 		// In another words:
@@ -919,7 +919,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		this->vscroll = this->GetScrollbar(WID_CPR_MATRIX_SCROLLBAR);
 		this->vscroll->SetCount(static_cast<int>(_sorted_standard_cargo_specs.size()));
 
-		// SLOWPACE: setup footer hint dynamically depending in PACE FACTOR value.
+		// SLOWPACE: setup footer hint dynamically depending on PACE FACTOR value.
 		this->GetWidget<NWidgetLeaf>(WID_CPR_FOOTER)->SetDataTip(
 			transit_units.label_id, STR_NULL
 		);
@@ -1082,6 +1082,13 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		this->num_dataset = i;
 	}
 
+	/**
+	 * Figure out time unit optimal to measure cargo payment rates in.
+	 * It depends on pace factor, and may be days, hours or minutes.
+	 * @return TransitUnitDesc structure with information about unit and
+	 *    proper footer string ID. In footer we say something like "days in transit"
+	 *    or "hours in transit" and so on.
+	 */
 	static TransitUnitDesc GetTransitUnits() {
 		uint width_in_minutes = 200 * 24 * 60 / GetPaceFactor();
 		uint step_in_minutes = width_in_minutes / 20;
@@ -1144,6 +1151,7 @@ static const NWidgetPart _nested_cargo_payment_rates_widgets[] = {
 				SetMinimalSize(0, 6), SetPadding(2, 0, 2, 0),
 				// SLOWPACE: Currently we print "Days in transit".. or "Hours in transit",
 				// or "minute in transit". And we should print it dynamically.
+				// So we don't define a DataTip here:
 				// SetDataTip(STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL, STR_NULL),
 			NWidget(NWID_SPACER), SetFill(1, 0), SetResize(1, 0),
 			NWidget(WWT_RESIZEBOX, COLOUR_BROWN, WID_CPR_RESIZE),

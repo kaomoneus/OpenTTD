@@ -20,6 +20,7 @@
 #include "table/strings.h"
 #include "table/sprites.h"
 #include "table/clear_land.h"
+#include "date_func.h"
 
 #include "safeguards.h"
 
@@ -296,9 +297,12 @@ static void TileLoop_Clear(TileIndex tile)
 				/* This farmfield is no longer farmfield, so make it grass again */
 				MakeClear(tile, CLEAR_GRASS, 2);
 			} else {
-				uint field_type = GetFieldType(tile);
-				field_type = (field_type < 8) ? field_type + 1 : 0;
-				SetFieldType(tile, field_type);
+				auto field_anim_fract = GetIncFieldAnimationFract(tile);
+				if (field_anim_fract % GetPaceFactor() == 0) {
+					uint field_type = GetFieldType(tile);
+					field_type = (field_type < 8) ? field_type + 1 : 0;
+					SetFieldType(tile, field_type);
+				}
 			}
 			break;
 

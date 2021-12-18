@@ -707,6 +707,9 @@ static void TileLoop_Trees(TileIndex tile)
 
 	AmbientSoundEffect(tile);
 
+	if ((_date_fract % GetPaceFactor()) != 0)
+		return;
+
 	uint treeCounter = GetTreeCounter(tile);
 
 	/* Handle growth of grass (under trees/on MP_TREES tiles) at every 8th processings, like it's done for grass on MP_CLEAR tiles. */

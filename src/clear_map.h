@@ -187,6 +187,16 @@ static inline void SetFieldType(TileIndex t, uint f)
 }
 
 /**
+ * Get the animation frame for "field" tile and increment it for given tile.
+ * @param t tile index field belongs to.
+ * @return frame value.
+ */
+static inline int GetIncFieldAnimationFract(TileIndex t) {
+	assert(GetClearGround(t) == CLEAR_FIELDS);
+	return _me[t].m8++;
+}
+
+/**
  * Get the industry (farm) that made the field
  * @param t the field to get creating industry of
  * @pre GetClearGround(t) == CLEAR_FIELDS

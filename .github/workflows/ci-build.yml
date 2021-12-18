@@ -7,6 +7,7 @@ on:
     - master
     - slow_pace_dev
     - slow_pace
+    - slow_pace_release/12.1.sp0
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1

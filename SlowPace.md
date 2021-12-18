@@ -3,9 +3,9 @@ The idea described quite well, by Rymdkejsaren1, in [his github comment](https:/
 
 > We just want a slower general pace, with the years progressing considerably slower so that we can log in, build a line, and not come back a day later to massive cities and someone has made an absolute killing on their two oil lines that now have been running for decades.
 
-And finally there is a version which works exactly this way (TODO: link to my release). It even supports multiplayer.
+And finally [there is a version](https://github.com/kaomoneus/OpenTTD/releases/tag/12.1.slowpace-1.1) which works exactly this way. It even supports multiplayer.
 
-There might be some bugs , of course and everyone is welcome to test it. Just download client, open multiplayer and find "Daily pace" server. Here is invitation: (TODO invitation)
+There might be some bugs , of course and everyone is welcome to test it. Just download client, open multiplayer and find "Daily pace" server. Here is invitation: +5gX5VdJ
 
 [Here](https://github.com/kaomoneus/OpenTTD/issues) you can create bugs/tasks/whatever.
 
@@ -191,7 +191,6 @@ To me "slow pace" is an only way to play this game, otherwise game becomes a tim
 I invite everybody to test this addition. Here are links to release and server invitations:
 
 * [OpenTTD Slow Pace project](https://github.com/kaomoneus/OpenTTD/)
-* [OpenTTD 12.0.SlowPace Release](TODO)
-* Daily server invitation (one game year is ~1 user's day):
-* Weekly server invitation (one game year is ~1 user's week):
+* [OpenTTD 12.1.slowpace-1.1 Release](https://github.com/kaomoneus/OpenTTD/releases/tag/12.1.slowpace-1.1)
+* Daily server invitation (one game year is ~1 user's day): +5gX5VdJ
 * [OpenTTD Slow Pace Bugs/tasks tracker](https://github.com/kaomoneus/OpenTTD/issues)

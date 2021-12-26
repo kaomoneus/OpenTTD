@@ -1,5 +1,9 @@
 # OpenTTD
 
+This fork introduced slow pace mode, main documentation is in [SlowPace.md](SlowPace.md).
+
+Below you can find contents of legacy *Readme.md*.
+
 ## Table of contents
 
 - 1.0) [About](#10-about)

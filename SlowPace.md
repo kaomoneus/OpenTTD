@@ -18,7 +18,7 @@ First you might watch short feature overview (~6mins):
 
 [![Video: OpenTTD Slow Pace](https://img.youtube.com/YJ_49gPTcuY/0.jpg)](https://www.youtube.com/watch?v=YJ_49gPTcuY)
 
-Or... opposite. If you're lazy to read human friendly text, there is a [`slow_pace`](https://github.com/kaomoneus/OpenTTD/commits/slow_pace) branch where all commits reflect
+Or opposite. If you're lazy to read human friendly text, there is a [`slow_pace`](https://github.com/kaomoneus/OpenTTD/commits/slow_pace) branch where all commits reflect
 particular subfeature of *Slow Pace Mode*. All changes gathered in only 10 commits.
 
 Otherwise though, below you can find intuitive description and even few C++ implementation details.

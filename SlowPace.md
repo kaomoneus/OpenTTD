@@ -16,7 +16,7 @@ There might be some bugs , of course and everyone is welcome to test it. Just do
 
 First you might watch short youtube feature overview:
 
-[OpenTTD Slow Pace mode overview video](https://www.youtube.com/watch?v=YJ_49gPTcuY)
+[![Video: OpenTTD Slow Pace](https://img.youtube.com/YJ_49gPTcuY/0.jpg)](https://www.youtube.com/watch?v=YJ_49gPTcuY)
 
 If you're lazy to read human friendly text, there is a [`slow_pace`](https://github.com/kaomoneus/OpenTTD/commits/slow_pace) branch where all commits reflect
 particular subfeature of *Slow Pace Mode*. All changes gathered in only 10 commits.

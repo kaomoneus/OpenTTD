@@ -14,7 +14,7 @@ There might be some bugs , of course and everyone is welcome to test it. Just do
 
 [Here, in github bug tracker](https://github.com/kaomoneus/OpenTTD/issues) you can create bugs/tasks/whatever.
 
-First you might watch short youtube feature overview:
+First you might watch short feature overview (~6mins):
 
 [![Video: OpenTTD Slow Pace](https://img.youtube.com/YJ_49gPTcuY/0.jpg)](https://www.youtube.com/watch?v=YJ_49gPTcuY)
 

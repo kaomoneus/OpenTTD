@@ -1,15 +1,27 @@
 # Slow pace mode
+
 The idea described quite well, by Rymdkejsaren1, in [his github comment](https://github.com/OpenTTD/OpenTTD/discussions/8397#discussioncomment-424935):
 
 > We just want a slower general pace, with the years progressing considerably slower so that we can log in, build a line, and not come back a day later to massive cities and someone has made an absolute killing on their two oil lines that now have been running for decades.
 
 And finally [there is a version](https://github.com/kaomoneus/OpenTTD/releases/tag/12.1.slowpace-1.1) which works exactly this way. It even supports multiplayer.
 
-There might be some bugs , of course and everyone is welcome to test it. Just download client, open multiplayer and find "Daily pace" server. Here is invitation: +5gX5VdJ
+There might be some bugs , of course and everyone is welcome to test it. Just download client, open multiplayer and find
+"Daily pace" server. Here is invitation:
+```
++5gX5VdJ
+```
 
-[Here](https://github.com/kaomoneus/OpenTTD/issues) you can create bugs/tasks/whatever.
+[Here, in github bug tracker](https://github.com/kaomoneus/OpenTTD/issues) you can create bugs/tasks/whatever.
 
-Of course it is not in mainstream, it's just a fork. There's have a little-tiny hope though that it might be considered to be included into mainstream one day.
+First you might watch short youtube feature overview:
+
+[![IMAGE OpenTTD Slow Pace mode overview](https://img.youtube.com/vi/YJ_49gPTcuY/0.jpg)](https://www.youtube.com/watch?v=YJ_49gPTcuY)
+
+If you're lazy to read human friendly text, there is a [`slow_pace`](https://github.com/kaomoneus/OpenTTD/commits/slow_pace) branch where all commits reflect
+particular subfeature of *Slow Pace Mode*. All changes gathered in only 10 commits.
+
+Otherwise though, below you can find intuitive description and even few C++ implementation details.
 
 ## Some intuitive implementation description
 Key point is to split notion of "day" onto *animation day* and *game day*. So we have two time streams:

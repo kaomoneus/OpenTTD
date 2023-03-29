@@ -166,6 +166,7 @@ CommandCost EnsureNoTrainOnTrackBits(TileIndex tile, TrackBits track_bits);
 
 bool CanVehicleUseStation(EngineID engine_type, const struct Station *st);
 bool CanVehicleUseStation(const Vehicle *v, const struct Station *st);
+StringID GetVehicleCannotUseStationReason(const Vehicle *v, const Station *st);
 
 void ReleaseDisastersTargetingVehicle(VehicleID vehicle);
 
@@ -173,5 +174,8 @@ typedef std::vector<VehicleID> VehicleSet;
 void GetVehicleSet(VehicleSet &set, Vehicle *v, uint8 num_vehicles);
 
 void CheckCargoCapacity(Vehicle *v);
+
+bool VehiclesHaveSameEngineList(const Vehicle *v1, const Vehicle *v2);
+bool VehiclesHaveSameOrderList(const Vehicle *v1, const Vehicle *v2);
 
 #endif /* VEHICLE_FUNC_H */

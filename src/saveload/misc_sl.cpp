@@ -34,18 +34,16 @@ ZoomLevel _saved_scrollpos_zoom;
 
 void SaveViewportBeforeSaveGame()
 {
-	const Window *w = FindWindowById(WC_MAIN_WINDOW, 0);
+	const Window *w = GetMainWindow();
 
-	if (w != nullptr) {
-		_saved_scrollpos_x = w->viewport->scrollpos_x;
-		_saved_scrollpos_y = w->viewport->scrollpos_y;
-		_saved_scrollpos_zoom = w->viewport->zoom;
-	}
+	_saved_scrollpos_x = w->viewport->scrollpos_x;
+	_saved_scrollpos_y = w->viewport->scrollpos_y;
+	_saved_scrollpos_zoom = w->viewport->zoom;
 }
 
 void ResetViewportAfterLoadGame()
 {
-	Window *w = FindWindowById(WC_MAIN_WINDOW, 0);
+	Window *w = GetMainWindow();
 
 	w->viewport->scrollpos_x = _saved_scrollpos_x;
 	w->viewport->scrollpos_y = _saved_scrollpos_y;
@@ -74,8 +72,8 @@ static const SaveLoad _date_desc[] = {
 	SLEG_CONDVAR("date",                   _date,                   SLE_FILE_U16 | SLE_VAR_I32,  SL_MIN_VERSION,  SLV_31),
 	SLEG_CONDVAR("date",                   _date,                   SLE_INT32,                  SLV_31, SL_MAX_VERSION),
 	    SLEG_VAR("date_fract",             _date_fract,             SLE_UINT16),
-	    SLEG_CONDVAR("tick_counter",         _tick_counter,           SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_SLOWPACE),
-	    SLEG_CONDVAR("tick_counter",         _tick_counter,           SLE_UINT32, SLV_SLOWPACE, SL_MAX_VERSION),
+	SLEG_CONDVAR("tick_counter",           _tick_counter,           SLE_FILE_U16 | SLE_VAR_U64,  SL_MIN_VERSION, SLV_U64_TICK_COUNTER),
+	SLEG_CONDVAR("tick_counter",           _tick_counter,           SLE_UINT64,                  SLV_U64_TICK_COUNTER, SL_MAX_VERSION),
 	SLEG_CONDVAR("age_cargo_skip_counter", _age_cargo_skip_counter, SLE_UINT8,                   SL_MIN_VERSION, SLV_162),
 	SLEG_CONDVAR("cur_tileloop_tile",      _cur_tileloop_tile,      SLE_FILE_U16 | SLE_VAR_U32,  SL_MIN_VERSION, SLV_6),
 	SLEG_CONDVAR("cur_tileloop_tile",      _cur_tileloop_tile,      SLE_UINT32,                  SLV_6, SL_MAX_VERSION),

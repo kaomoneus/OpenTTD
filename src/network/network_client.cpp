@@ -223,7 +223,9 @@ void ClientNetworkGameSocketHandler::ClientError(NetworkRecvStatus res)
 		ClientNetworkEmergencySave();
 	}
 
-	_switch_mode = SM_MENU;
+	CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
+
+	if (_game_mode != GM_MENU) _switch_mode = SM_MENU;
 	_networking = false;
 }
 
@@ -264,7 +266,6 @@ void ClientNetworkGameSocketHandler::ClientError(NetworkRecvStatus res)
 
 	NetworkExecuteLocalCommandQueue();
 
-	extern void StateGameLoop();
 	StateGameLoop();
 
 	/* Check if we are in sync! */
@@ -532,7 +533,6 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_FULL(Packet *p)
 {
 	/* We try to join a server which is full */
 	ShowErrorMessage(STR_NETWORK_ERROR_SERVER_FULL, INVALID_STRING_ID, WL_CRITICAL);
-	CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 
 	return NETWORK_RECV_STATUS_SERVER_FULL;
 }
@@ -541,7 +541,6 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_BANNED(Packet *
 {
 	/* We try to join a server where we are banned */
 	ShowErrorMessage(STR_NETWORK_ERROR_SERVER_BANNED, INVALID_STRING_ID, WL_CRITICAL);
-	CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 
 	return NETWORK_RECV_STATUS_SERVER_BANNED;
 }
@@ -647,8 +646,6 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_ERROR(Packet *p
 
 	/* Perform an emergency save if we had already entered the game */
 	if (this->status == STATUS_ACTIVE) ClientNetworkEmergencySave();
-
-	CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 
 	return NETWORK_RECV_STATUS_SERVER_ERROR;
 }
@@ -818,7 +815,6 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_MAP_DONE(Packet
 	this->last_packet = std::chrono::steady_clock::now();
 
 	if (!load_success) {
-		CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 		ShowErrorMessage(STR_NETWORK_ERROR_SAVEGAMEERROR, INVALID_STRING_ID, WL_CRITICAL);
 		return NETWORK_RECV_STATUS_SAVEGAME;
 	}
@@ -1115,6 +1111,7 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_CONFIG_UPDATE(P
 
 	_network_server_max_companies = p->Recv_uint8();
 	_network_server_name = p->Recv_string(NETWORK_NAME_LENGTH);
+	SetWindowClassesDirty(WC_CLIENT_LIST);
 
 	return NETWORK_RECV_STATUS_OKAY;
 }
@@ -1324,10 +1321,19 @@ bool NetworkClientPreferTeamChat(const NetworkClientInfo *cio)
 }
 
 /**
+ * Get the maximum number of companies that are allowed by the server.
+ * @return The number of companies allowed.
+ */
+uint NetworkMaxCompaniesAllowed()
+{
+	return _network_server ? _settings_client.network.max_companies : _network_server_max_companies;
+}
+
+/**
  * Check if max_companies has been reached on the server (local check only).
  * @return true if the max value has been reached or exceeded, false otherwise.
  */
 bool NetworkMaxCompaniesReached()
 {
-	return Company::GetNumItems() >= (_network_server ? _settings_client.network.max_companies : _network_server_max_companies);
+	return Company::GetNumItems() >= NetworkMaxCompaniesAllowed();
 }

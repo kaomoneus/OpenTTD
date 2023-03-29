@@ -43,8 +43,8 @@ CommandCost CmdIncreaseLoan(DoCommandFlag flags, LoanCommand cmd, Money amount)
 {
 	Company *c = Company::Get(_current_company);
 
-	if (c->current_loan >= _economy.max_loan) {
-		SetDParam(0, _economy.max_loan);
+	if (c->current_loan >= _economy.max_loan * GetPaceFactor()) {
+		SetDParam(0, _economy.max_loan * GetPaceFactor());
 		return_cmd_error(STR_ERROR_MAXIMUM_PERMITTED_LOAN);
 	}
 
@@ -55,16 +55,18 @@ CommandCost CmdIncreaseLoan(DoCommandFlag flags, LoanCommand cmd, Money amount)
 			loan = LOAN_INTERVAL;
 			break;
 		case LoanCommand::Max: // Take a loan as big as possible
-			loan = _economy.max_loan - c->current_loan;
+			loan = _economy.max_loan * GetPaceFactor() - c->current_loan;
 			break;
 		case LoanCommand::Amount: // Take the given amount of loan
 			loan = amount;
-			if (loan < LOAN_INTERVAL || c->current_loan + loan > _economy.max_loan || loan % LOAN_INTERVAL != 0) return CMD_ERROR;
+			if (loan < LOAN_INTERVAL || c->current_loan + loan > _economy.max_loan * GetPaceFactor() || loan % LOAN_INTERVAL != 0) return CMD_ERROR;
 			break;
 	}
 
-	/* Overflow protection */
-	if (c->money + c->current_loan + loan < c->money) return CMD_ERROR;
+	/* In case adding the loan triggers the overflow protection of Money,
+	 * we would essentially be losing money as taking and repaying the loan
+	 * immediately would not get us back to the same bank balance anymore. */
+	if (c->money > Money::max() - loan) return CMD_ERROR;
 
 	if (flags & DC_EXEC) {
 		c->money        += loan;
@@ -223,6 +225,6 @@ CommandCost CmdChangeBankBalance(DoCommandFlag flags, TileIndex tile, Money delt
 	}
 
 	/* This command doesn't cost anything for deity. */
-	CommandCost zero_cost(expenses_type, 0);
+	CommandCost zero_cost(expenses_type, (Money)0);
 	return zero_cost;
 }

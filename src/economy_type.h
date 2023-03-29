@@ -26,7 +26,7 @@ enum EconomyType : uint8 {
 
 /** Data of the economy. */
 struct Economy {
-	Money max_loan;                       ///< NOSAVE: Maximum possible loan
+	Money max_loan;                       ///< NOSAVE: Maximum possible loan. Not Pace-scaled!
 	int16 fluct;                          ///< Economy fluctuation status
 	byte interest_rate;                   ///< Interest
 	byte infl_amount;                     ///< inflation amount

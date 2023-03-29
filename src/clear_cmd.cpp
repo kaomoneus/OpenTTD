@@ -13,7 +13,6 @@
 #include "landscape.h"
 #include "genworld.h"
 #include "viewport_func.h"
-#include "water.h"
 #include "core/random_func.hpp"
 #include "newgrf_generic.h"
 #include "landscape_cmd.h"
@@ -249,15 +248,6 @@ static void TileLoopClearDesert(TileIndex tile)
 
 static void TileLoop_Clear(TileIndex tile)
 {
-	/* If the tile is at any edge flood it to prevent maps without water. */
-	if (_settings_game.construction.freeform_edges && DistanceFromEdge(tile) == 1) {
-		int z;
-		if (IsTileFlat(tile, &z) && z == 0) {
-			DoFloodTile(tile);
-			MarkTileDirtyByTile(tile);
-			return;
-		}
-	}
 	AmbientSoundEffect(tile);
 
 	switch (_settings_game.game_creation.landscape) {
@@ -320,8 +310,8 @@ void GenerateClearTile()
 	TileIndex tile;
 
 	/* add rough tiles */
-	i = ScaleByMapSize(GB(Random(), 0, 10) + 0x400);
-	gi = ScaleByMapSize(GB(Random(), 0, 7) + 0x80);
+	i = Map::ScaleBySize(GB(Random(), 0, 10) + 0x400);
+	gi = Map::ScaleBySize(GB(Random(), 0, 7) + 0x80);
 
 	SetGeneratingWorldProgress(GWP_ROUGH_ROCKY, gi + i);
 	do {

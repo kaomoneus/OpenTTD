@@ -16,7 +16,7 @@ extern Year      _cur_year;
 extern Month     _cur_month;
 extern Date      _date;
 extern DateFract _date_fract;
-extern uint32 _tick_counter;
+extern uint64 _tick_counter;
 
 enum struct StandardTimeUnits {
 	MINUTES, HOURS, DAYS, length, VANILLA_DAY_MAX_UNITS = length

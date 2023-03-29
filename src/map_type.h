@@ -11,32 +11,6 @@
 #define MAP_TYPE_H
 
 /**
- * Data that is stored per tile. Also used TileExtended for this.
- * Look at docs/landscape.html for the exact meaning of the members.
- */
-struct Tile {
-	byte   type;        ///< The type (bits 4..7), bridges (2..3), rainforest/desert (0..1)
-	byte   height;      ///< The height of the northern corner.
-	uint16 m2;          ///< Primarily used for indices to towns, industries and stations
-	byte   m1;          ///< Primarily used for ownership information
-	byte   m3;          ///< General purpose
-	byte   m4;          ///< General purpose
-	byte   m5;          ///< General purpose
-};
-
-static_assert(sizeof(Tile) == 8);
-
-/**
- * Data that is stored per tile. Also used Tile for this.
- * Look at docs/landscape.html for the exact meaning of the members.
- */
-struct TileExtended {
-	byte m6;   ///< General purpose
-	byte m7;   ///< Primarily used for newgrf support
-	uint16 m8; ///< General purpose
-};
-
-/**
  * An offset value between two tiles.
  *
  * This value is used for the difference between
@@ -60,10 +34,10 @@ struct TileIndexDiffC {
 };
 
 /** Minimal and maximal map width and height */
-static const uint MIN_MAP_SIZE_BITS = 6;                      ///< Minimal size of map is equal to 2 ^ MIN_MAP_SIZE_BITS
-static const uint MAX_MAP_SIZE_BITS = 12;                     ///< Maximal size of map is equal to 2 ^ MAX_MAP_SIZE_BITS
-static const uint MIN_MAP_SIZE      = 1 << MIN_MAP_SIZE_BITS; ///< Minimal map size = 64
-static const uint MAX_MAP_SIZE      = 1 << MAX_MAP_SIZE_BITS; ///< Maximal map size = 4096
+static const uint MIN_MAP_SIZE_BITS = 6;                       ///< Minimal size of map is equal to 2 ^ MIN_MAP_SIZE_BITS
+static const uint MAX_MAP_SIZE_BITS = 12;                      ///< Maximal size of map is equal to 2 ^ MAX_MAP_SIZE_BITS
+static const uint MIN_MAP_SIZE      = 1U << MIN_MAP_SIZE_BITS; ///< Minimal map size = 64
+static const uint MAX_MAP_SIZE      = 1U << MAX_MAP_SIZE_BITS; ///< Maximal map size = 4096
 
 /**
  * Approximation of the length of a straight track, relative to a diagonal

@@ -656,7 +656,7 @@ void OrderList::DebugCheckSanity() const
 static inline bool OrderGoesToStation(const Vehicle *v, const Order *o)
 {
 	return o->IsType(OT_GOTO_STATION) ||
-			(v->type == VEH_AIRCRAFT && o->IsType(OT_GOTO_DEPOT) && !(o->GetDepotActionType() & ODATFB_NEAREST_DEPOT));
+			(v->type == VEH_AIRCRAFT && o->IsType(OT_GOTO_DEPOT) && o->GetDestination() != INVALID_STATION);
 }
 
 /**
@@ -690,7 +690,7 @@ TileIndex Order::GetLocation(const Vehicle *v, bool airport) const
 			return BaseStation::Get(this->GetDestination())->xy;
 
 		case OT_GOTO_DEPOT:
-			if ((this->GetDepotActionType() & ODATFB_NEAREST_DEPOT) != 0) return INVALID_TILE;
+			if (this->GetDestination() == INVALID_DEPOT) return INVALID_TILE;
 			return (v->type == VEH_AIRCRAFT) ? Station::Get(this->GetDestination())->xy : Depot::Get(this->GetDestination())->xy;
 
 		default:
@@ -754,13 +754,13 @@ CommandCost CmdInsertOrder(DoCommandFlag flags, VehicleID veh, VehicleOrderID se
 			if (st == nullptr) return CMD_ERROR;
 
 			if (st->owner != OWNER_NONE) {
-				CommandCost ret = CheckOwnership(st->owner);
+				ret = CheckOwnership(st->owner);
 				if (ret.Failed()) return ret;
 			}
 
-			if (!CanVehicleUseStation(v, st)) return_cmd_error(STR_ERROR_CAN_T_ADD_ORDER);
+			if (!CanVehicleUseStation(v, st)) return CommandCost(STR_ERROR_CAN_T_ADD_ORDER, GetVehicleCannotUseStationReason(v, st));
 			for (Vehicle *u = v->FirstShared(); u != nullptr; u = u->NextShared()) {
-				if (!CanVehicleUseStation(u, st)) return_cmd_error(STR_ERROR_CAN_T_ADD_ORDER_SHARED);
+				if (!CanVehicleUseStation(u, st)) return CommandCost(STR_ERROR_CAN_T_ADD_ORDER_SHARED, GetVehicleCannotUseStationReason(u, st));
 			}
 
 			/* Non stop only allowed for ground vehicles. */
@@ -800,7 +800,7 @@ CommandCost CmdInsertOrder(DoCommandFlag flags, VehicleID veh, VehicleOrderID se
 
 					if (st == nullptr) return CMD_ERROR;
 
-					CommandCost ret = CheckOwnership(st->owner);
+					ret = CheckOwnership(st->owner);
 					if (ret.Failed()) return ret;
 
 					if (!CanVehicleUseStation(v, st) || !st->airport.HasHangar()) {
@@ -811,7 +811,7 @@ CommandCost CmdInsertOrder(DoCommandFlag flags, VehicleID veh, VehicleOrderID se
 
 					if (dp == nullptr) return CMD_ERROR;
 
-					CommandCost ret = CheckOwnership(GetTileOwner(dp->xy));
+					ret = CheckOwnership(GetTileOwner(dp->xy));
 					if (ret.Failed()) return ret;
 
 					switch (v->type) {
@@ -847,17 +847,17 @@ CommandCost CmdInsertOrder(DoCommandFlag flags, VehicleID veh, VehicleOrderID se
 				default: return CMD_ERROR;
 
 				case VEH_TRAIN: {
-					if (!(wp->facilities & FACIL_TRAIN)) return_cmd_error(STR_ERROR_CAN_T_ADD_ORDER);
+					if (!(wp->facilities & FACIL_TRAIN)) return CommandCost(STR_ERROR_CAN_T_ADD_ORDER, STR_ERROR_NO_RAIL_WAYPOINT);
 
-					CommandCost ret = CheckOwnership(wp->owner);
+					ret = CheckOwnership(wp->owner);
 					if (ret.Failed()) return ret;
 					break;
 				}
 
 				case VEH_SHIP:
-					if (!(wp->facilities & FACIL_DOCK)) return_cmd_error(STR_ERROR_CAN_T_ADD_ORDER);
+					if (!(wp->facilities & FACIL_DOCK)) return CommandCost(STR_ERROR_CAN_T_ADD_ORDER, STR_ERROR_NO_BUOY);
 					if (wp->owner != OWNER_NONE) {
-						CommandCost ret = CheckOwnership(wp->owner);
+						ret = CheckOwnership(wp->owner);
 						if (ret.Failed()) return ret;
 					}
 					break;
@@ -1251,6 +1251,7 @@ CommandCost CmdModifyOrder(DoCommandFlag flags, VehicleID veh, VehicleOrderID se
 	if (sel_ord >= v->GetNumOrders()) return CMD_ERROR;
 
 	Order *order = v->GetOrder(sel_ord);
+	assert(order != nullptr);
 	switch (order->GetType()) {
 		case OT_GOTO_STATION:
 			if (mof != MOF_NON_STOP && mof != MOF_STOP_LOCATION && mof != MOF_UNLOAD && mof != MOF_LOAD) return CMD_ERROR;
@@ -1513,7 +1514,7 @@ CommandCost CmdCloneOrder(DoCommandFlag flags, CloneOptions action, VehicleID ve
 			/* Sanity checks */
 			if (src == nullptr || !src->IsPrimaryVehicle() || dst->type != src->type || dst == src) return CMD_ERROR;
 
-			CommandCost ret = CheckOwnership(src->owner);
+			ret = CheckOwnership(src->owner);
 			if (ret.Failed()) return ret;
 
 			/* Trucks can't share orders with busses (and visa versa) */
@@ -1532,7 +1533,7 @@ CommandCost CmdCloneOrder(DoCommandFlag flags, CloneOptions action, VehicleID ve
 				 * are temporarily invalid due to reconstruction. */
 				const Station *st = Station::Get(order->GetDestination());
 				if (CanVehicleUseStation(src, st) && !CanVehicleUseStation(dst, st)) {
-					return_cmd_error(STR_ERROR_CAN_T_COPY_SHARE_ORDER);
+					return CommandCost(STR_ERROR_CAN_T_COPY_SHARE_ORDER, GetVehicleCannotUseStationReason(dst, st));
 				}
 			}
 
@@ -1570,15 +1571,16 @@ CommandCost CmdCloneOrder(DoCommandFlag flags, CloneOptions action, VehicleID ve
 			/* Sanity checks */
 			if (src == nullptr || !src->IsPrimaryVehicle() || dst->type != src->type || dst == src) return CMD_ERROR;
 
-			CommandCost ret = CheckOwnership(src->owner);
+			ret = CheckOwnership(src->owner);
 			if (ret.Failed()) return ret;
 
 			/* Trucks can't copy all the orders from busses (and visa versa),
 			 * and neither can helicopters and aircraft. */
 			for (const Order *order : src->Orders()) {
-				if (OrderGoesToStation(dst, order) &&
-						!CanVehicleUseStation(dst, Station::Get(order->GetDestination()))) {
-					return_cmd_error(STR_ERROR_CAN_T_COPY_SHARE_ORDER);
+				if (!OrderGoesToStation(dst, order)) continue;
+				Station *st = Station::Get(order->GetDestination());
+				if (!CanVehicleUseStation(dst, st)) {
+					return CommandCost(STR_ERROR_CAN_T_COPY_SHARE_ORDER, GetVehicleCannotUseStationReason(dst, st));
 				}
 			}
 
@@ -1771,12 +1773,9 @@ void RemoveOrderFromAllVehicles(OrderType type, DestinationID destination, bool 
 
 	/* Go through all vehicles */
 	for (Vehicle *v : Vehicle::Iterate()) {
-		Order *order;
-
-		order = &v->current_order;
-		if ((v->type == VEH_AIRCRAFT && order->IsType(OT_GOTO_DEPOT) && !hangar ? OT_GOTO_STATION : order->GetType()) == type &&
+		if ((v->type == VEH_AIRCRAFT && v->current_order.IsType(OT_GOTO_DEPOT) && !hangar ? OT_GOTO_STATION : v->current_order.GetType()) == type &&
 				(!hangar || v->type == VEH_AIRCRAFT) && v->current_order.GetDestination() == destination) {
-			order->MakeDummy();
+			v->current_order.MakeDummy();
 			SetWindowDirty(WC_VEHICLE_VIEW, v->index);
 		}
 
@@ -1983,25 +1982,22 @@ bool UpdateOrderDest(Vehicle *v, const Order *order, int conditional_depth, bool
 
 			if (v->current_order.GetDepotActionType() & ODATFB_NEAREST_DEPOT) {
 				/* We need to search for the nearest depot (hangar). */
-				TileIndex location;
-				DestinationID destination;
-				bool reverse;
+				ClosestDepot closestDepot = v->FindClosestDepot();
 
-				if (v->FindClosestDepot(&location, &destination, &reverse)) {
+				if (closestDepot.found) {
 					/* PBS reservations cannot reverse */
-					if (pbs_look_ahead && reverse) return false;
+					if (pbs_look_ahead && closestDepot.reverse) return false;
 
-					v->SetDestTile(location);
-					v->current_order.MakeGoToDepot(destination, v->current_order.GetDepotOrderType(), v->current_order.GetNonStopType(), (OrderDepotActionFlags)(v->current_order.GetDepotActionType() & ~ODATFB_NEAREST_DEPOT), v->current_order.GetRefitCargo());
+					v->SetDestTile(closestDepot.location);
+					v->current_order.SetDestination(closestDepot.destination);
 
 					/* If there is no depot in front, reverse automatically (trains only) */
-					if (v->type == VEH_TRAIN && reverse) Command<CMD_REVERSE_TRAIN_DIRECTION>::Do(DC_EXEC, v->index, false);
+					if (v->type == VEH_TRAIN && closestDepot.reverse) Command<CMD_REVERSE_TRAIN_DIRECTION>::Do(DC_EXEC, v->index, false);
 
 					if (v->type == VEH_AIRCRAFT) {
 						Aircraft *a = Aircraft::From(v);
-						if (a->state == FLYING && a->targetairport != destination) {
+						if (a->state == FLYING && a->targetairport != closestDepot.destination) {
 							/* The aircraft is now heading for a different hangar than the next in the orders */
-							extern void AircraftNextAirportPos_and_Order(Aircraft *a);
 							AircraftNextAirportPos_and_Order(a);
 						}
 					}
@@ -2143,7 +2139,6 @@ bool ProcessOrders(Vehicle *v)
 	if (order == nullptr || (v->type == VEH_AIRCRAFT && !CheckForValidOrders(v))) {
 		if (v->type == VEH_AIRCRAFT) {
 			/* Aircraft do something vastly different here, so handle separately */
-			extern void HandleMissingAircraftOrders(Aircraft *v);
 			HandleMissingAircraftOrders(Aircraft::From(v));
 			return false;
 		}

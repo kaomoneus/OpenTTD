@@ -32,6 +32,7 @@
 #include "goal_cmd.h"
 #include "group_cmd.h"
 #include "industry_cmd.h"
+#include "league_cmd.h"
 #include "landscape_cmd.h"
 #include "misc_cmd.h"
 #include "news_cmd.h"
@@ -258,7 +259,7 @@ void CommandHelperBase::InternalPostResult(const CommandCost &res, TileIndex til
 	if (res.Failed()) {
 		/* Only show the error when it's for us. */
 		if (estimate_only || (IsLocalCompany() && err_message != 0 && my_cmd)) {
-			ShowErrorMessage(err_message, res.GetErrorMessage(), WL_INFO, x, y, res.GetTextRefStackGRF(), res.GetTextRefStackSize(), res.GetTextRefStack());
+			ShowErrorMessage(err_message, x, y, res);
 		}
 	} else if (estimate_only) {
 		ShowEstimatedCostOrIncome(res.GetCost(), x, y);

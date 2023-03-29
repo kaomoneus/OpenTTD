@@ -27,7 +27,7 @@ Year      _cur_year;   ///< Current year, starting at 0
 Month     _cur_month;  ///< Current month (0..11)
 Date      _date;       ///< Current date in days (day counter)
 DateFract _date_fract; ///< Fractional part of the day.
-uint32 _tick_counter;  ///< Ever incrementing (and sometimes wrapping) tick counter for setting off various events
+uint64 _tick_counter;  ///< Ever incrementing tick counter for setting off various events
 
 /**
  * Set the date.
@@ -264,6 +264,8 @@ static void OnNewYear()
 	VehiclesYearlyLoop();
 	TownsYearlyLoop();
 	InvalidateWindowClassesData(WC_BUILD_STATION);
+	InvalidateWindowClassesData(WC_BUS_STATION);
+	InvalidateWindowClassesData(WC_TRUCK_STATION);
 	if (_network_server) NetworkServerYearlyLoop();
 
 	if (_cur_year == _settings_client.gui.semaphore_build_before) ResetSignalVariant();

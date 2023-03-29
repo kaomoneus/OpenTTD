@@ -59,6 +59,7 @@ void NetworkClientSendRcon(const std::string &password, const std::string &comma
 void NetworkClientSendChat(NetworkAction action, DestType type, int dest, const std::string &msg, int64 data = 0);
 bool NetworkClientPreferTeamChat(const NetworkClientInfo *cio);
 bool NetworkCompanyIsPassworded(CompanyID company_id);
+uint NetworkMaxCompaniesAllowed();
 bool NetworkMaxCompaniesReached();
 void NetworkPrintClients();
 void NetworkHandlePauseChange(PauseMode prev_mode, PauseMode changed_mode);
@@ -85,6 +86,7 @@ uint NetworkServerKickOrBanIP(ClientID client_id, bool ban, const std::string &r
 uint NetworkServerKickOrBanIP(const std::string &ip, bool ban, const std::string &reason);
 
 void NetworkInitChatMessage();
+void NetworkReInitChatBoxSize();
 void CDECL NetworkAddChatMessage(TextColour colour, uint duration, const std::string &message);
 void NetworkUndrawChatMessage();
 void NetworkChatMessageLoop();

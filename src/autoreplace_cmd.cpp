@@ -60,9 +60,6 @@ bool CheckAutoreplaceValidity(EngineID from, EngineID to, CompanyID company)
 {
 	assert(Engine::IsValidID(from) && Engine::IsValidID(to));
 
-	/* we can't replace an engine into itself (that would be autorenew) */
-	if (from == to) return false;
-
 	const Engine *e_from = Engine::Get(from);
 	const Engine *e_to = Engine::Get(to);
 	VehicleType type = e_from->type;
@@ -346,7 +343,7 @@ static CommandCost BuildReplacementVehicle(Vehicle *old_veh, Vehicle **new_vehic
 
 	/* Build the new vehicle */
 	VehicleID new_veh_id;
-	std::tie(cost, new_veh_id, std::ignore, std::ignore) = Command<CMD_BUILD_VEHICLE>::Do(DC_EXEC | DC_AUTOREPLACE, old_veh->tile, e, true, CT_INVALID, INVALID_CLIENT_ID);
+	std::tie(cost, new_veh_id, std::ignore, std::ignore, std::ignore) = Command<CMD_BUILD_VEHICLE>::Do(DC_EXEC | DC_AUTOREPLACE, old_veh->tile, e, true, CT_INVALID, INVALID_CLIENT_ID);
 	if (cost.Failed()) return cost;
 
 	Vehicle *new_veh = Vehicle::Get(new_veh_id);
@@ -422,6 +419,7 @@ static CommandCost CopyHeadSpecificThings(Vehicle *old_head, Vehicle *new_head, 
 	if (cost.Succeeded() && old_head != new_head && (flags & DC_EXEC) != 0) {
 		/* Copy other things which cannot be copied by a command and which shall not stay resetted from the build vehicle command */
 		new_head->CopyVehicleConfigAndStatistics(old_head);
+		GroupStatistics::AddProfitLastYear(new_head);
 
 		/* Switch vehicle windows/news to the new vehicle, so they are not closed/deleted when the old vehicle is sold */
 		ChangeVehicleViewports(old_head->index, new_head->index);
@@ -444,7 +442,7 @@ static CommandCost ReplaceFreeUnit(Vehicle **single_unit, DoCommandFlag flags, b
 	Train *old_v = Train::From(*single_unit);
 	assert(!old_v->IsArticulatedPart() && !old_v->IsRearDualheaded());
 
-	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, 0);
+	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, (Money)0);
 
 	/* Build and refit replacement vehicle */
 	Vehicle *new_v = nullptr;
@@ -496,7 +494,7 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 	Vehicle *old_head = *chain;
 	assert(old_head->IsPrimaryVehicle());
 
-	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, 0);
+	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, (Money)0);
 
 	if (old_head->type == VEH_TRAIN) {
 		/* Store the length of the old vehicle chain, rounded up to whole tiles */
@@ -755,7 +753,7 @@ CommandCost CmdAutoreplaceVehicle(DoCommandFlag flags, VehicleID veh_id)
 		w = (!free_wagon && w->type == VEH_TRAIN ? Train::From(w)->GetNextUnit() : nullptr);
 	}
 
-	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, 0);
+	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, (Money)0);
 	bool nothing_to_do = true;
 
 	if (any_replacements) {
@@ -780,7 +778,6 @@ CommandCost CmdAutoreplaceVehicle(DoCommandFlag flags, VehicleID veh_id)
 		RestoreRandomSeeds(saved_seeds);
 
 		if (cost.Succeeded() && (flags & DC_EXEC) != 0) {
-			CommandCost ret;
 			if (free_wagon) {
 				ret = ReplaceFreeUnit(&v, flags, &nothing_to_do);
 			} else {

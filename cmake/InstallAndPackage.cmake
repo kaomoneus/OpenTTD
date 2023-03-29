@@ -132,6 +132,8 @@ set(CPACK_STRIP_FILES YES)
 set(CPACK_OUTPUT_FILE_PREFIX "bundles")
 
 if(APPLE)
+    # Stripping would produce unreadable stacktraces.
+    set(CPACK_STRIP_FILES NO)
     set(CPACK_GENERATOR "Bundle")
     include(PackageBundle)
 
@@ -181,6 +183,10 @@ elseif(UNIX)
 
                 set(CPACK_GENERATOR "DEB")
                 include(PackageDeb)
+            elseif(LSB_RELEASE_ID STREQUAL "Fedora")
+                set(PLATFORM "fedora")
+                set(CPACK_GENERATOR "RPM")
+                include(PackageRPM)
             else()
                 set(UNSUPPORTED_PLATFORM_NAME "LSB-based Linux distribution '${LSB_RELEASE_ID}'")
             endif()

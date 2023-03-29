@@ -82,11 +82,12 @@ static void _DoCommandReturnBuildTunnel1(class ScriptInstance *instance)
 
 /* static */ bool ScriptTunnel::BuildTunnel(ScriptVehicle::VehicleType vehicle_type, TileIndex start)
 {
+	EnforceDeityOrCompanyModeValid(false);
 	EnforcePrecondition(false, ::IsValidTile(start));
 	EnforcePrecondition(false, vehicle_type == ScriptVehicle::VT_RAIL || vehicle_type == ScriptVehicle::VT_ROAD);
 	EnforcePrecondition(false, vehicle_type != ScriptVehicle::VT_RAIL || ScriptRail::IsRailTypeAvailable(ScriptRail::GetCurrentRailType()));
 	EnforcePrecondition(false, vehicle_type != ScriptVehicle::VT_ROAD || ScriptRoad::IsRoadTypeAvailable(ScriptRoad::GetCurrentRoadType()));
-	EnforcePrecondition(false, ScriptObject::GetCompany() != OWNER_DEITY || vehicle_type == ScriptVehicle::VT_ROAD);
+	EnforcePrecondition(false, ScriptCompanyMode::IsValid() || vehicle_type == ScriptVehicle::VT_ROAD);
 
 	if (vehicle_type == ScriptVehicle::VT_RAIL) {
 		/* For rail we do nothing special */
@@ -99,6 +100,8 @@ static void _DoCommandReturnBuildTunnel1(class ScriptInstance *instance)
 
 /* static */ bool ScriptTunnel::_BuildTunnelRoad1()
 {
+	EnforceDeityOrCompanyModeValid(false);
+
 	/* Build the piece of road on the 'start' side of the tunnel */
 	TileIndex end = ScriptObject::GetCallbackVariable(0);
 	TileIndex start = ScriptTunnel::GetOtherTunnelEnd(end);
@@ -111,6 +114,8 @@ static void _DoCommandReturnBuildTunnel1(class ScriptInstance *instance)
 
 /* static */ bool ScriptTunnel::_BuildTunnelRoad2()
 {
+	EnforceDeityOrCompanyModeValid(false);
+
 	/* Build the piece of road on the 'end' side of the tunnel */
 	TileIndex end = ScriptObject::GetCallbackVariable(0);
 	TileIndex start = ScriptTunnel::GetOtherTunnelEnd(end);
@@ -123,7 +128,7 @@ static void _DoCommandReturnBuildTunnel1(class ScriptInstance *instance)
 
 /* static */ bool ScriptTunnel::RemoveTunnel(TileIndex tile)
 {
-	EnforcePrecondition(false, ScriptObject::GetCompany() != OWNER_DEITY);
+	EnforceCompanyModeValid(false);
 	EnforcePrecondition(false, IsTunnelTile(tile));
 
 	return ScriptObject::Command<CMD_LANDSCAPE_CLEAR>::Do(tile);

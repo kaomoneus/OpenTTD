@@ -111,7 +111,8 @@ RoadBits CleanUpRoadBits(const TileIndex tile, RoadBits org_rb)
 bool HasRoadTypeAvail(const CompanyID company, RoadType roadtype)
 {
 	if (company == OWNER_DEITY || company == OWNER_TOWN || _game_mode == GM_EDITOR || _generating_world) {
-		return true; // TODO: should there be a proper check?
+		const RoadTypeInfo *rti = GetRoadTypeInfo(roadtype);
+		return rti->label != 0 && (rti->flags & ROTFB_HIDDEN) == 0;
 	} else {
 		const Company *c = Company::GetIfValid(company);
 		if (c == nullptr) return false;

@@ -25,9 +25,9 @@
 
 #include "../../safeguards.h"
 
-/* static */ int32 ScriptIndustry::GetIndustryCount()
+/* static */ SQInteger ScriptIndustry::GetIndustryCount()
 {
-	return (int32)::Industry::GetNumItems();
+	return ::Industry::GetNumItems();
 }
 
 /* static */ bool ScriptIndustry::IsValidIndustry(IndustryID industry_id)
@@ -53,14 +53,10 @@
 {
 	CCountedPtr<Text> counter(text);
 
-	const char *encoded_text = nullptr;
-	if (text != nullptr) {
-		encoded_text = text->GetEncodedText();
-		EnforcePreconditionEncodedText(false, encoded_text);
-	}
+	EnforceDeityMode(false);
 	EnforcePrecondition(false, IsValidIndustry(industry_id));
 
-	return ScriptObject::Command<CMD_INDUSTRY_CTRL>::Do(industry_id, IndustryAction::SetText, INDCTL_NONE, INVALID_OWNER, std::string{ encoded_text ? encoded_text : "" });
+	return ScriptObject::Command<CMD_INDUSTRY_SET_TEXT>::Do(industry_id, text != nullptr ? text->GetEncodedText() : std::string{});
 }
 
 /* static */ ScriptIndustry::CargoAcceptState ScriptIndustry::IsCargoAccepted(IndustryID industry_id, CargoID cargo_id)
@@ -80,7 +76,7 @@
 	return CAS_NOT_ACCEPTED;
 }
 
-/* static */ int32 ScriptIndustry::GetStockpiledCargo(IndustryID industry_id, CargoID cargo_id)
+/* static */ SQInteger ScriptIndustry::GetStockpiledCargo(IndustryID industry_id, CargoID cargo_id)
 {
 	if (!IsValidIndustry(industry_id)) return -1;
 	if (!ScriptCargo::IsValidCargo(cargo_id)) return -1;
@@ -96,7 +92,7 @@
 	return -1;
 }
 
-/* static */ int32 ScriptIndustry::GetLastMonthProduction(IndustryID industry_id, CargoID cargo_id)
+/* static */ SQInteger ScriptIndustry::GetLastMonthProduction(IndustryID industry_id, CargoID cargo_id)
 {
 	if (!IsValidIndustry(industry_id)) return -1;
 	if (!ScriptCargo::IsValidCargo(cargo_id)) return -1;
@@ -110,7 +106,7 @@
 	return -1;
 }
 
-/* static */ int32 ScriptIndustry::GetLastMonthTransported(IndustryID industry_id, CargoID cargo_id)
+/* static */ SQInteger ScriptIndustry::GetLastMonthTransported(IndustryID industry_id, CargoID cargo_id)
 {
 	if (!IsValidIndustry(industry_id)) return -1;
 	if (!ScriptCargo::IsValidCargo(cargo_id)) return -1;
@@ -124,7 +120,7 @@
 	return -1;
 }
 
-/* static */ int32 ScriptIndustry::GetLastMonthTransportedPercentage(IndustryID industry_id, CargoID cargo_id)
+/* static */ SQInteger ScriptIndustry::GetLastMonthTransportedPercentage(IndustryID industry_id, CargoID cargo_id)
 {
 	if (!IsValidIndustry(industry_id)) return -1;
 	if (!ScriptCargo::IsValidCargo(cargo_id)) return -1;
@@ -145,22 +141,22 @@
 	return ::Industry::Get(industry_id)->location.tile;
 }
 
-/* static */ int32 ScriptIndustry::GetAmountOfStationsAround(IndustryID industry_id)
+/* static */ SQInteger ScriptIndustry::GetAmountOfStationsAround(IndustryID industry_id)
 {
 	if (!IsValidIndustry(industry_id)) return -1;
 
 	Industry *ind = ::Industry::Get(industry_id);
-	return (int32)ind->stations_near.size();
+	return ind->stations_near.size();
 }
 
-/* static */ int32 ScriptIndustry::GetDistanceManhattanToTile(IndustryID industry_id, TileIndex tile)
+/* static */ SQInteger ScriptIndustry::GetDistanceManhattanToTile(IndustryID industry_id, TileIndex tile)
 {
 	if (!IsValidIndustry(industry_id)) return -1;
 
 	return ScriptMap::DistanceManhattan(tile, GetLocation(industry_id));
 }
 
-/* static */ int32 ScriptIndustry::GetDistanceSquareToTile(IndustryID industry_id, TileIndex tile)
+/* static */ SQInteger ScriptIndustry::GetDistanceSquareToTile(IndustryID industry_id, TileIndex tile)
 {
 	if (!IsValidIndustry(industry_id)) return -1;
 
@@ -225,14 +221,14 @@
 	return ::Industry::Get(industry_id)->type;
 }
 
-int32 ScriptIndustry::GetLastProductionYear(IndustryID industry_id)
+/* static */ SQInteger ScriptIndustry::GetLastProductionYear(IndustryID industry_id)
 {
 	Industry *i = Industry::GetIfValid(industry_id);
 	if (i == nullptr) return 0;
 	return i->last_prod_year;
 }
 
-ScriptDate::Date ScriptIndustry::GetCargoLastAcceptedDate(IndustryID industry_id, CargoID cargo_type)
+/* static */ ScriptDate::Date ScriptIndustry::GetCargoLastAcceptedDate(IndustryID industry_id, CargoID cargo_type)
 {
 	Industry *i = Industry::GetIfValid(industry_id);
 	if (i == nullptr) return ScriptDate::DATE_INVALID;
@@ -246,19 +242,19 @@ ScriptDate::Date ScriptIndustry::GetCargoLastAcceptedDate(IndustryID industry_id
 	}
 }
 
-uint32 ScriptIndustry::GetControlFlags(IndustryID industry_id)
+/* static */ SQInteger ScriptIndustry::GetControlFlags(IndustryID industry_id)
 {
 	Industry *i = Industry::GetIfValid(industry_id);
 	if (i == nullptr) return 0;
 	return i->ctlflags;
 }
 
-bool ScriptIndustry::SetControlFlags(IndustryID industry_id, uint32 control_flags)
+/* static */ bool ScriptIndustry::SetControlFlags(IndustryID industry_id, SQInteger control_flags)
 {
-	if (ScriptObject::GetCompany() != OWNER_DEITY) return false;
+	EnforceDeityMode(false);
 	if (!IsValidIndustry(industry_id)) return false;
 
-	return ScriptObject::Command<CMD_INDUSTRY_CTRL>::Do(industry_id, IndustryAction::SetControlFlags, (::IndustryControlFlags)control_flags & ::INDCTL_MASK, INVALID_OWNER, {});
+	return ScriptObject::Command<CMD_INDUSTRY_SET_FLAGS>::Do(industry_id, (::IndustryControlFlags)control_flags & ::INDCTL_MASK);
 }
 
 /* static */ ScriptCompany::CompanyID ScriptIndustry::GetExclusiveSupplier(IndustryID industry_id)
@@ -273,11 +269,12 @@ bool ScriptIndustry::SetControlFlags(IndustryID industry_id, uint32 control_flag
 
 /* static */ bool ScriptIndustry::SetExclusiveSupplier(IndustryID industry_id, ScriptCompany::CompanyID company_id)
 {
+	EnforceDeityMode(false);
 	EnforcePrecondition(false, IsValidIndustry(industry_id));
 
 	auto company = ScriptCompany::ResolveCompanyID(company_id);
 	::Owner owner = (company == ScriptCompany::COMPANY_INVALID ? ::INVALID_OWNER : (::Owner)company);
-	return ScriptObject::Command<CMD_INDUSTRY_CTRL>::Do(industry_id, IndustryAction::SetExclusiveSupplier, INDCTL_NONE, owner, {});
+	return ScriptObject::Command<CMD_INDUSTRY_SET_EXCLUSIVITY>::Do(industry_id, owner, false);
 }
 
 /* static */ ScriptCompany::CompanyID ScriptIndustry::GetExclusiveConsumer(IndustryID industry_id)
@@ -292,9 +289,10 @@ bool ScriptIndustry::SetControlFlags(IndustryID industry_id, uint32 control_flag
 
 /* static */ bool ScriptIndustry::SetExclusiveConsumer(IndustryID industry_id, ScriptCompany::CompanyID company_id)
 {
+	EnforceDeityMode(false);
 	EnforcePrecondition(false, IsValidIndustry(industry_id));
 
 	auto company = ScriptCompany::ResolveCompanyID(company_id);
 	::Owner owner = (company == ScriptCompany::COMPANY_INVALID ? ::INVALID_OWNER : (::Owner)company);
-	return ScriptObject::Command<CMD_INDUSTRY_CTRL>::Do(industry_id, IndustryAction::SetExclusiveConsumer, INDCTL_NONE, owner, {});
+	return ScriptObject::Command<CMD_INDUSTRY_SET_EXCLUSIVITY>::Do(industry_id, owner, true);
 }

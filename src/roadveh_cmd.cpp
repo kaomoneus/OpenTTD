@@ -94,10 +94,10 @@ int RoadVehicle::GetDisplayImageWidth(Point *offset) const
 	int reference_width = ROADVEHINFO_DEFAULT_VEHICLE_WIDTH;
 
 	if (offset != nullptr) {
-		offset->x = ScaleGUITrad(reference_width) / 2;
+		offset->x = ScaleSpriteTrad(reference_width) / 2;
 		offset->y = 0;
 	}
-	return ScaleGUITrad(this->gcache.cached_veh_length * reference_width / VEHICLE_LENGTH);
+	return ScaleSpriteTrad(this->gcache.cached_veh_length * reference_width / VEHICLE_LENGTH);
 }
 
 static void GetRoadVehIcon(EngineID engine, EngineImageType image_type, VehicleSpriteSeq *result)
@@ -175,8 +175,8 @@ void GetRoadVehSpriteSize(EngineID engine, uint &width, uint &height, int &xoffs
 	Rect rect;
 	seq.GetBounds(&rect);
 
-	width  = UnScaleGUI(rect.right - rect.left + 1);
-	height = UnScaleGUI(rect.bottom - rect.top + 1);
+	width  = UnScaleGUI(rect.Width());
+	height = UnScaleGUI(rect.Height());
 	xoffs  = UnScaleGUI(rect.left);
 	yoffs  = UnScaleGUI(rect.top);
 }
@@ -1004,7 +1004,7 @@ struct RoadDriveEntry {
 
 #include "table/roadveh_movement.h"
 
-static bool RoadVehLeaveDepot(RoadVehicle *v, bool first)
+bool RoadVehLeaveDepot(RoadVehicle *v, bool first)
 {
 	/* Don't leave unless v and following wagons are in the depot. */
 	for (const RoadVehicle *u = v; u != nullptr; u = u->Next()) {
@@ -1280,9 +1280,12 @@ again:
 
 		Direction new_dir = RoadVehGetSlidingDirection(v, x, y);
 		if (v->IsFrontEngine()) {
-			Vehicle *u = RoadVehFindCloseTo(v, x, y, new_dir);
+			const Vehicle *u = RoadVehFindCloseTo(v, x, y, new_dir);
 			if (u != nullptr) {
 				v->cur_speed = u->First()->cur_speed;
+				/* We might be blocked, prevent pathfinding rerun as we already know where we are heading to. */
+				v->path.tile.push_front(tile);
+				v->path.td.push_front(dir);
 				return false;
 			}
 		}
@@ -1392,15 +1395,15 @@ again:
 		int y = TileY(v->tile) * TILE_SIZE + rdp[turn_around_start_frame].y;
 
 		Direction new_dir = RoadVehGetSlidingDirection(v, x, y);
-		if (v->IsFrontEngine() && RoadVehFindCloseTo(v, x, y, new_dir) != nullptr) {
-			/* We are blocked. */
-			v->cur_speed = 0;
-			if (!v->path.empty()) {
-				/* Prevent pathfinding rerun as we already know where we are heading to. */
+		if (v->IsFrontEngine()) {
+			const Vehicle *u = RoadVehFindCloseTo(v, x, y, new_dir);
+			if (u != nullptr) {
+				v->cur_speed = u->First()->cur_speed;
+				/* We might be blocked, prevent pathfinding rerun as we already know where we are heading to. */
 				v->path.tile.push_front(v->tile);
 				v->path.td.push_front(dir);
+				return false;
 			}
-			return false;
 		}
 
 		uint32 r = VehicleEnterTile(v, v->tile, x, y);
@@ -1752,4 +1755,17 @@ Trackdir RoadVehicle::GetVehicleTrackdir() const
 	/* If vehicle's state is a valid track direction (vehicle is not turning around) return it,
 	 * otherwise transform it into a valid track direction */
 	return (Trackdir)((IsReversingRoadTrackdir((Trackdir)this->state)) ? (this->state - 6) : this->state);
+}
+
+uint16 RoadVehicle::GetMaxWeight() const
+{
+	uint16 weight = CargoSpec::Get(this->cargo_type)->WeightOfNUnits(this->GetEngine()->DetermineCapacity(this));
+
+	/* Vehicle weight is not added for articulated parts. */
+	if (!this->IsArticulatedPart()) {
+		/* Road vehicle weight is in units of 1/4 t. */
+		weight += GetVehicleProperty(this, PROP_ROADVEH_WEIGHT, RoadVehInfo(this->engine_type)->weight) / 4;
+	}
+
+	return weight;
 }

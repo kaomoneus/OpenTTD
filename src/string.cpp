@@ -168,14 +168,14 @@ char *CDECL str_fmt(const char *str, ...)
  */
 std::string FormatArrayAsHex(span<const byte> data)
 {
-	std::ostringstream ss;
-	ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex;
+	std::string str;
+	str.reserve(data.size() * 2 + 1);
 
 	for (auto b : data) {
-		ss << b;
+		fmt::format_to(std::back_inserter(str), "{:02X}", b);
 	}
 
-	return ss.str();
+	return str;
 }
 
 /**
@@ -494,11 +494,12 @@ bool strtolower(std::string &str, std::string::size_type offs)
 bool IsValidChar(WChar key, CharSetFilter afilter)
 {
 	switch (afilter) {
-		case CS_ALPHANUMERAL:  return IsPrintable(key);
-		case CS_NUMERAL:       return (key >= '0' && key <= '9');
-		case CS_NUMERAL_SPACE: return (key >= '0' && key <= '9') || key == ' ';
-		case CS_ALPHA:         return IsPrintable(key) && !(key >= '0' && key <= '9');
-		case CS_HEXADECIMAL:   return (key >= '0' && key <= '9') || (key >= 'a' && key <= 'f') || (key >= 'A' && key <= 'F');
+		case CS_ALPHANUMERAL:   return IsPrintable(key);
+		case CS_NUMERAL:        return (key >= '0' && key <= '9');
+		case CS_NUMERAL_SPACE:  return (key >= '0' && key <= '9') || key == ' ';
+		case CS_NUMERAL_SIGNED: return (key >= '0' && key <= '9') || key == '-';
+		case CS_ALPHA:          return IsPrintable(key) && !(key >= '0' && key <= '9');
+		case CS_HEXADECIMAL:    return (key >= '0' && key <= '9') || (key >= 'a' && key <= 'f') || (key >= 'A' && key <= 'F');
 		default: NOT_REACHED();
 	}
 }

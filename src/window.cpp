@@ -22,7 +22,6 @@
 #include "tilehighlight_func.h"
 #include "network/network.h"
 #include "querystring_gui.h"
-#include "widgets/dropdown_func.h"
 #include "strings_func.h"
 #include "settings_type.h"
 #include "settings_func.h"
@@ -355,6 +354,17 @@ QueryString *Window::GetQueryString(uint widnum)
 }
 
 /**
+ * Update size of all QueryStrings of this window.
+ */
+void Window::UpdateQueryStringSize()
+{
+	for (auto &qs : this->querystrings)
+	{
+		qs.second->text.UpdateSize();
+	}
+}
+
+/**
  * Get the current input text if an edit box has the focus.
  * @return The currently focused input text or nullptr if no input focused.
  */
@@ -446,6 +456,9 @@ void SetFocusedWindow(Window *w)
 {
 	if (_focused_window == w) return;
 
+	/* Don't focus a tooltip */
+	if (w != nullptr && w->window_class == WC_TOOLTIPS) return;
+
 	/* Invalidate focused widget */
 	if (_focused_window != nullptr) {
 		if (_focused_window->nested_focus != nullptr) _focused_window->nested_focus->SetDirty(_focused_window);
@@ -456,7 +469,7 @@ void SetFocusedWindow(Window *w)
 	_focused_window = w;
 
 	/* So we can inform it that it lost focus */
-	if (old_focused != nullptr) old_focused->OnFocusLost();
+	if (old_focused != nullptr) old_focused->OnFocusLost(false);
 	if (_focused_window != nullptr) _focused_window->OnFocus();
 }
 
@@ -532,7 +545,7 @@ void Window::OnFocus()
 /**
  * Called when window loses focus
  */
-void Window::OnFocusLost()
+void Window::OnFocusLost(bool closing)
 {
 	if (this->nested_focus != nullptr && this->nested_focus->type == WWT_EDITBOX) VideoDriver::GetInstance()->EditBoxLostFocus();
 }
@@ -665,6 +678,9 @@ static void DispatchLeftClickEvent(Window *w, int x, int y, int click_count)
 	NWidgetCore *nw = w->nested_root->GetWidgetFromPos(x, y);
 	WidgetType widget_type = (nw != nullptr) ? nw->type : WWT_EMPTY;
 
+	/* Allow dropdown close flag detection to work. */
+	if (nw != nullptr) ClrBit(nw->disp_flags, NDB_DROPDOWN_CLOSED);
+
 	bool focused_widget_changed = false;
 	/* If clicked on a window that previously did not have focus */
 	if (_focused_window != w &&                 // We already have focus, right?
@@ -697,9 +713,8 @@ static void DispatchLeftClickEvent(Window *w, int x, int y, int click_count)
 		focused_widget_changed |= w->SetFocusedWidget(widget_index);
 	}
 
-	/* Close any child drop down menus. If the button pressed was the drop down
-	 * list's own button, then we should not process the click any further. */
-	if (HideDropDownMenu(w) == widget_index && widget_index >= 0) return;
+	/* Dropdown window of this widget was closed so don't process click this time. */
+	if (HasBit(nw->disp_flags, NDB_DROPDOWN_CLOSED)) return;
 
 	if ((widget_type & ~WWB_PUSHBUTTON) < WWT_LAST && (widget_type & WWB_PUSHBUTTON)) w->HandleButtonClick(widget_index);
 
@@ -1112,7 +1127,7 @@ void Window::Close()
 
 	/* Make sure we don't try to access this window as the focused window when it doesn't exist anymore. */
 	if (_focused_window == this) {
-		this->OnFocusLost();
+		this->OnFocusLost(true);
 		_focused_window = nullptr;
 	}
 
@@ -1643,7 +1658,7 @@ static Point GetAutoPlacePosition(int width, int height)
 	 */
 	int left = rtl ? _screen.width - width : 0, top = toolbar_y;
 	int offset_x = rtl ? -(int)NWidgetLeaf::closebox_dimension.width : (int)NWidgetLeaf::closebox_dimension.width;
-	int offset_y = std::max<int>(NWidgetLeaf::closebox_dimension.height, FONT_HEIGHT_NORMAL + WD_CAPTIONTEXT_TOP + WD_CAPTIONTEXT_BOTTOM);
+	int offset_y = std::max<int>(NWidgetLeaf::closebox_dimension.height, FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.captiontext.Vertical());
 
 restart:
 	for (const Window *w : Window::Iterate()) {
@@ -1709,7 +1724,7 @@ static Point LocalGetWindowPlacement(const WindowDesc *desc, int16 sm_width, int
 			 *  - Y position: closebox of parent + closebox of child + statusbar
 			 *  - X position: closebox on left/right, resizebox on right/left (depending on ltr/rtl)
 			 */
-			int indent_y = std::max<int>(NWidgetLeaf::closebox_dimension.height, FONT_HEIGHT_NORMAL + WD_CAPTIONTEXT_TOP + WD_CAPTIONTEXT_BOTTOM);
+			int indent_y = std::max<int>(NWidgetLeaf::closebox_dimension.height, FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.captiontext.Vertical());
 			if (w->top + 3 * indent_y < _screen.height) {
 				pt.y = w->top + indent_y;
 				int indent_close = NWidgetLeaf::closebox_dimension.width;
@@ -2000,28 +2015,30 @@ static void PreventHiding(int *nx, int *ny, const Rect &rect, const Window *v, i
 {
 	if (v == nullptr) return;
 
+	const int min_visible = ScaleGUITrad(MIN_VISIBLE_TITLE_BAR);
+
 	int v_bottom = v->top + v->height;
 	int v_right = v->left + v->width;
-	int safe_y = (dir == PHD_UP) ? (v->top - MIN_VISIBLE_TITLE_BAR - rect.top) : (v_bottom + MIN_VISIBLE_TITLE_BAR - rect.bottom); // Compute safe vertical position.
+	int safe_y = (dir == PHD_UP) ? (v->top - min_visible - rect.top) : (v_bottom + min_visible - rect.bottom); // Compute safe vertical position.
 
-	if (*ny + rect.top <= v->top - MIN_VISIBLE_TITLE_BAR) return; // Above v is enough space
-	if (*ny + rect.bottom >= v_bottom + MIN_VISIBLE_TITLE_BAR) return; // Below v is enough space
+	if (*ny + rect.top <= v->top - min_visible) return; // Above v is enough space
+	if (*ny + rect.bottom >= v_bottom + min_visible) return; // Below v is enough space
 
 	/* Vertically, the rectangle is hidden behind v. */
-	if (*nx + rect.left + MIN_VISIBLE_TITLE_BAR < v->left) { // At left of v.
-		if (v->left < MIN_VISIBLE_TITLE_BAR) *ny = safe_y; // But enough room, force it to a safe position.
+	if (*nx + rect.left + min_visible < v->left) { // At left of v.
+		if (v->left < min_visible) *ny = safe_y; // But enough room, force it to a safe position.
 		return;
 	}
-	if (*nx + rect.right - MIN_VISIBLE_TITLE_BAR > v_right) { // At right of v.
-		if (v_right > _screen.width - MIN_VISIBLE_TITLE_BAR) *ny = safe_y; // Not enough room, force it to a safe position.
+	if (*nx + rect.right - min_visible > v_right) { // At right of v.
+		if (v_right > _screen.width - min_visible) *ny = safe_y; // Not enough room, force it to a safe position.
 		return;
 	}
 
 	/* Horizontally also hidden, force movement to a safe area. */
-	if (px + rect.left < v->left && v->left >= MIN_VISIBLE_TITLE_BAR) { // Coming from the left, and enough room there.
-		*nx = v->left - MIN_VISIBLE_TITLE_BAR - rect.left;
-	} else if (px + rect.right > v_right && v_right <= _screen.width - MIN_VISIBLE_TITLE_BAR) { // Coming from the right, and enough room there.
-		*nx = v_right + MIN_VISIBLE_TITLE_BAR - rect.right;
+	if (px + rect.left < v->left && v->left >= min_visible) { // Coming from the left, and enough room there.
+		*nx = v->left - min_visible - rect.left;
+	} else if (px + rect.right > v_right && v_right <= _screen.width - min_visible) { // Coming from the right, and enough room there.
+		*nx = v_right + min_visible - rect.right;
 	} else {
 		*ny = safe_y;
 	}
@@ -2042,9 +2059,11 @@ static void EnsureVisibleCaption(Window *w, int nx, int ny)
 	if (caption != nullptr) {
 		caption_rect = caption->GetCurrentRect();
 
+		const int min_visible = ScaleGUITrad(MIN_VISIBLE_TITLE_BAR);
+
 		/* Make sure the window doesn't leave the screen */
-		nx = Clamp(nx, MIN_VISIBLE_TITLE_BAR - caption_rect.right, _screen.width - MIN_VISIBLE_TITLE_BAR - caption_rect.left);
-		ny = Clamp(ny, 0, _screen.height - MIN_VISIBLE_TITLE_BAR);
+		nx = Clamp(nx, min_visible - caption_rect.right, _screen.width - min_visible - caption_rect.left);
+		ny = Clamp(ny, 0, _screen.height - min_visible);
 
 		/* Make sure the title bar isn't hidden behind the main tool bar or the status bar. */
 		PreventHiding(&nx, &ny, caption_rect, FindWindowById(WC_MAIN_TOOLBAR, 0), w->left, PHD_DOWN);
@@ -2310,7 +2329,6 @@ static void StartWindowDrag(Window *w)
 	_drag_delta.y = w->top  - _cursor.pos.y;
 
 	BringWindowToFront(w);
-	CloseWindowById(WC_DROPDOWN_MENU, 0);
 }
 
 /**
@@ -2328,7 +2346,6 @@ static void StartWindowSizing(Window *w, bool to_left)
 	_drag_delta.y = _cursor.pos.y;
 
 	BringWindowToFront(w);
-	CloseWindowById(WC_DROPDOWN_MENU, 0);
 }
 
 /**
@@ -2877,6 +2894,7 @@ static void MouseLoop(MouseClick click, int mousewheel)
 					_scrolling_viewport = true;
 					_cursor.fix_at = (_settings_client.gui.scroll_mode == VSM_VIEWPORT_RMB_FIXED ||
 							_settings_client.gui.scroll_mode == VSM_MAP_RMB_FIXED);
+					DispatchRightClickEvent(w, x - w->left, y - w->top);
 					return;
 				}
 				break;
@@ -2886,27 +2904,25 @@ static void MouseLoop(MouseClick click, int mousewheel)
 		}
 	}
 
-	if (vp == nullptr || (w->flags & WF_DISABLE_VP_SCROLL)) {
-		switch (click) {
-			case MC_LEFT:
-			case MC_DOUBLE_LEFT:
-				DispatchLeftClickEvent(w, x - w->left, y - w->top, click == MC_DOUBLE_LEFT ? 2 : 1);
-				return;
+	switch (click) {
+		case MC_LEFT:
+		case MC_DOUBLE_LEFT:
+			DispatchLeftClickEvent(w, x - w->left, y - w->top, click == MC_DOUBLE_LEFT ? 2 : 1);
+			return;
 
-			default:
-				if (!scrollwheel_scrolling || w == nullptr || w->window_class != WC_SMALLMAP) break;
-				/* We try to use the scrollwheel to scroll since we didn't touch any of the buttons.
-				 * Simulate a right button click so we can get started. */
-				FALLTHROUGH;
+		default:
+			if (!scrollwheel_scrolling || w == nullptr || w->window_class != WC_SMALLMAP) break;
+			/* We try to use the scrollwheel to scroll since we didn't touch any of the buttons.
+			 * Simulate a right button click so we can get started. */
+			FALLTHROUGH;
 
-			case MC_RIGHT:
-				DispatchRightClickEvent(w, x - w->left, y - w->top);
-				return;
+		case MC_RIGHT:
+			DispatchRightClickEvent(w, x - w->left, y - w->top);
+			return;
 
-			case MC_HOVER:
-				DispatchHoverEvent(w, x - w->left, y - w->top);
-				break;
-		}
+		case MC_HOVER:
+			DispatchHoverEvent(w, x - w->left, y - w->top);
+			break;
 	}
 
 	/* We're not doing anything with 2D scrolling, so reset the value.  */
@@ -2970,11 +2986,12 @@ void HandleMouseEvents()
 			hover_pos = _cursor.pos;
 			hover_time = std::chrono::steady_clock::now();
 			_mouse_hovering = false;
-		} else {
+		} else if (!_mouse_hovering) {
 			if (std::chrono::steady_clock::now() > hover_time + std::chrono::milliseconds(_settings_client.gui.hover_delay_ms)) {
 				click = MC_HOVER;
 				_input_events_this_tick++;
 				_mouse_hovering = true;
+				hover_time = std::chrono::steady_clock::now();
 			}
 		}
 	}
@@ -3070,6 +3087,9 @@ void UpdateWindows()
 
 	PerformanceMeasurer framerate(PFE_DRAWING);
 	PerformanceAccumulator::Reset(PFE_DRAWWORLD);
+
+	extern void ProcessPendingPerformanceMeasurements();
+	ProcessPendingPerformanceMeasurements();
 
 	CallWindowRealtimeTickEvent(delta_ms);
 
@@ -3347,18 +3367,33 @@ void HideVitalWindows()
 	CloseWindowById(WC_STATUS_BAR, 0);
 }
 
+void ReInitWindow(Window *w, bool zoom_changed)
+{
+	if (w == nullptr) return;
+	if (zoom_changed) {
+		w->nested_root->AdjustPaddingForZoom();
+		w->UpdateQueryStringSize();
+	}
+	w->ReInit();
+}
+
 /** Re-initialize all windows. */
 void ReInitAllWindows(bool zoom_changed)
 {
+	SetupWidgetDimensions();
 	NWidgetLeaf::InvalidateDimensionCache(); // Reset cached sizes of several widgets.
 	NWidgetScrollbar::InvalidateDimensionCache();
 
 	extern void InitDepotWindowBlockSizes();
 	InitDepotWindowBlockSizes();
 
+	/* When _gui_zoom has changed, we need to resize toolbar and statusbar first,
+	 * so EnsureVisibleCaption uses the updated size information. */
+	ReInitWindow(FindWindowById(WC_MAIN_TOOLBAR, 0), zoom_changed);
+	ReInitWindow(FindWindowById(WC_STATUS_BAR, 0), zoom_changed);
 	for (Window *w : Window::Iterate()) {
-		if (zoom_changed) w->nested_root->AdjustPaddingForZoom();
-		w->ReInit();
+		if (w->window_class == WC_MAIN_TOOLBAR || w->window_class == WC_STATUS_BAR) continue;
+		ReInitWindow(w, zoom_changed);
 	}
 
 	void NetworkReInitChatBoxSize();
@@ -3462,7 +3497,7 @@ void ChangeVehicleViewports(VehicleID from_index, VehicleID to_index)
  */
 void RelocateAllWindows(int neww, int newh)
 {
-	CloseWindowById(WC_DROPDOWN_MENU, 0);
+	CloseWindowByClass(WC_DROPDOWN_MENU);
 
 	for (Window *w : Window::Iterate()) {
 		int left, top;

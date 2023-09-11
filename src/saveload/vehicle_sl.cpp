@@ -401,9 +401,11 @@ void AfterLoadVehicles(bool part_of_load)
 
 					rv->roadtype = Engine::Get(rv->engine_type)->u.road.roadtype;
 					rv->compatible_roadtypes = GetRoadTypeInfo(rv->roadtype)->powered_roadtypes;
+					RoadTramType rtt = GetRoadTramType(rv->roadtype);
 					for (RoadVehicle *u = rv; u != nullptr; u = u->Next()) {
 						u->roadtype = rv->roadtype;
 						u->compatible_roadtypes = rv->compatible_roadtypes;
+						if (GetRoadType(u->tile, rtt) == INVALID_ROADTYPE) SlErrorCorrupt("Road vehicle on invalid road type");
 					}
 
 					RoadVehUpdateCache(rv);
@@ -707,6 +709,7 @@ public:
 		SLE_CONDVAR(Vehicle, group_id,              SLE_UINT16,                  SLV_60, SL_MAX_VERSION),
 
 		SLE_CONDVAR(Vehicle, current_order_time,    SLE_UINT32,                  SLV_67, SL_MAX_VERSION),
+		SLE_CONDVAR(Vehicle, last_loading_tick,     SLE_UINT64,                   SLV_LAST_LOADING_TICK, SL_MAX_VERSION),
 		SLE_CONDVAR(Vehicle, lateness_counter,      SLE_INT32,                   SLV_67, SL_MAX_VERSION),
 	};
 #if defined(_MSC_VER) && (_MSC_VER == 1915 || _MSC_VER == 1916)

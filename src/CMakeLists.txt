@@ -10,6 +10,7 @@ add_subdirectory(3rdparty)
 add_subdirectory(ai)
 add_subdirectory(blitter)
 add_subdirectory(core)
+add_subdirectory(fontcache)
 add_subdirectory(game)
 add_subdirectory(lang)
 add_subdirectory(linkgraph)
@@ -29,11 +30,6 @@ add_files(
     viewport_sprite_sorter_sse4.cpp
     CONDITION SSE_FOUND
 )
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-    set_compile_flags(
-        viewport_sprite_sorter_sse4.cpp
-        COMPILE_FLAGS -msse4.1)
-endif()
 
 add_files(
     aircraft.h
@@ -162,7 +158,6 @@ add_files(
     fios_gui.cpp
     fontcache.cpp
     fontcache.h
-    fontcache_internal.h
     fontdetection.h
     framerate_gui.cpp
     framerate_type.h
@@ -221,6 +216,12 @@ add_files(
     landscape_cmd.h
     landscape_type.h
     language.h
+    league_base.h
+    league_cmd.h
+    league_cmd.cpp
+    league_gui.h
+    league_gui.cpp
+    league_type.h
     livery.h
     main_gui.cpp
     map.cpp

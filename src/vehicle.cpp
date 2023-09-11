@@ -776,7 +776,7 @@ uint32 Vehicle::GetGRFID() const
  */
 void Vehicle::ShiftDates(int interval)
 {
-	this->date_of_last_service += interval;
+	this->date_of_last_service = std::max(this->date_of_last_service + interval, 0);
 }
 
 /**
@@ -1405,7 +1405,7 @@ void AgeVehicle(Vehicle *v)
 {
 	if (v->age < MAX_DAY) {
 		v->age++;
-		if (v->IsPrimaryVehicle() && v->age == VEHICLE_PROFIT_MIN_AGE + 1) GroupStatistics::VehicleReachedProfitAge(v);
+		if (v->IsPrimaryVehicle() && v->age == VEHICLE_PROFIT_MIN_AGE + 1) GroupStatistics::VehicleReachedMinAge(v);
 	}
 
 	if (!v->IsPrimaryVehicle() && (v->type != VEH_TRAIN || !Train::From(v)->IsEngine())) return;
@@ -2140,7 +2140,7 @@ void Vehicle::BeginLoading()
 {
 	assert(IsTileType(this->tile, MP_STATION) || this->type == VEH_SHIP);
 
-	uint32 travel_time = this->current_order_time;
+	Ticks travel_time = _tick_counter - this->last_loading_tick;
 	if (this->current_order.IsType(OT_GOTO_STATION) &&
 			this->current_order.GetDestination() == this->last_station_visited) {
 		this->DeleteUnreachedImplicitOrders();
@@ -2305,6 +2305,7 @@ void Vehicle::LeaveStation()
 
 			/* if the vehicle could load here or could stop with cargo loaded set the last loading station */
 			this->last_loading_station = this->last_station_visited;
+			this->last_loading_tick = _tick_counter;
 		} else {
 			/* if the vehicle couldn't load and had to unload or transfer everything
 			 * set the last loading station to invalid as it will leave empty. */
@@ -3015,5 +3016,67 @@ void GetVehicleSet(VehicleSet &set, Vehicle *v, uint8 num_vehicles)
 				u = u->Next();
 			} while (u != nullptr && u->IsArticulatedPart());
 		}
+	}
+}
+
+/**
+ * Calculates the maximum weight of the ground vehicle when loaded.
+ * @return Weight in tonnes
+ */
+uint32 Vehicle::GetDisplayMaxWeight() const
+{
+	uint32 max_weight = 0;
+
+	for (const Vehicle* u = this; u != nullptr; u = u->Next()) {
+		max_weight += u->GetMaxWeight();
+	}
+
+	return max_weight;
+}
+
+/**
+ * Calculates the minimum power-to-weight ratio using the maximum weight of the ground vehicle
+ * @return power-to-weight ratio in 10ths of hp(I) per tonne
+ */
+uint32 Vehicle::GetDisplayMinPowerToWeight() const
+{
+	uint32 max_weight = GetDisplayMaxWeight();
+	if (max_weight == 0) return 0;
+	return GetGroundVehicleCache()->cached_power * 10u / max_weight;
+}
+
+/**
+ * Checks if two vehicle chains have the same list of engines.
+ * @param v1 First vehicle chain.
+ * @param v1 Second vehicle chain.
+ * @return True if same, false if different.
+ */
+bool VehiclesHaveSameEngineList(const Vehicle *v1, const Vehicle *v2)
+{
+	while (true) {
+		if (v1 == nullptr && v2 == nullptr) return true;
+		if (v1 == nullptr || v2 == nullptr) return false;
+		if (v1->GetEngine() != v2->GetEngine()) return false;
+		v1 = v1->GetNextVehicle();
+		v2 = v2->GetNextVehicle();
+	}
+}
+
+/**
+ * Checks if two vehicles have the same list of orders.
+ * @param v1 First vehicles.
+ * @param v1 Second vehicles.
+ * @return True if same, false if different.
+ */
+bool VehiclesHaveSameOrderList(const Vehicle *v1, const Vehicle *v2)
+{
+	const Order *o1 = v1->GetFirstOrder();
+	const Order *o2 = v2->GetFirstOrder();
+	while (true) {
+		if (o1 == nullptr && o2 == nullptr) return true;
+		if (o1 == nullptr || o2 == nullptr) return false;
+		if (!o1->Equals(*o2)) return false;
+		o1 = o1->next;
+		o2 = o2->next;
 	}
 }

@@ -132,6 +132,8 @@ set(CPACK_STRIP_FILES YES)
 set(CPACK_OUTPUT_FILE_PREFIX "bundles")
 
 if(APPLE)
+    # Stripping would produce unreadable stacktraces.
+    set(CPACK_STRIP_FILES NO)
     set(CPACK_GENERATOR "Bundle")
     include(PackageBundle)
 

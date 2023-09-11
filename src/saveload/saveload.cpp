@@ -210,7 +210,6 @@ struct SaveLoadParams {
 	StringID error_str;                  ///< the translatable error message to show
 	char *extra_msg;                     ///< the error message
 
-	uint16 game_speed;                   ///< The game speed when saving started.
 	bool saveinprogress;                 ///< Whether there is currently a save in progress.
 };
 
@@ -240,6 +239,7 @@ static const std::vector<ChunkHandlerRef> &ChunkHandlers()
 	extern const ChunkHandlerTable _cargomonitor_chunk_handlers;
 	extern const ChunkHandlerTable _goal_chunk_handlers;
 	extern const ChunkHandlerTable _story_page_chunk_handlers;
+	extern const ChunkHandlerTable _league_chunk_handlers;
 	extern const ChunkHandlerTable _ai_chunk_handlers;
 	extern const ChunkHandlerTable _game_chunk_handlers;
 	extern const ChunkHandlerTable _animated_tile_chunk_handlers;
@@ -271,6 +271,7 @@ static const std::vector<ChunkHandlerRef> &ChunkHandlers()
 		_cargomonitor_chunk_handlers,
 		_goal_chunk_handlers,
 		_story_page_chunk_handlers,
+		_league_chunk_handlers,
 		_engine_chunk_handlers,
 		_town_chunk_handlers,
 		_sign_chunk_handlers,
@@ -2597,6 +2598,7 @@ struct ZlibLoadFilter : LoadFilter {
 /** Filter using Zlib compression. */
 struct ZlibSaveFilter : SaveFilter {
 	z_stream z; ///< Stream state we are writing to.
+	byte fwrite_buf[MEMORY_CHUNK_SIZE]; ///< Buffer for writing to the file.
 
 	/**
 	 * Initialise this filter.
@@ -2623,13 +2625,12 @@ struct ZlibSaveFilter : SaveFilter {
 	 */
 	void WriteLoop(byte *p, size_t len, int mode)
 	{
-		byte buf[MEMORY_CHUNK_SIZE]; // output buffer
 		uint n;
 		this->z.next_in = p;
 		this->z.avail_in = (uInt)len;
 		do {
-			this->z.next_out = buf;
-			this->z.avail_out = sizeof(buf);
+			this->z.next_out = this->fwrite_buf;
+			this->z.avail_out = sizeof(this->fwrite_buf);
 
 			/**
 			 * For the poor next soul who sees many valgrind warnings of the
@@ -2641,8 +2642,8 @@ struct ZlibSaveFilter : SaveFilter {
 			int r = deflate(&this->z, mode);
 
 			/* bytes were emitted? */
-			if ((n = sizeof(buf) - this->z.avail_out) != 0) {
-				this->chain->Write(buf, n);
+			if ((n = sizeof(this->fwrite_buf) - this->z.avail_out) != 0) {
+				this->chain->Write(this->fwrite_buf, n);
 			}
 			if (r == Z_STREAM_END) break;
 
@@ -2725,6 +2726,7 @@ struct LZMALoadFilter : LoadFilter {
 /** Filter using LZMA compression. */
 struct LZMASaveFilter : SaveFilter {
 	lzma_stream lzma; ///< Stream state that we are writing to.
+	byte fwrite_buf[MEMORY_CHUNK_SIZE]; ///< Buffer for writing to the file.
 
 	/**
 	 * Initialise this filter.
@@ -2750,19 +2752,18 @@ struct LZMASaveFilter : SaveFilter {
 	 */
 	void WriteLoop(byte *p, size_t len, lzma_action action)
 	{
-		byte buf[MEMORY_CHUNK_SIZE]; // output buffer
 		size_t n;
 		this->lzma.next_in = p;
 		this->lzma.avail_in = len;
 		do {
-			this->lzma.next_out = buf;
-			this->lzma.avail_out = sizeof(buf);
+			this->lzma.next_out = this->fwrite_buf;
+			this->lzma.avail_out = sizeof(this->fwrite_buf);
 
 			lzma_ret r = lzma_code(&this->lzma, action);
 
 			/* bytes were emitted? */
-			if ((n = sizeof(buf) - this->lzma.avail_out) != 0) {
-				this->chain->Write(buf, n);
+			if ((n = sizeof(this->fwrite_buf) - this->lzma.avail_out) != 0) {
+				this->chain->Write(this->fwrite_buf, n);
 			}
 			if (r == LZMA_STREAM_END) break;
 			if (r != LZMA_OK) SlError(STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR, "liblzma returned error code");
@@ -2911,15 +2912,9 @@ static inline void ClearSaveLoadState()
 	_sl.lf = nullptr;
 }
 
-/**
- * Update the gui accordingly when starting saving
- * and set locks on saveload. Also turn off fast-forward cause with that
- * saving takes Aaaaages
- */
+/** Update the gui accordingly when starting saving and set locks on saveload. */
 static void SaveFileStart()
 {
-	_sl.game_speed = _game_speed;
-	_game_speed = 100;
 	SetMouseCursorBusy(true);
 
 	InvalidateWindowData(WC_STATUS_BAR, 0, SBI_SAVELOAD_START);
@@ -2929,7 +2924,6 @@ static void SaveFileStart()
 /** Update the gui accordingly when saving is done and release locks on saveload. */
 static void SaveFileDone()
 {
-	if (_game_mode != GM_MENU) _game_speed = _sl.game_speed;
 	SetMouseCursorBusy(false);
 
 	InvalidateWindowData(WC_STATUS_BAR, 0, SBI_SAVELOAD_FINISH);
@@ -3316,7 +3310,7 @@ SaveOrLoadResult SaveOrLoad(const std::string &filename, SaveLoadOperation fop, 
 		ClearSaveLoadState();
 
 		/* Skip the "colour" character */
-		if (fop != SLO_CHECK) Debug(sl, 0, "{}", GetSaveLoadErrorString());
+		if (fop != SLO_CHECK) Debug(sl, 0, "{}", GetSaveLoadErrorString() + 3);
 
 		/* A saver/loader exception!! reinitialize all variables to prevent crash! */
 		return (fop == SLO_LOAD) ? SL_REINIT : SL_ERROR;

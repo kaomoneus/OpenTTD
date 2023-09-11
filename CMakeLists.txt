@@ -5,7 +5,7 @@ if(NOT BINARY_NAME)
 endif()
 
 project(${BINARY_NAME}
-    VERSION 13.0
+    VERSION 13.4
 )
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
@@ -22,7 +22,7 @@ if (EMSCRIPTEN)
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.14)
+set(CMAKE_OSX_DEPLOYMENT_TARGET 10.13)
 
 # Use GNUInstallDirs to allow customisation
 # but set our own default data and bin dir
@@ -279,6 +279,8 @@ if(NOT OPTION_DEDICATED)
         link_package(OpenGL TARGET OpenGL::GL)
     endif()
 endif()
+
+include(CheckAtomic)
 
 if(APPLE)
     link_package(Iconv TARGET Iconv::Iconv)

@@ -34,6 +34,7 @@
 #include "debug.h"
 #include "game/game_text.hpp"
 #include "network/network_content_gui.h"
+#include "newgrf_engine.h"
 #include <stack>
 #include <cmath>
 
@@ -780,11 +781,24 @@ static const Units _units_velocity[] = {
 	{ {37888, 16}, STR_UNITS_VELOCITY_GAMEUNITS,    1 },
 };
 
-/** Unit conversions for velocity. */
+/** Unit conversions for power. */
 static const Units _units_power[] = {
 	{ {   1,  0}, STR_UNITS_POWER_IMPERIAL, 0 },
 	{ {4153, 12}, STR_UNITS_POWER_METRIC,   0 },
 	{ {6109, 13}, STR_UNITS_POWER_SI,       0 },
+};
+
+/** Unit conversions for power to weight. */
+static const Units _units_power_to_weight[] = {
+	{ {  29,  5}, STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL, 1},
+	{ {   1,  0}, STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC, 1},
+	{ {   1,  0}, STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_SI, 1},
+	{ {  59,  6}, STR_UNITS_POWER_METRIC_TO_WEIGHT_IMPERIAL, 1},
+	{ {  65,  6}, STR_UNITS_POWER_METRIC_TO_WEIGHT_METRIC, 1},
+	{ {  65,  6}, STR_UNITS_POWER_METRIC_TO_WEIGHT_SI, 1},
+	{ { 173,  8}, STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL, 1},
+	{ {   3,  2}, STR_UNITS_POWER_SI_TO_WEIGHT_METRIC, 1},
+	{ {   3,  2}, STR_UNITS_POWER_SI_TO_WEIGHT_SI, 1},
 };
 
 /** Unit conversions for weight. */
@@ -1328,6 +1342,19 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				break;
 			}
 
+			case SCC_POWER_TO_WEIGHT: { // {POWER_TO_WEIGHT}
+				auto setting = _settings_game.locale.units_power * 3u + _settings_game.locale.units_weight;
+				assert(setting < lengthof(_units_power_to_weight));
+
+				auto const &x = _units_power_to_weight[setting];
+
+				int64 args_array[] = {x.c.ToDisplay(args->GetInt64()), x.decimal_places};
+
+				StringParameters tmp_params(args_array);
+				buff = FormatString(buff, GetStringPtr(x.s), &tmp_params, last);
+				break;
+			}
+
 			case SCC_VELOCITY: { // {VELOCITY}
 				assert(_settings_game.locale.units_velocity < lengthof(_units_velocity));
 				unsigned int decimal_places = _units_velocity[_settings_game.locale.units_velocity].decimal_places;
@@ -1421,17 +1448,38 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 			}
 
 			case SCC_ENGINE_NAME: { // {ENGINE}
-				const Engine *e = Engine::GetIfValid(args->GetInt32(SCC_ENGINE_NAME));
+				int64 arg = args->GetInt64(SCC_ENGINE_NAME);
+				const Engine *e = Engine::GetIfValid(static_cast<EngineID>(arg));
 				if (e == nullptr) break;
 
 				if (!e->name.empty() && e->IsEnabled()) {
 					int64 args_array[] = {(int64)(size_t)e->name.c_str()};
 					StringParameters tmp_params(args_array);
 					buff = GetStringWithArgs(buff, STR_JUST_RAW_STRING, &tmp_params, last);
-				} else {
-					StringParameters tmp_params(nullptr, 0, nullptr);
-					buff = GetStringWithArgs(buff, e->info.string_id, &tmp_params, last);
+
+					break;
 				}
+
+				if (HasBit(e->info.callback_mask, CBM_VEHICLE_NAME)) {
+					uint16 callback = GetVehicleCallback(CBID_VEHICLE_NAME, static_cast<uint32>(arg >> 32), 0, e->index, nullptr);
+					/* Not calling ErrorUnknownCallbackResult due to being inside string processing. */
+					if (callback != CALLBACK_FAILED && callback < 0x400) {
+						const GRFFile *grffile = e->GetGRF();
+						assert(grffile != nullptr);
+
+						StartTextRefStackUsage(grffile, 6);
+						uint64 tmp_dparam[6] = { 0 };
+						WChar tmp_type[6] = { 0 };
+						StringParameters tmp_params(tmp_dparam, 6, tmp_type);
+						buff = GetStringWithArgs(buff, GetGRFStringID(grffile->grfid, 0xD000 + callback), &tmp_params, last);
+						StopTextRefStackUsage();
+
+						break;
+					}
+				}
+
+				StringParameters tmp_params(nullptr, 0, nullptr);
+				buff = GetStringWithArgs(buff, e->info.string_id, &tmp_params, last);
 				break;
 			}
 
@@ -2087,7 +2135,7 @@ const char *GetCurrentLanguageIsoCode()
  */
 bool MissingGlyphSearcher::FindMissingGlyphs()
 {
-	InitFreeType(this->Monospace());
+	InitFontCache(this->Monospace());
 	const Sprite *question_mark[FS_END];
 
 	for (FontSize size = this->Monospace() ? FS_MONO : FS_BEGIN; size < (this->Monospace() ? FS_END : FS_MONO); size++) {
@@ -2112,7 +2160,7 @@ bool MissingGlyphSearcher::FindMissingGlyphs()
 					default: NOT_REACHED();
 				}
 
-				Debug(freetype, 0, "Font is missing glyphs to display char 0x{:X} in {} font size", (int)c, size_name);
+				Debug(fontcache, 0, "Font is missing glyphs to display char 0x{:X} in {} font size", (int)c, size_name);
 				return true;
 			}
 		}
@@ -2156,7 +2204,7 @@ class LanguagePackGlyphSearcher : public MissingGlyphSearcher {
 		return false;
 	}
 
-	void SetFontNames(FreeTypeSettings *settings, const char *font_name, const void *os_data) override
+	void SetFontNames(FontCacheSettings *settings, const char *font_name, const void *os_data) override
 	{
 #if defined(WITH_FREETYPE) || defined(_WIN32) || defined(WITH_COCOA)
 		settings->small.font = font_name;
@@ -2192,15 +2240,15 @@ void CheckForMissingGlyphs(bool base_font, MissingGlyphSearcher *searcher)
 	if (bad_font) {
 		/* We found an unprintable character... lets try whether we can find
 		 * a fallback font that can print the characters in the current language. */
-		bool any_font_configured = !_freetype.medium.font.empty();
-		FreeTypeSettings backup = _freetype;
+		bool any_font_configured = !_fcsettings.medium.font.empty();
+		FontCacheSettings backup = _fcsettings;
 
-		_freetype.mono.os_handle = nullptr;
-		_freetype.medium.os_handle = nullptr;
+		_fcsettings.mono.os_handle = nullptr;
+		_fcsettings.medium.os_handle = nullptr;
 
-		bad_font = !SetFallbackFont(&_freetype, _langpack.langpack->isocode, _langpack.langpack->winlangid, searcher);
+		bad_font = !SetFallbackFont(&_fcsettings, _langpack.langpack->isocode, _langpack.langpack->winlangid, searcher);
 
-		_freetype = backup;
+		_fcsettings = backup;
 
 		if (!bad_font && any_font_configured) {
 			/* If the user configured a bad font, and we found a better one,
@@ -2219,7 +2267,7 @@ void CheckForMissingGlyphs(bool base_font, MissingGlyphSearcher *searcher)
 			/* Our fallback font does miss characters too, so keep the
 			 * user chosen font as that is more likely to be any good than
 			 * the wild guess we made */
-			InitFreeType(searcher->Monospace());
+			InitFontCache(searcher->Monospace());
 		}
 	}
 #endif

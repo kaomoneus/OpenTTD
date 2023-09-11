@@ -186,6 +186,7 @@ enum Commands : uint16 {
 	CMD_REMOVE_SIGNALS,               ///< remove a signal
 	CMD_TERRAFORM_LAND,               ///< terraform a tile
 	CMD_BUILD_OBJECT,                 ///< build an object
+	CMD_BUILD_OBJECT_AREA,            ///< build an area of objects
 	CMD_BUILD_TUNNEL,                 ///< build a tunnel
 
 	CMD_REMOVE_FROM_RAIL_STATION,     ///< remove a (rectangle of) tiles from a rail station
@@ -330,11 +331,18 @@ enum Commands : uint16 {
 
 	CMD_MOVE_ORDER,                   ///< move an order
 	CMD_CHANGE_TIMETABLE,             ///< change the timetable for a vehicle
+	CMD_BULK_CHANGE_TIMETABLE,        ///< change the timetable for all orders of a vehicle
 	CMD_SET_VEHICLE_ON_TIME,          ///< set the vehicle on time feature (timetable)
 	CMD_AUTOFILL_TIMETABLE,           ///< autofill the timetable
 	CMD_SET_TIMETABLE_START,          ///< set the date that a timetable should start
 
 	CMD_OPEN_CLOSE_AIRPORT,           ///< open/close an airport to incoming aircraft
+
+	CMD_CREATE_LEAGUE_TABLE,               ///< create a new league table
+	CMD_CREATE_LEAGUE_TABLE_ELEMENT,       ///< create a new element in a league table
+	CMD_UPDATE_LEAGUE_TABLE_ELEMENT_DATA,  ///< update the data fields of a league table element
+	CMD_UPDATE_LEAGUE_TABLE_ELEMENT_SCORE, ///< update the score of a league table element
+	CMD_REMOVE_LEAGUE_TABLE_ELEMENT,       ///< remove a league table element
 
 	CMD_END,                          ///< Must ALWAYS be on the end of this list!! (period)
 };
@@ -378,6 +386,7 @@ enum CommandFlags {
 	CMD_DEITY     = 0x100, ///< the command may be executed by COMPANY_DEITY
 	CMD_STR_CTRL  = 0x200, ///< the command's string may contain control strings
 	CMD_NO_EST    = 0x400, ///< the command is never estimated.
+	CMD_LOCATION  = 0x800, ///< the command has implicit location argument.
 };
 DECLARE_ENUM_AS_BIT_SET(CommandFlags)
 
@@ -469,6 +478,6 @@ typedef void CommandCallback(Commands cmd, const CommandCost &result, TileIndex 
  * @param result_data Additional returned data from the command
  * @see CommandProc
  */
-typedef void CommandCallbackData(Commands cmd, const CommandCost &result, TileIndex tile, const CommandDataBuffer &data, CommandDataBuffer result_data);
+typedef void CommandCallbackData(Commands cmd, const CommandCost &result, const CommandDataBuffer &data, CommandDataBuffer result_data);
 
 #endif /* COMMAND_TYPE_H */

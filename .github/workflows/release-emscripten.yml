@@ -1,0 +1,85 @@
+name: Emscripten
+
+on:
+  workflow_call:
+
+jobs:
+  emscripten:
+    name: Emscripten
+
+    runs-on: ubuntu-20.04
+    container:
+      # If you change this version, change the number in the cache step too.
+      image: emscripten/emsdk:2.0.31
+
+    steps:
+    - name: Download source
+      uses: actions/download-artifact@v2
+      with:
+        name: internal-source
+
+    - name: Unpack source
+      run: |
+        tar -xf source.tar.gz --strip-components=1
+
+    - name: Setup cache
+      uses: actions/cache@v2
+      with:
+        path: /emsdk/upstream/emscripten/cache
+        key: 2.0.31-${{ runner.os }}
+
+    - name: Patch Emscripten to support LZMA
+      run: |
+        cd /emsdk/upstream/emscripten
+        patch -p1 < ${GITHUB_WORKSPACE}/os/emscripten/emsdk-liblzma.patch
+
+    - name: Build (host tools)
+      run: |
+        mkdir build-host
+        cd build-host
+
+        echo "::group::CMake"
+        cmake .. -DOPTION_TOOLS_ONLY=ON
+        echo "::endgroup::"
+
+        echo "::group::Build"
+        echo "Running on $(nproc) cores"
+        cmake --build . -j $(nproc) --target tools
+        echo "::endgroup::"
+
+    - name: Install GCC problem matcher
+      uses: ammaraskar/gcc-problem-matcher@master
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+
+        echo "::group::CMake"
+
+        emcmake cmake .. \
+            -DHOST_BINARY_DIR=../build-host \
+            -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/build/install \
+            -DCMAKE_INSTALL_DATADIR=${GITHUB_WORKSPACE}/build/install \
+            -DCMAKE_INSTALL_BINDIR=${GITHUB_WORKSPACE}/build/install
+
+        echo "::endgroup::"
+
+        echo "::group::Build"
+        echo "Running on $(nproc) cores"
+        cmake --build . -j $(nproc)
+        echo "::endgroup::"
+
+    - name: Install
+      run: |
+        cd ${GITHUB_WORKSPACE}/build
+        echo "::group::Install"
+        cmake --build . --target install -j $(nproc)
+        echo "::endgroup::"
+
+    - name: Store installation as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: openttd-emscripten
+        path: build/install
+        retention-days: 5

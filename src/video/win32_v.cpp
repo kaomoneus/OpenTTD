@@ -38,6 +38,10 @@
 #define PM_QS_INPUT 0x20000
 #endif
 
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+
 bool _window_maximize;
 static Dimension _bck_resolution;
 DWORD _imm_props;
@@ -208,8 +212,18 @@ bool VideoDriver_Win32Base::MakeWindow(bool full_screen, bool resize)
 		if (this->main_wnd != nullptr) {
 			if (!_window_maximize && resize) SetWindowPos(this->main_wnd, 0, 0, 0, w, h, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOMOVE);
 		} else {
-			int x = (GetSystemMetrics(SM_CXSCREEN) - w) / 2;
-			int y = (GetSystemMetrics(SM_CYSCREEN) - h) / 2;
+			int x = 0;
+			int y = 0;
+
+			/* For windowed mode, center on the workspace of the primary display. */
+			if (!this->fullscreen) {
+				MONITORINFO mi;
+				mi.cbSize = sizeof(mi);
+				GetMonitorInfo(MonitorFromWindow(0, MONITOR_DEFAULTTOPRIMARY), &mi);
+
+				x = (mi.rcWork.right - mi.rcWork.left - w) / 2;
+				y = (mi.rcWork.bottom - mi.rcWork.top - h) / 2;
+			}
 
 			char window_title[64];
 			seprintf(window_title, lastof(window_title), "OpenTTD %s", _openttd_revision);
@@ -485,7 +499,7 @@ LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
-			if (_cursor.UpdateCursorPosition(x, y, false)) {
+			if (_cursor.UpdateCursorPosition(x, y)) {
 				POINT pt;
 				pt.x = _cursor.pos.x;
 				pt.y = _cursor.pos.y;
@@ -668,6 +682,24 @@ LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					break;
 			}
 			return TRUE;
+		}
+
+		case WM_DPICHANGED: {
+			auto did_adjust = AdjustGUIZoom(true);
+
+			/* Resize the window to match the new DPI setting. */
+			RECT *prcNewWindow = (RECT *)lParam;
+			SetWindowPos(hwnd,
+				NULL,
+				prcNewWindow->left,
+				prcNewWindow->top,
+				prcNewWindow->right - prcNewWindow->left,
+				prcNewWindow->bottom - prcNewWindow->top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+
+			if (did_adjust) ReInitAllWindows(true);
+
+			return 0;
 		}
 
 /* needed for wheel */

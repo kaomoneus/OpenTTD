@@ -408,7 +408,7 @@ void Town::UpdateVirtCoord()
 	SetDParam(1, this->cache.population);
 	this->cache.sign.UpdatePosition(pt.x, pt.y - 24 * ZOOM_LVL_BASE,
 		_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN,
-		STR_VIEWPORT_TOWN);
+		STR_VIEWPORT_TOWN_TINY_WHITE);
 
 	_viewport_sign_kdtree.Insert(ViewportSignKdtreeItem::MakeTown(this->index));
 
@@ -1161,6 +1161,27 @@ static bool CanRoadContinueIntoNextTile(const Town *t, const TileIndex tile, con
 }
 
 /**
+ * CircularTileSearch proc which checks for a nearby parallel bridge to avoid building redundant bridges.
+ * @param tile The tile to search.
+ * @param user_data Reference to the valid direction of the proposed bridge.
+ * @return true if another bridge exists, else false.
+ */
+static bool RedundantBridgeExistsNearby(TileIndex tile, void *user_data)
+{
+	/* Don't look into the void. */
+	if (!IsValidTile(tile)) return false;
+
+	/* Only consider bridge head tiles. */
+	if (!IsBridgeTile(tile)) return false;
+
+	/* Only consider road bridges. */
+	if (GetTunnelBridgeTransportType(tile) != TRANSPORT_ROAD) return false;
+
+	/* If the bridge is facing the same direction as the proposed bridge, we've found a redundant bridge. */
+	return (GetTileSlope(tile) & InclinedSlope(ReverseDiagDir(*(DiagDirection *)user_data)));
+}
+
+/**
  * Grows the town with a bridge.
  *  At first we check if a bridge is reasonable.
  *  If so we check if we are able to build it.
@@ -1220,6 +1241,11 @@ static bool GrowTownWithBridge(const Town *t, const TileIndex tile, const DiagDi
 
 	/* Make sure the road can be continued past the bridge. At this point, bridge_tile holds the end tile of the bridge. */
 	if (!CanRoadContinueIntoNextTile(t, bridge_tile, bridge_dir)) return false;
+
+	/* If another parallel bridge exists nearby, this one would be redundant and shouldn't be built. We don't care about flat bridges. */
+	TileIndex search = tile;
+	DiagDirection direction_to_match = bridge_dir;
+	if (slope != SLOPE_FLAT && CircularTileSearch(&search, bridge_length, 0, 0, RedundantBridgeExistsNearby, &direction_to_match)) return false;
 
 	for (uint8 times = 0; times <= 22; times++) {
 		byte bridge_type = RandomRange(MAX_BRIDGES - 1);
@@ -3267,21 +3293,19 @@ static TownActionProc * const _town_action_proc[] = {
 
 /**
  * Get a list of available actions to do at a town.
- * @param nump if not nullptr add put the number of available actions in it
  * @param cid the company that is querying the town
  * @param t the town that is queried
  * @return bitmasked value of enabled actions
  */
-uint GetMaskOfTownActions(int *nump, CompanyID cid, const Town *t)
+TownActions GetMaskOfTownActions(CompanyID cid, const Town *t)
 {
-	int num = 0;
 	TownActions buttons = TACT_NONE;
 
 	/* Spectators and unwanted have no options */
 	if (cid != COMPANY_SPECTATOR && !(_settings_game.economy.bribe && t->unwanted[cid])) {
 
-		/* Things worth more than this are not shown */
-		Money avail = Company::Get(cid)->money + _price[PR_STATION_VALUE] * 200;
+		/* Actions worth more than this are not able to be performed */
+		Money avail = Company::Get(cid)->money;
 
 		/* Check the action bits for validity and
 		 * if they are valid add them */
@@ -3305,12 +3329,10 @@ uint GetMaskOfTownActions(int *nump, CompanyID cid, const Town *t)
 
 			if (avail >= _town_action_costs[i] * _price[PR_TOWN_ACTION] >> 8) {
 				buttons |= cur;
-				num++;
 			}
 		}
 	}
 
-	if (nump != nullptr) *nump = num;
 	return buttons;
 }
 
@@ -3328,7 +3350,7 @@ CommandCost CmdDoTownAction(DoCommandFlag flags, TownID town_id, uint8 action)
 	Town *t = Town::GetIfValid(town_id);
 	if (t == nullptr || action >= lengthof(_town_action_proc)) return CMD_ERROR;
 
-	if (!HasBit(GetMaskOfTownActions(nullptr, _current_company, t), action)) return CMD_ERROR;
+	if (!HasBit(GetMaskOfTownActions(_current_company, t), action)) return CMD_ERROR;
 
 	CommandCost cost(EXPENSES_OTHER, _price[PR_TOWN_ACTION] * _town_action_costs[action] >> 8);
 

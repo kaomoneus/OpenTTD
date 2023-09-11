@@ -13,7 +13,9 @@
 #include "../../strings_func.h"
 #include "../../table/control_codes.h"
 #include "../../fontcache.h"
+#include "../../zoom_func.h"
 #include "macos.h"
+#include <cmath>
 
 #include <CoreFoundation/CoreFoundation.h>
 
@@ -178,7 +180,7 @@ static CTRunDelegateCallbacks _sprite_font_callback = {
 		if (font == nullptr) {
 			if (!_font_cache[i.second->fc->GetSize()]) {
 				/* Cache font information. */
-				CFAutoRelease<CFStringRef> font_name(CFStringCreateWithCString(kCFAllocatorDefault, i.second->fc->GetFontName(), kCFStringEncodingUTF8));
+				CFAutoRelease<CFStringRef> font_name(CFStringCreateWithCString(kCFAllocatorDefault, i.second->fc->GetFontName().c_str(), kCFStringEncodingUTF8));
 				_font_cache[i.second->fc->GetSize()].reset(CTFontCreateWithName(font_name.get(), i.second->fc->GetFontSize(), nullptr));
 			}
 			font = _font_cache[i.second->fc->GetSize()].get();
@@ -245,14 +247,14 @@ CoreTextParagraphLayout::CoreTextVisualRun::CoreTextVisualRun(CTRunRef run, Font
 		if (buff[this->glyph_to_char[i]] >= SCC_SPRITE_START && buff[this->glyph_to_char[i]] <= SCC_SPRITE_END) {
 			this->glyphs[i] = font->fc->MapCharToGlyph(buff[this->glyph_to_char[i]]);
 			this->positions[i * 2 + 0] = pts[i].x;
-			this->positions[i * 2 + 1] = font->fc->GetAscender() - font->fc->GetGlyph(this->glyphs[i])->height - 1; // Align sprite glyphs to font baseline.
+			this->positions[i * 2 + 1] = (font->fc->GetHeight() - ScaleSpriteTrad(FontCache::GetDefaultFontHeight(font->fc->GetSize()))) / 2; // Align sprite font to centre
 		} else {
 			this->glyphs[i] = gl[i];
 			this->positions[i * 2 + 0] = pts[i].x;
 			this->positions[i * 2 + 1] = pts[i].y;
 		}
 	}
-	this->total_advance = (int)CTRunGetTypographicBounds(run, CFRangeMake(0, 0), nullptr, nullptr, nullptr);
+	this->total_advance = (int)std::ceil(CTRunGetTypographicBounds(run, CFRangeMake(0, 0), nullptr, nullptr, nullptr));
 	this->positions[this->glyphs.size() * 2] = this->positions[0] + this->total_advance;
 }
 

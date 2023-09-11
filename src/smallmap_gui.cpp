@@ -556,15 +556,18 @@ static inline uint32 GetSmallMapVegetationPixels(TileIndex tile, TileType t)
 /**
  * Return the colour a tile would be displayed with in the small map in mode "Owner".
  *
- * @param tile The tile of which we would like to get the colour.
- * @param t    Effective tile type of the tile (see #SmallMapWindow::GetTileColours).
+ * @note If include_heightmap is IH_NEVER, the return value can safely be used as a palette colour (by masking it to a uint8)
+ * @param tile              The tile of which we would like to get the colour.
+ * @param t                 Effective tile type of the tile (see #SmallMapWindow::GetTileColours).
+ * @param include_heightmap Whether to return the heightmap/contour colour of this tile (instead of the default land tile colour)
  * @return The colour of tile in the small map in mode "Owner"
  */
-static inline uint32 GetSmallMapOwnerPixels(TileIndex tile, TileType t)
+uint32 GetSmallMapOwnerPixels(TileIndex tile, TileType t, IncludeHeightmap include_heightmap)
 {
 	Owner o;
 
 	switch (t) {
+		case MP_VOID:     return MKCOLOUR_XXXX(PC_BLACK);
 		case MP_INDUSTRY: return MKCOLOUR_XXXX(PC_DARK_GREY);
 		case MP_HOUSE:    return MKCOLOUR_XXXX(PC_DARK_RED);
 		default:          o = GetTileOwner(tile); break;
@@ -577,7 +580,8 @@ static inline uint32 GetSmallMapOwnerPixels(TileIndex tile, TileType t)
 	if ((o < MAX_COMPANIES && !_legend_land_owners[_company_to_list_pos[o]].show_on_map) || o == OWNER_NONE || o == OWNER_WATER) {
 		if (t == MP_WATER) return MKCOLOUR_XXXX(PC_WATER);
 		const SmallMapColourScheme *cs = &_heightmap_schemes[_settings_client.gui.smallmap_land_colour];
-		return _smallmap_show_heightmap ? cs->height_colours[TileHeight(tile)] : cs->default_colour;
+		return ((include_heightmap == IncludeHeightmap::IfEnabled && _smallmap_show_heightmap) || include_heightmap == IncludeHeightmap::Always)
+			? cs->height_colours[TileHeight(tile)] : cs->default_colour;
 	} else if (o == OWNER_TOWN) {
 		return MKCOLOUR_XXXX(PC_DARK_RED);
 	}
@@ -814,7 +818,7 @@ inline uint32 SmallMapWindow::GetTileColours(const TileArea &ta) const
 			return GetSmallMapVegetationPixels(tile, et);
 
 		case SMT_OWNER:
-			return GetSmallMapOwnerPixels(tile, et);
+			return GetSmallMapOwnerPixels(tile, et, IncludeHeightmap::IfEnabled);
 
 		default: NOT_REACHED();
 	}
@@ -1184,10 +1188,10 @@ void SmallMapWindow::RebuildColourIndexIfNecessary()
 	}
 
 	/* Width of the legend blob. */
-	this->legend_width = (FONT_HEIGHT_SMALL - ScaleFontTrad(1)) * 8 / 5;
+	this->legend_width = (FONT_HEIGHT_SMALL - ScaleGUITrad(1)) * 8 / 5;
 
 	/* The width of a column is the minimum width of all texts + the size of the blob + some spacing */
-	this->column_width = min_width + this->legend_width + WD_FRAMERECT_LEFT + WD_FRAMERECT_RIGHT;
+	this->column_width = min_width + this->legend_width + WidgetDimensions::scaled.framerect.Horizontal();
 }
 
 /* virtual */ void SmallMapWindow::OnPaint()
@@ -1210,27 +1214,24 @@ void SmallMapWindow::RebuildColourIndexIfNecessary()
 {
 	switch (widget) {
 		case WID_SM_MAP: {
+			Rect ir = r.Shrink(WidgetDimensions::scaled.bevel);
 			DrawPixelInfo new_dpi;
-			if (!FillDrawPixelInfo(&new_dpi, r.left + 1, r.top + 1, r.right - r.left - 1, r.bottom - r.top - 1)) return;
+			if (!FillDrawPixelInfo(&new_dpi, ir.left, ir.top, ir.Width(), ir.Height())) return;
 			this->DrawSmallMap(&new_dpi);
 			break;
 		}
 
 		case WID_SM_LEGEND: {
-			uint columns = this->GetNumberColumnsLegend(r.right - r.left + 1);
+			uint columns = this->GetNumberColumnsLegend(r.Width());
 			uint number_of_rows = this->GetNumberRowsLegend(columns);
 			bool rtl = _current_text_dir == TD_RTL;
-			uint y_org = r.top + WD_FRAMERECT_TOP;
-			uint x = rtl ? r.right - this->column_width - WD_FRAMERECT_RIGHT : r.left + WD_FRAMERECT_LEFT;
-			uint y = y_org;
 			uint i = 0; // Row counter for industry legend.
 			uint row_height = FONT_HEIGHT_SMALL;
-			int padding = ScaleFontTrad(1);
+			int padding = WidgetDimensions::scaled.hsep_normal;
 
-			uint text_left  = rtl ? 0 : this->legend_width + WD_FRAMERECT_LEFT;
-			uint text_right = this->column_width - padding - (rtl ? this->legend_width + WD_FRAMERECT_RIGHT : 0);
-			uint blob_left  = rtl ? this->column_width - padding - this->legend_width : 0;
-			uint blob_right = rtl ? this->column_width - padding : this->legend_width;
+			Rect origin = r.WithWidth(this->column_width, rtl).Shrink(WidgetDimensions::scaled.framerect).WithHeight(row_height);
+			Rect text = origin.Indent(this->legend_width + WidgetDimensions::scaled.hsep_normal, rtl);
+			Rect icon = origin.WithWidth(this->legend_width, rtl).Shrink(0, padding, 0, 0);
 
 			StringID string = STR_NULL;
 			switch (this->map_type) {
@@ -1251,8 +1252,10 @@ void SmallMapWindow::RebuildColourIndexIfNecessary()
 				if (tbl->col_break || ((this->map_type == SMT_INDUSTRY || this->map_type == SMT_OWNER || this->map_type == SMT_LINKSTATS) && i++ >= number_of_rows)) {
 					/* Column break needed, continue at top, COLUMN_WIDTH pixels
 					 * (one "row") to the right. */
-					x += rtl ? -(int)this->column_width : this->column_width;
-					y = y_org;
+					int x = rtl ? -(int)this->column_width : this->column_width;
+					int y = origin.top - text.top;
+					text = text.Translate(x, y);
+					icon = icon.Translate(x, y);
 					i = 1;
 				}
 
@@ -1279,10 +1282,10 @@ void SmallMapWindow::RebuildColourIndexIfNecessary()
 							if (!tbl->show_on_map) {
 								/* Simply draw the string, not the black border of the legend colour.
 								 * This will enforce the idea of the disabled item */
-								DrawString(x + text_left, x + text_right, y, string, TC_GREY);
+								DrawString(text, string, TC_GREY);
 							} else {
-								DrawString(x + text_left, x + text_right, y, string, TC_BLACK);
-								GfxFillRect(x + blob_left, y + padding, x + blob_right, y + row_height - 1, PC_BLACK); // Outer border of the legend colour
+								DrawString(text, string, TC_BLACK);
+								GfxFillRect(icon, PC_BLACK); // Outer border of the legend colour
 							}
 							break;
 						}
@@ -1291,13 +1294,14 @@ void SmallMapWindow::RebuildColourIndexIfNecessary()
 					default:
 						if (this->map_type == SMT_CONTOUR) SetDParam(0, tbl->height * TILE_HEIGHT_STEP);
 						/* Anything that is not an industry or a company is using normal process */
-						GfxFillRect(x + blob_left, y + padding, x + blob_right, y + row_height - 1, PC_BLACK);
-						DrawString(x + text_left, x + text_right, y, tbl->legend);
+						GfxFillRect(icon, PC_BLACK);
+						DrawString(text, tbl->legend);
 						break;
 				}
-				GfxFillRect(x + blob_left + 1, y + padding + 1, x + blob_right - 1, y + row_height - 2, legend_colour); // Legend colour
+				GfxFillRect(icon.Shrink(WidgetDimensions::scaled.bevel), legend_colour); // Legend colour
 
-				y += row_height;
+				text = text.Translate(0, row_height);
+				icon = icon.Translate(0, row_height);
 			}
 		}
 	}
@@ -1392,7 +1396,7 @@ void SmallMapWindow::SetOverlayCargoMask()
 int SmallMapWindow::GetPositionOnLegend(Point pt)
 {
 	const NWidgetBase *wi = this->GetWidget<NWidgetBase>(WID_SM_LEGEND);
-	uint line = (pt.y - wi->pos_y - WD_FRAMERECT_TOP) / FONT_HEIGHT_SMALL;
+	uint line = (pt.y - wi->pos_y - WidgetDimensions::scaled.framerect.top) / FONT_HEIGHT_SMALL;
 	uint columns = this->GetNumberColumnsLegend(wi->current_x);
 	uint number_of_rows = this->GetNumberRowsLegend(columns);
 	if (line >= number_of_rows) return -1;
@@ -1400,7 +1404,7 @@ int SmallMapWindow::GetPositionOnLegend(Point pt)
 	bool rtl = _current_text_dir == TD_RTL;
 	int x = pt.x - wi->pos_x;
 	if (rtl) x = wi->current_x - x;
-	uint column = (x - WD_FRAMERECT_LEFT) / this->column_width;
+	uint column = (x - WidgetDimensions::scaled.framerect.left) / this->column_width;
 
 	return (column * number_of_rows) + line;
 }
@@ -1679,8 +1683,8 @@ void SmallMapWindow::SmallMapCenterOnCurrentPos()
  */
 Point SmallMapWindow::GetStationMiddle(const Station *st) const
 {
-	int x = (st->rect.right + st->rect.left + 1) / 2;
-	int y = (st->rect.bottom + st->rect.top + 1) / 2;
+	int x = CenterBounds(st->rect.left, st->rect.right, 0);
+	int y = CenterBounds(st->rect.top, st->rect.bottom, 0);
 	Point ret = this->RemapTile(x, y);
 
 	/* Same magic 3 as in DrawVehicles; that's where I got it from.

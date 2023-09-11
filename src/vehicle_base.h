@@ -316,6 +316,7 @@ public:
 
 	StationID last_station_visited;     ///< The last station we stopped at.
 	StationID last_loading_station;     ///< Last station the vehicle has stopped at and could possibly leave from with any cargo loaded.
+	uint64_t last_loading_tick;         ///< Last time (relative to _tick_counter) the vehicle has stopped at a station and could possibly leave with any cargo loaded.
 
 	CargoID cargo_type;                 ///< type of cargo this vehicle is carrying
 	byte cargo_subtype;                 ///< Used for livery refits (NewGRF variations)
@@ -345,6 +346,15 @@ public:
 	VehicleCache vcache;                ///< Cache of often used vehicle values.
 
 	mutable MutableSpriteCache sprite_cache; ///< Cache of sprites and values related to recalculating them, see #MutableSpriteCache
+
+	/**
+	 * Calculates the weight value that this vehicle will have when fully loaded with its current cargo.
+	 * @return Weight value in tonnes.
+	 */
+	virtual uint16 GetMaxWeight() const
+	{
+		return 0;
+	}
 
 	Vehicle(VehicleType type = VEH_INVALID);
 
@@ -443,8 +453,9 @@ public:
 
 	/**
 	 * Play the sound associated with leaving the station
+	 * @param force Should we play the sound even if sound effects are muted? (horn hotkey)
 	 */
-	virtual void PlayLeaveStationSound() const {}
+	virtual void PlayLeaveStationSound(bool force = false) const {}
 
 	/**
 	 * Whether this is the primary vehicle in the chain.
@@ -1047,6 +1058,9 @@ public:
 	 * @return an iterable ensemble of orders of a vehicle
 	 */
 	IterateWrapper Orders() const { return IterateWrapper(this->orders); }
+
+	uint32 GetDisplayMaxWeight() const;
+	uint32 GetDisplayMinPowerToWeight() const;
 };
 
 /**

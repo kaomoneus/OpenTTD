@@ -424,7 +424,7 @@ void Station::UpdateVirtCoord()
 
 	SetDParam(0, this->index);
 	SetDParam(1, this->facilities);
-	this->sign.UpdatePosition(pt.x, pt.y, STR_VIEWPORT_STATION);
+	this->sign.UpdatePosition(pt.x, pt.y, STR_VIEWPORT_STATION, STR_VIEWPORT_STATION_TINY);
 
 	_viewport_sign_kdtree.Insert(ViewportSignKdtreeItem::MakeStation(this->index));
 
@@ -1910,18 +1910,15 @@ CommandCost CmdBuildRoadStop(DoCommandFlag flags, TileIndex tile, uint8 width, u
 				if (road_rt == INVALID_ROADTYPE && RoadTypeIsRoad(rt)) road_rt = rt;
 				if (tram_rt == INVALID_ROADTYPE && RoadTypeIsTram(rt)) tram_rt = rt;
 
-				UpdateCompanyRoadInfrastructure(road_rt, road_owner, ROAD_STOP_TRACKBIT_FACTOR);
-				UpdateCompanyRoadInfrastructure(tram_rt, tram_owner, ROAD_STOP_TRACKBIT_FACTOR);
-
 				MakeDriveThroughRoadStop(cur_tile, st->owner, road_owner, tram_owner, st->index, rs_type, road_rt, tram_rt, axis);
 				road_stop->MakeDriveThrough();
 			} else {
 				if (road_rt == INVALID_ROADTYPE && RoadTypeIsRoad(rt)) road_rt = rt;
 				if (tram_rt == INVALID_ROADTYPE && RoadTypeIsTram(rt)) tram_rt = rt;
-				/* Non-drive-through stop never overbuild and always count as two road bits. */
-				Company::Get(st->owner)->infrastructure.road[rt] += ROAD_STOP_TRACKBIT_FACTOR;
 				MakeRoadStop(cur_tile, st->owner, st->index, rs_type, road_rt, tram_rt, ddir);
 			}
+			UpdateCompanyRoadInfrastructure(road_rt, road_owner, ROAD_STOP_TRACKBIT_FACTOR);
+			UpdateCompanyRoadInfrastructure(tram_rt, tram_owner, ROAD_STOP_TRACKBIT_FACTOR);
 			Company::Get(st->owner)->infrastructure.station++;
 
 			MarkTileDirtyByTile(cur_tile);
@@ -2503,7 +2500,7 @@ CommandCost CmdBuildDock(DoCommandFlag flags, TileIndex tile, StationID station_
 
 	TileIndex tile_cur = tile + TileOffsByDiagDir(direction);
 
-	if (!IsTileType(tile_cur, MP_WATER) || !IsTileFlat(tile_cur)) {
+	if (!HasTileWaterGround(tile_cur) || !IsTileFlat(tile_cur)) {
 		return_cmd_error(STR_ERROR_SITE_UNSUITABLE);
 	}
 
@@ -2512,8 +2509,10 @@ CommandCost CmdBuildDock(DoCommandFlag flags, TileIndex tile, StationID station_
 	/* Get the water class of the water tile before it is cleared.*/
 	WaterClass wc = GetWaterClass(tile_cur);
 
+	bool add_cost = !IsWaterTile(tile_cur);
 	ret = Command<CMD_LANDSCAPE_CLEAR>::Do(flags, tile_cur);
 	if (ret.Failed()) return ret;
+	if (add_cost) cost.AddCost(ret);
 
 	tile_cur += TileOffsByDiagDir(direction);
 	if (!IsTileType(tile_cur, MP_WATER) || !IsTileFlat(tile_cur)) {
@@ -2536,14 +2535,17 @@ CommandCost CmdBuildDock(DoCommandFlag flags, TileIndex tile, StationID station_
 
 	if (flags & DC_EXEC) {
 		st->ship_station.Add(tile);
-		st->ship_station.Add(tile + TileOffsByDiagDir(direction));
+		TileIndex flat_tile = tile + TileOffsByDiagDir(direction);
+		st->ship_station.Add(flat_tile);
 		st->AddFacility(FACIL_DOCK, tile);
 
 		st->rect.BeforeAddRect(dock_area.tile, dock_area.w, dock_area.h, StationRect::ADD_TRY);
 
 		/* If the water part of the dock is on a canal, update infrastructure counts.
-		 * This is needed as we've unconditionally cleared that tile before. */
-		if (wc == WATER_CLASS_CANAL) {
+		 * This is needed as we've cleared that tile before.
+		 * Clearing object tiles may result in water tiles which are already accounted for in the water infrastructure total.
+		 * See: MakeWaterKeepingClass() */
+		if (wc == WATER_CLASS_CANAL && !(HasTileWaterClass(flat_tile) && GetWaterClass(flat_tile) == WATER_CLASS_CANAL && IsTileOwner(flat_tile, _current_company))) {
 			Company::Get(st->owner)->infrastructure.water++;
 		}
 		Company::Get(st->owner)->infrastructure.station += 2;
@@ -2922,7 +2924,7 @@ static void DrawTile_Station(TileInfo *ti)
 				EndSpriteCombine();
 			}
 
-			OffsetGroundSprite(31, 1);
+			OffsetGroundSprite(0, -8);
 			ti->z += ApplyPixelFoundationToSlope(FOUNDATION_LEVELED, &ti->tileh);
 		} else {
 draw_default_foundation:

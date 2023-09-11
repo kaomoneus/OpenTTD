@@ -144,11 +144,7 @@ struct CursorVars {
 	bool vehchain;                ///< vehicle chain is dragged
 
 	void UpdateCursorPositionRelative(int delta_x, int delta_y);
-	bool UpdateCursorPosition(int x, int y, bool queued_warp);
-
-private:
-	bool queued_warp;
-	Point last_position;
+	bool UpdateCursorPosition(int x, int y);
 };
 
 /** Data about how and where to blit pixels. */
@@ -214,6 +210,13 @@ enum FontSize {
 };
 DECLARE_POSTFIX_INCREMENT(FontSize)
 
+static inline const char *FontSizeToName(FontSize fs)
+{
+	static const char *SIZE_TO_NAME[] = { "medium", "small", "large", "mono" };
+	assert(fs < FS_END);
+	return SIZE_TO_NAME[fs];
+}
+
 /**
  * Used to only draw a part of the sprite.
  * Draw the subsprite in the rect (sprite_x_offset + left, sprite_y_offset + top) to (sprite_x_offset + right, sprite_y_offset + bottom).
@@ -273,6 +276,9 @@ enum TextColour {
 	TC_IS_PALETTE_COLOUR = 0x100, ///< Colour value is already a real palette colour index, not an index of a StringColour.
 	TC_NO_SHADE          = 0x200, ///< Do not add shading to this text colour.
 	TC_FORCED            = 0x400, ///< Ignore colour changes from strings.
+
+	TC_COLOUR_MASK = 0xFF, ///< Mask to test if TextColour (without flags) is within limits.
+	TC_FLAGS_MASK = 0x700, ///< Mask to test if TextColour (with flags) is within limits.
 };
 DECLARE_ENUM_AS_BIT_SET(TextColour)
 

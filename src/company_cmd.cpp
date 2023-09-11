@@ -63,9 +63,10 @@ Company::Company(uint16 name_1, bool is_ai)
 	this->name_1 = name_1;
 	this->location_of_HQ = INVALID_TILE;
 	this->is_ai = is_ai;
-	this->terraform_limit = (uint32)_settings_game.construction.terraform_frame_burst << 16;
-	this->clear_limit     = (uint32)_settings_game.construction.clear_frame_burst << 16;
-	this->tree_limit      = (uint32)_settings_game.construction.tree_frame_burst << 16;
+	this->terraform_limit    = (uint32)_settings_game.construction.terraform_frame_burst << 16;
+	this->clear_limit        = (uint32)_settings_game.construction.clear_frame_burst << 16;
+	this->tree_limit         = (uint32)_settings_game.construction.tree_frame_burst << 16;
+	this->build_object_limit = (uint32)_settings_game.construction.build_object_frame_burst << 16;
 
 	std::fill(this->share_owners.begin(), this->share_owners.end(), INVALID_OWNER);
 	InvalidateWindowData(WC_PERFORMANCE_DETAIL, 0, INVALID_COMPANY);
@@ -114,8 +115,11 @@ void SetLocalCompany(CompanyID new_company)
 
 	_current_company = _local_company = new_company;
 
-	/* Delete any construction windows... */
-	if (switching_company) CloseConstructionWindows();
+	if (switching_company) {
+		InvalidateWindowClassesData(WC_COMPANY);
+		/* Delete any construction windows... */
+		CloseConstructionWindows();
+	}
 
 	/* ... and redraw the whole screen. */
 	MarkWholeScreenDirty();
@@ -267,9 +271,10 @@ void SubtractMoneyFromCompanyFract(CompanyID company, const CommandCost &cst)
 void UpdateLandscapingLimits()
 {
 	for (Company *c : Company::Iterate()) {
-		c->terraform_limit = std::min<uint64>((uint64)c->terraform_limit + _settings_game.construction.terraform_per_64k_frames, (uint64)_settings_game.construction.terraform_frame_burst << 16);
-		c->clear_limit     = std::min<uint64>((uint64)c->clear_limit     + _settings_game.construction.clear_per_64k_frames,     (uint64)_settings_game.construction.clear_frame_burst << 16);
-		c->tree_limit      = std::min<uint64>((uint64)c->tree_limit      + _settings_game.construction.tree_per_64k_frames,      (uint64)_settings_game.construction.tree_frame_burst << 16);
+		c->terraform_limit    = std::min<uint64>((uint64)c->terraform_limit    + _settings_game.construction.terraform_per_64k_frames,    (uint64)_settings_game.construction.terraform_frame_burst << 16);
+		c->clear_limit        = std::min<uint64>((uint64)c->clear_limit        + _settings_game.construction.clear_per_64k_frames,        (uint64)_settings_game.construction.clear_frame_burst << 16);
+		c->tree_limit         = std::min<uint64>((uint64)c->tree_limit         + _settings_game.construction.tree_per_64k_frames,         (uint64)_settings_game.construction.tree_frame_burst << 16);
+		c->build_object_limit = std::min<uint64>((uint64)c->build_object_limit + _settings_game.construction.build_object_per_64k_frames, (uint64)_settings_game.construction.build_object_frame_burst << 16);
 	}
 }
 
@@ -555,15 +560,25 @@ Company *DoStartupNewCompany(bool is_ai, CompanyID company = INVALID_COMPANY)
 	ResetCompanyLivery(c);
 	_company_colours[c->index] = (Colours)c->colour;
 
+    // c->money = c->current_loan = (std::min<int64>(INITIAL_LOAN, _economy.max_loan) * _economy.inflation_prices >> 16) / 50000 * 50000;
+
     auto initial_loan = INITIAL_LOAN * GetPaceFactor();
-	c->money = c->current_loan = (std::min<int64>(initial_loan, _economy.max_loan) * _economy.inflation_prices >> 16) / 50000 * 50000;
+	auto loan_interval = ::GetLoanInterval();
+	c->money = c->current_loan = std::min<int64>((initial_loan * _economy.inflation_prices >> 16) / loan_interval * loan_interval, _economy.max_loan);
 
 	std::fill(c->share_owners.begin(), c->share_owners.end(), INVALID_OWNER);
 
 	c->avail_railtypes = GetCompanyRailtypes(c->index);
 	c->avail_roadtypes = GetCompanyRoadTypes(c->index);
 	c->inaugurated_year = _cur_year;
-	RandomCompanyManagerFaceBits(c->face, (GenderEthnicity)Random(), false, false); // create a random company manager face
+
+	/* If starting a player company in singleplayer and a favorite company manager face is selected, choose it. Otherwise, use a random face.
+	 * In a network game, we'll choose the favorite face later in CmdCompanyCtrl to sync it to all clients. */
+	if (_company_manager_face != 0 && !is_ai && !_networking) {
+		c->face = _company_manager_face;
+	} else {
+		RandomCompanyManagerFaceBits(c->face, (GenderEthnicity)Random(), false, false);
+	}
 
 	SetDefaultCompanySettings(c->index);
 	ClearEnginesHiddenFlagOfCompany(c->index);
@@ -839,6 +854,10 @@ CommandCost CmdCompanyCtrl(DoCommandFlag flags, CompanyCtrlAction cca, CompanyID
 					NetworkChangeCompanyPassword(_local_company, _settings_client.network.default_company_pass);
 				}
 
+				/* In network games, we need to try setting the company manager face here to sync it to all clients.
+				 * If a favorite company manager face is selected, choose it. Otherwise, use a random face. */
+				if (_company_manager_face != 0) Command<CMD_SET_COMPANY_MANAGER_FACE>::SendNet(STR_NULL, c->index, _company_manager_face);
+
 				/* Now that we have a new company, broadcast our company settings to
 				 * all clients so everything is in sync */
 				SyncCompanySettings();
@@ -877,8 +896,6 @@ CommandCost CmdCompanyCtrl(DoCommandFlag flags, CompanyCtrlAction cca, CompanyID
 
 			if (!(flags & DC_EXEC)) return CommandCost();
 
-			/* Delete any open window of the company */
-			CloseCompanyWindows(c->index);
 			CompanyNewsInformation *cni = new CompanyNewsInformation(c);
 
 			/* Show the bankrupt news */

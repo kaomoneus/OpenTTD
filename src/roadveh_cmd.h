@@ -14,10 +14,12 @@
 #include "engine_type.h"
 #include "vehicle_type.h"
 
+bool RoadVehLeaveDepot(RoadVehicle *v, bool first);
+
 CommandCost CmdBuildRoadVehicle(DoCommandFlag flags, TileIndex tile, const Engine *e, Vehicle **v);
 
 CommandCost CmdTurnRoadVeh(DoCommandFlag flags, VehicleID veh_id);
 
-DEF_CMD_TRAIT(CMD_TURN_ROADVEH, CmdTurnRoadVeh, 0, CMDT_VEHICLE_MANAGEMENT)
+DEF_CMD_TRAIT(CMD_TURN_ROADVEH, CmdTurnRoadVeh, CMD_LOCATION, CMDT_VEHICLE_MANAGEMENT)
 
 #endif /* ROADVEH_CMD_H */

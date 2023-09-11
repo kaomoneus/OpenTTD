@@ -136,11 +136,14 @@ CommandCost CmdBuildShipDepot(DoCommandFlag flags, TileIndex tile, Axis axis)
 		Depot *depot = new Depot(tile);
 		depot->build_date = _date;
 
-		if (wc1 == WATER_CLASS_CANAL || wc2 == WATER_CLASS_CANAL) {
-			/* Update infrastructure counts after the unconditional clear earlier. */
-			Company::Get(_current_company)->infrastructure.water += wc1 == WATER_CLASS_CANAL && wc2 == WATER_CLASS_CANAL ? 2 : 1;
-		}
-		Company::Get(_current_company)->infrastructure.water += 2 * LOCK_DEPOT_TILE_FACTOR;
+		uint new_water_infra = 2 * LOCK_DEPOT_TILE_FACTOR;
+		/* Update infrastructure counts after the tile clears earlier.
+		 * Clearing object tiles may result in water tiles which are already accounted for in the water infrastructure total.
+		 * See: MakeWaterKeepingClass() */
+		if (wc1 == WATER_CLASS_CANAL && !(HasTileWaterClass(tile) && GetWaterClass(tile) == WATER_CLASS_CANAL && IsTileOwner(tile, _current_company))) new_water_infra++;
+		if (wc2 == WATER_CLASS_CANAL && !(HasTileWaterClass(tile2) && GetWaterClass(tile2) == WATER_CLASS_CANAL && IsTileOwner(tile2, _current_company))) new_water_infra++;
+
+		Company::Get(_current_company)->infrastructure.water += new_water_infra;
 		DirtyCompanyInfrastructureWindows(_current_company);
 
 		MakeShipDepot(tile,  _current_company, depot->index, DEPOT_PART_NORTH, axis, wc1);
@@ -443,12 +446,6 @@ CommandCost CmdBuildCanal(DoCommandFlag flags, TileIndex tile, TileIndex start_t
 	/* Outside of the editor you can only build canals, not oceans */
 	if (wc != WATER_CLASS_CANAL && _game_mode != GM_EDITOR) return CMD_ERROR;
 
-	/* Outside the editor you can only drag canals, and not areas */
-	if (_game_mode != GM_EDITOR) {
-		TileArea ta(tile, start_tile);
-		if (ta.w != 1 && ta.h != 1) return CMD_ERROR;
-	}
-
 	CommandCost cost(EXPENSES_CONSTRUCTION);
 
 	std::unique_ptr<TileIterator> iter;
@@ -478,6 +475,14 @@ CommandCost CmdBuildCanal(DoCommandFlag flags, TileIndex tile, TileIndex start_t
 		if (!water) cost.AddCost(ret);
 
 		if (flags & DC_EXEC) {
+			if (IsTileType(current_tile, MP_WATER) && IsCanal(current_tile)) {
+				Owner owner = GetTileOwner(current_tile);
+				if (Company::IsValidID(owner)) {
+					Company::Get(owner)->infrastructure.water--;
+					DirtyCompanyInfrastructureWindows(owner);
+				}
+			}
+
 			switch (wc) {
 				case WATER_CLASS_RIVER:
 					MakeRiver(current_tile, Random());
@@ -495,14 +500,11 @@ CommandCost CmdBuildCanal(DoCommandFlag flags, TileIndex tile, TileIndex start_t
 					FALLTHROUGH;
 
 				default:
-					/* If we overbuild a water object with a canal, don't update the infrastructure total. */
-					bool is_existing_canal = IsTileType(current_tile, MP_WATER) && IsCanal(current_tile);
-					if (Company::IsValidID(_current_company) && !is_existing_canal) {
+					MakeCanal(current_tile, _current_company, Random());
+					if (Company::IsValidID(_current_company)) {
 						Company::Get(_current_company)->infrastructure.water++;
 						DirtyCompanyInfrastructureWindows(_current_company);
 					}
-
-					MakeCanal(current_tile, _current_company, Random());
 					break;
 			}
 			MarkTileDirtyByTile(current_tile);
@@ -548,10 +550,8 @@ static CommandCost ClearTile_Water(TileIndex tile, DoCommandFlag flags)
 					Company::Get(owner)->infrastructure.water--;
 					DirtyCompanyInfrastructureWindows(owner);
 				}
-				bool remove = IsDockingTile(tile);
 				DoClearSquare(tile);
 				MarkCanalsAndRiversAroundDirty(tile);
-				if (remove) RemoveDockingTile(tile);
 			}
 
 			return CommandCost(EXPENSES_CONSTRUCTION, base_cost);
@@ -565,10 +565,8 @@ static CommandCost ClearTile_Water(TileIndex tile, DoCommandFlag flags)
 			if (ret.Failed()) return ret;
 
 			if (flags & DC_EXEC) {
-				bool remove = IsDockingTile(tile);
 				DoClearSquare(tile);
 				MarkCanalsAndRiversAroundDirty(tile);
-				if (remove) RemoveDockingTile(tile);
 			}
 			if (IsSlopeWithOneCornerRaised(slope)) {
 				return CommandCost(EXPENSES_CONSTRUCTION, _price[PR_CLEAR_WATER]);

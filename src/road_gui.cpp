@@ -642,10 +642,10 @@ struct BuildRoadToolbarWindow : Window {
 
 					if (_remove_button_clicked) {
 						Command<CMD_REMOVE_LONG_ROAD>::Post(this->rti->strings.err_remove_road, CcPlaySound_CONSTRUCTION_OTHER,
-								start_tile, end_tile, _cur_roadtype, _place_road_dir, start_half, _place_road_end_half);
+								end_tile, start_tile, _cur_roadtype, _place_road_dir, start_half, _place_road_end_half);
 					} else {
 						Command<CMD_BUILD_LONG_ROAD>::Post(this->rti->strings.err_build_road, CcPlaySound_CONSTRUCTION_OTHER,
-								start_tile, end_tile, _cur_roadtype, _place_road_dir, _one_way_button_clicked ? DRD_NORTHBOUND : DRD_NONE, start_half, _place_road_end_half, false);
+								end_tile, start_tile, _cur_roadtype, _place_road_dir, _one_way_button_clicked ? DRD_NORTHBOUND : DRD_NONE, start_half, _place_road_end_half, false);
 					}
 					break;
 				}
@@ -974,15 +974,23 @@ struct BuildRoadDepotWindow : public PickerWindowBase {
 	{
 		if (!IsInsideMM(widget, WID_BROD_DEPOT_NE, WID_BROD_DEPOT_NW + 1)) return;
 
-		size->width  = ScaleGUITrad(64) + 2;
-		size->height = ScaleGUITrad(48) + 2;
+		size->width  = ScaleGUITrad(64) + WidgetDimensions::scaled.fullbevel.Horizontal();
+		size->height = ScaleGUITrad(48) + WidgetDimensions::scaled.fullbevel.Vertical();
 	}
 
 	void DrawWidget(const Rect &r, int widget) const override
 	{
 		if (!IsInsideMM(widget, WID_BROD_DEPOT_NE, WID_BROD_DEPOT_NW + 1)) return;
 
-		DrawRoadDepotSprite(r.left + 1 + ScaleGUITrad(31), r.bottom - ScaleGUITrad(31), (DiagDirection)(widget - WID_BROD_DEPOT_NE + DIAGDIR_NE), _cur_roadtype);
+		DrawPixelInfo tmp_dpi;
+		if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
+			DrawPixelInfo *old_dpi = _cur_dpi;
+			_cur_dpi = &tmp_dpi;
+			int x = (r.Width()  - ScaleSpriteTrad(64)) / 2 + ScaleSpriteTrad(31);
+			int y = (r.Height() + ScaleSpriteTrad(48)) / 2 - ScaleSpriteTrad(31);
+			DrawRoadDepotSprite(x, y, (DiagDirection)(widget - WID_BROD_DEPOT_NE + DIAGDIR_NE), _cur_roadtype);
+			_cur_dpi = old_dpi;
+		}
 	}
 
 	void OnClick(Point pt, int widget, int click_count) override
@@ -1011,27 +1019,20 @@ static const NWidgetPart _nested_build_road_depot_widgets[] = {
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN, WID_BROD_CAPTION), SetDataTip(STR_BUILD_DEPOT_ROAD_ORIENTATION_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_DARK_GREEN),
-		NWidget(NWID_SPACER), SetMinimalSize(0, 3),
-		NWidget(NWID_HORIZONTAL_LTR),
-			NWidget(NWID_SPACER), SetMinimalSize(3, 0), SetFill(1, 0),
-			NWidget(NWID_VERTICAL),
-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_NW), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
+		NWidget(NWID_HORIZONTAL), SetPadding(3),
+			NWidget(NWID_SPACER), SetFill(1, 0),
+			NWidget(NWID_VERTICAL), SetPIP(0, 2, 0),
+				NWidget(NWID_HORIZONTAL_LTR), SetPIP(0, 2, 0),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_NW), SetMinimalSize(66, 50), SetFill(0, 0), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP), EndContainer(),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_NE), SetMinimalSize(66, 50), SetFill(0, 0), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP), EndContainer(),
 				EndContainer(),
-				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_SW), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
-				EndContainer(),
-			EndContainer(),
-			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
-			NWidget(NWID_VERTICAL),
-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_NE), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
-				EndContainer(),
-				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_SE), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
+				NWidget(NWID_HORIZONTAL_LTR), SetPIP(0, 2, 0),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_SW), SetMinimalSize(66, 50), SetFill(0, 0), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP), EndContainer(),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_SE), SetMinimalSize(66, 50), SetFill(0, 0), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP), EndContainer(),
 				EndContainer(),
 			EndContainer(),
-			NWidget(NWID_SPACER), SetMinimalSize(3, 0), SetFill(1, 0),
+			NWidget(NWID_SPACER), SetFill(1, 0),
 		EndContainer(),
-		NWidget(NWID_SPACER), SetMinimalSize(0, 3),
 	EndContainer(),
 };
 
@@ -1090,17 +1091,15 @@ struct BuildRoadStationWindow : public PickerWindowBase {
 
 		/* 'Accepts' and 'Supplies' texts. */
 		StationCoverageType sct = (this->window_class == WC_BUS_STATION) ? SCT_PASSENGERS_ONLY : SCT_NON_PASSENGERS_ONLY;
-		int top = this->GetWidget<NWidgetBase>(WID_BROS_LT_ON)->pos_y + this->GetWidget<NWidgetBase>(WID_BROS_LT_ON)->current_y + WD_PAR_VSEP_NORMAL;
-		NWidgetBase *back_nwi = this->GetWidget<NWidgetBase>(WID_BROS_BACKGROUND);
-		int right = back_nwi->pos_x +  back_nwi->current_x;
-		int bottom = back_nwi->pos_y +  back_nwi->current_y;
-		top = DrawStationCoverageAreaText(back_nwi->pos_x + WD_FRAMERECT_LEFT, right - WD_FRAMERECT_RIGHT, top, sct, rad, false) + WD_PAR_VSEP_NORMAL;
-		top = DrawStationCoverageAreaText(back_nwi->pos_x + WD_FRAMERECT_LEFT, right - WD_FRAMERECT_RIGHT, top, sct, rad, true) + WD_PAR_VSEP_NORMAL;
+		Rect r = this->GetWidget<NWidgetBase>(WID_BROS_ACCEPTANCE)->GetCurrentRect();
+		int top = r.top + WidgetDimensions::scaled.vsep_normal;
+		top = DrawStationCoverageAreaText(r.left, r.right, top, sct, rad, false) + WidgetDimensions::scaled.vsep_normal;
+		top = DrawStationCoverageAreaText(r.left, r.right, top, sct, rad, true) + WidgetDimensions::scaled.vsep_normal;
 		/* Resize background if the window is too small.
 		 * Never make the window smaller to avoid oscillating if the size change affects the acceptance.
 		 * (This is the case, if making the window bigger moves the mouse into the window.) */
-		if (top > bottom) {
-			ResizeWindow(this, 0, top - bottom, false);
+		if (top > r.bottom) {
+			ResizeWindow(this, 0, top - r.bottom, false);
 		}
 	}
 
@@ -1108,8 +1107,8 @@ struct BuildRoadStationWindow : public PickerWindowBase {
 	{
 		if (!IsInsideMM(widget, WID_BROS_STATION_NE, WID_BROS_STATION_Y + 1)) return;
 
-		size->width  = ScaleGUITrad(64) + 2;
-		size->height = ScaleGUITrad(48) + 2;
+		size->width  = ScaleGUITrad(64) + WidgetDimensions::scaled.fullbevel.Horizontal();
+		size->height = ScaleGUITrad(48) + WidgetDimensions::scaled.fullbevel.Vertical();
 	}
 
 	void DrawWidget(const Rect &r, int widget) const override
@@ -1117,7 +1116,16 @@ struct BuildRoadStationWindow : public PickerWindowBase {
 		if (!IsInsideMM(widget, WID_BROS_STATION_NE, WID_BROS_STATION_Y + 1)) return;
 
 		StationType st = (this->window_class == WC_BUS_STATION) ? STATION_BUS : STATION_TRUCK;
-		StationPickerDrawSprite(r.left + 1 + ScaleGUITrad(31), r.bottom - ScaleGUITrad(31), st, INVALID_RAILTYPE, _cur_roadtype, widget - WID_BROS_STATION_NE);
+
+		DrawPixelInfo tmp_dpi;
+		if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
+			DrawPixelInfo *old_dpi = _cur_dpi;
+			_cur_dpi = &tmp_dpi;
+			int x = (r.Width()  - ScaleSpriteTrad(64)) / 2 + ScaleSpriteTrad(31);
+			int y = (r.Height() + ScaleSpriteTrad(48)) / 2 - ScaleSpriteTrad(31);
+			StationPickerDrawSprite(x, y, st, INVALID_RAILTYPE, _cur_roadtype, widget - WID_BROS_STATION_NE);
+			_cur_dpi = old_dpi;
+		}
 	}
 
 	void OnClick(Point pt, int widget, int click_count) override
@@ -1165,28 +1173,24 @@ static const NWidgetPart _nested_road_station_picker_widgets[] = {
 		NWidget(WWT_CAPTION,  COLOUR_DARK_GREEN, WID_BROS_CAPTION),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_DARK_GREEN, WID_BROS_BACKGROUND),
-		NWidget(NWID_SPACER), SetMinimalSize(0, 3),
-		NWidget(NWID_HORIZONTAL), SetPIP(0, 2, 0),
+		NWidget(NWID_HORIZONTAL), SetPadding(3),
 			NWidget(NWID_SPACER), SetFill(1, 0),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_NW), SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_NE), SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_X),  SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
-			NWidget(NWID_SPACER), SetFill(1, 0),
-		EndContainer(),
-		NWidget(NWID_SPACER), SetMinimalSize(0, 2),
-		NWidget(NWID_HORIZONTAL), SetPIP(0, 2, 0),
-			NWidget(NWID_SPACER), SetFill(1, 0),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_SW), SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_SE), SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_Y),  SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
-			NWidget(NWID_SPACER), SetFill(1, 0),
-		EndContainer(),
-		NWidget(NWID_SPACER), SetMinimalSize(0, 1),
-		NWidget(NWID_HORIZONTAL), SetPIP(2, 0, 2),
-			NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BROS_INFO), SetMinimalSize(140, 14), SetDataTip(STR_STATION_BUILD_COVERAGE_AREA_TITLE, STR_NULL),
+			NWidget(NWID_VERTICAL), SetPIP(0, 2, 0),
+				NWidget(NWID_HORIZONTAL), SetPIP(0, 2, 0),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_NW), SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_NE), SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_X),  SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
+				EndContainer(),
+				NWidget(NWID_HORIZONTAL), SetPIP(0, 2, 0),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_SW), SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_SE), SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_Y),  SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
+				EndContainer(),
+			EndContainer(),
 			NWidget(NWID_SPACER), SetFill(1, 0),
 		EndContainer(),
-		NWidget(NWID_HORIZONTAL), SetPIP(2, 0, 2),
+		NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BROS_INFO), SetPadding(WidgetDimensions::unscaled.framerect), SetDataTip(STR_STATION_BUILD_COVERAGE_AREA_TITLE, STR_NULL), SetFill(1, 0),
+		NWidget(NWID_HORIZONTAL), SetPadding(3),
 			NWidget(NWID_SPACER), SetFill(1, 0),
 			NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_BROS_LT_OFF), SetMinimalSize(60, 12),
 											SetDataTip(STR_STATION_BUILD_COVERAGE_OFF, STR_STATION_BUILD_COVERAGE_AREA_OFF_TOOLTIP),
@@ -1194,7 +1198,7 @@ static const NWidgetPart _nested_road_station_picker_widgets[] = {
 											SetDataTip(STR_STATION_BUILD_COVERAGE_ON, STR_STATION_BUILD_COVERAGE_AREA_ON_TOOLTIP),
 			NWidget(NWID_SPACER), SetFill(1, 0),
 		EndContainer(),
-		NWidget(NWID_SPACER), SetMinimalSize(0, 10), SetResize(0, 1),
+		NWidget(WWT_EMPTY, COLOUR_DARK_GREEN, WID_BROS_ACCEPTANCE), SetPadding(WidgetDimensions::unscaled.framerect), SetResize(0, 1),
 	EndContainer(),
 };
 
@@ -1212,19 +1216,18 @@ static const NWidgetPart _nested_tram_station_picker_widgets[] = {
 		NWidget(WWT_CAPTION,  COLOUR_DARK_GREEN, WID_BROS_CAPTION),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_DARK_GREEN, WID_BROS_BACKGROUND),
-		NWidget(NWID_SPACER), SetMinimalSize(0, 3),
-		NWidget(NWID_HORIZONTAL), SetPIP(0, 2, 0),
+		NWidget(NWID_HORIZONTAL), SetPadding(3),
 			NWidget(NWID_SPACER), SetFill(1, 0),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_X),  SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_Y),  SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
-			NWidget(NWID_SPACER), SetFill(1, 0),
-		EndContainer(),
-		NWidget(NWID_SPACER), SetMinimalSize(0, 1),
-		NWidget(NWID_HORIZONTAL), SetPIP(2, 0, 2),
-			NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BROS_INFO), SetMinimalSize(140, 14), SetDataTip(STR_STATION_BUILD_COVERAGE_AREA_TITLE, STR_NULL),
+			NWidget(NWID_VERTICAL), SetPIP(0, 2, 0),
+				NWidget(NWID_HORIZONTAL), SetPIP(0, 2, 0),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_X),  SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
+					NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_Y),  SetMinimalSize(66, 50), SetFill(0, 0), EndContainer(),
+				EndContainer(),
+			EndContainer(),
 			NWidget(NWID_SPACER), SetFill(1, 0),
 		EndContainer(),
-		NWidget(NWID_HORIZONTAL), SetPIP(2, 0, 2),
+		NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BROS_INFO), SetPadding(WidgetDimensions::unscaled.framerect), SetMinimalSize(140, 14), SetDataTip(STR_STATION_BUILD_COVERAGE_AREA_TITLE, STR_NULL), SetFill(1, 0),
+		NWidget(NWID_HORIZONTAL), SetPadding(3),
 			NWidget(NWID_SPACER), SetFill(1, 0),
 			NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_BROS_LT_OFF), SetMinimalSize(60, 12),
 											SetDataTip(STR_STATION_BUILD_COVERAGE_OFF, STR_STATION_BUILD_COVERAGE_AREA_OFF_TOOLTIP),
@@ -1232,7 +1235,7 @@ static const NWidgetPart _nested_tram_station_picker_widgets[] = {
 											SetDataTip(STR_STATION_BUILD_COVERAGE_ON, STR_STATION_BUILD_COVERAGE_AREA_ON_TOOLTIP),
 			NWidget(NWID_SPACER), SetFill(1, 0),
 		EndContainer(),
-		NWidget(NWID_SPACER), SetMinimalSize(0, 10), SetResize(0, 1),
+		NWidget(WWT_EMPTY, COLOUR_DARK_GREEN, WID_BROS_ACCEPTANCE), SetPadding(WidgetDimensions::unscaled.framerect), SetResize(0, 1),
 	EndContainer(),
 };
 

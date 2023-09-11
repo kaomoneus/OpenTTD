@@ -548,6 +548,7 @@ CommandCost CmdBuildSingleRail(DoCommandFlag flags, TileIndex tile, RailType rai
 					if (flags & DC_EXEC) {
 						MakeRoadCrossing(tile, road_owner, tram_owner, _current_company, (track == TRACK_X ? AXIS_Y : AXIS_X), railtype, roadtype_road, roadtype_tram, GetTownIndex(tile));
 						UpdateLevelCrossing(tile, false);
+						MarkDirtyAdjacentLevelCrossingTiles(tile, GetCrossingRoadAxis(tile));
 						Company::Get(_current_company)->infrastructure.rail[railtype] += LEVELCROSSING_TRACKBIT_FACTOR;
 						DirtyCompanyInfrastructureWindows(_current_company);
 						if (num_new_road_pieces > 0 && Company::IsValidID(road_owner)) {
@@ -649,6 +650,8 @@ CommandCost CmdRemoveSingleRail(DoCommandFlag flags, TileIndex tile, Track track
 			cost.AddCost(RailClearCost(GetRailType(tile)));
 
 			if (flags & DC_EXEC) {
+				UpdateAdjacentLevelCrossingTilesOnLevelCrossingRemoval(tile, GetCrossingRoadAxis(tile));
+
 				if (HasReservedTracks(tile, trackbit)) {
 					v = GetTrainForReservation(tile, track);
 					if (v != nullptr) FreeTrainTrackReservation(v);
@@ -880,7 +883,7 @@ static CommandCost CmdRailTrackHelper(DoCommandFlag flags, TileIndex tile, TileI
 	CommandCost total_cost(EXPENSES_CONSTRUCTION);
 
 	if ((!remove && !ValParamRailtype(railtype)) || !ValParamTrackOrientation(track)) return CMD_ERROR;
-	if (end_tile >= MapSize()) return CMD_ERROR;
+	if (end_tile >= MapSize() || tile >= MapSize()) return CMD_ERROR;
 
 	Trackdir trackdir = TrackToTrackdir(track);
 
@@ -922,8 +925,8 @@ static CommandCost CmdRailTrackHelper(DoCommandFlag flags, TileIndex tile, TileI
  * Build rail on a stretch of track.
  * Stub for the unified rail builder/remover
  * @param flags operation to perform
- * @param tile start tile of drag
  * @param end_tile end tile of drag
+ * @param start_tile start tile of drag
  * @param railtype railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev), only used for building
  * @param track track-orientation
  * @param auto_remove_signals false = build up to an obstacle, true = fail if an obstacle is found (used for AIs).
@@ -931,24 +934,24 @@ static CommandCost CmdRailTrackHelper(DoCommandFlag flags, TileIndex tile, TileI
 
  * @see CmdRailTrackHelper
  */
-CommandCost CmdBuildRailroadTrack(DoCommandFlag flags, TileIndex tile, TileIndex end_tile, RailType railtype, Track track, bool auto_remove_signals, bool fail_on_obstacle)
+CommandCost CmdBuildRailroadTrack(DoCommandFlag flags, TileIndex end_tile, TileIndex start_tile, RailType railtype, Track track, bool auto_remove_signals, bool fail_on_obstacle)
 {
-	return CmdRailTrackHelper(flags, tile, end_tile, railtype, track, false, auto_remove_signals, fail_on_obstacle);
+	return CmdRailTrackHelper(flags, start_tile, end_tile, railtype, track, false, auto_remove_signals, fail_on_obstacle);
 }
 
 /**
  * Build rail on a stretch of track.
  * Stub for the unified rail builder/remover
  * @param flags operation to perform
- * @param tile start tile of drag
  * @param end_tile end tile of drag
+ * @param start_tile start tile of drag
  * @param track track-orientation
  * @return the cost of this operation or an error
  * @see CmdRailTrackHelper
  */
-CommandCost CmdRemoveRailroadTrack(DoCommandFlag flags, TileIndex tile, TileIndex end_tile, Track track)
+CommandCost CmdRemoveRailroadTrack(DoCommandFlag flags, TileIndex end_tile, TileIndex start_tile, Track track)
 {
-	return CmdRailTrackHelper(flags, tile, end_tile, INVALID_RAILTYPE, track, true, false, false);
+	return CmdRailTrackHelper(flags, start_tile, end_tile, INVALID_RAILTYPE, track, true, false, false);
 }
 
 /**
@@ -1819,9 +1822,7 @@ static CommandCost ClearTile_Track(TileIndex tile, DoCommandFlag flags)
 
 				/* The track was removed, and left a coast tile. Now also clear the water. */
 				if (flags & DC_EXEC) {
-					bool remove = IsDockingTile(tile);
 					DoClearSquare(tile);
-					if (remove) RemoveDockingTile(tile);
 				}
 				cost.AddCost(_price[PR_CLEAR_WATER]);
 			}

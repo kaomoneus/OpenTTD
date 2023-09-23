@@ -763,7 +763,8 @@ bool AddInflation(bool check_year)
 void RecomputePrices()
 {
 	/* Setup maximum loan as a rounded down multiple of LOAN_INTERVAL. */
-	_economy.max_loan = ((uint64)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / LOAN_INTERVAL * LOAN_INTERVAL;
+	auto roundDownTo = VANILLA_LOAN_INTERVAL;
+	_economy.max_loan = ((uint64)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / roundDownTo * roundDownTo;
 
 	// SLOWPACE: money scaling
 	_economy.max_loan *= GetPaceFactor();

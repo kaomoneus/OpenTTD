@@ -563,8 +563,8 @@ Company *DoStartupNewCompany(bool is_ai, CompanyID company = INVALID_COMPANY)
 
     /* Scale the initial loan based on the inflation rounded down to the loan interval. The maximum loan has already been inflation adjusted. */
     auto initial_loan = INITIAL_LOAN * GetPaceFactor();
-	auto loan_interval = ::GetLoanInterval();
-	c->money = c->current_loan = std::min<int64>((initial_loan * _economy.inflation_prices >> 16) / loan_interval * loan_interval, _economy.max_loan);
+	auto roundDownTo = VANILLA_LOAN_INTERVAL;
+	c->money = c->current_loan = std::min<int64>((initial_loan * _economy.inflation_prices >> 16) / roundDownTo * roundDownTo, _economy.max_loan);
 
 	std::fill(c->share_owners.begin(), c->share_owners.end(), INVALID_OWNER);
 

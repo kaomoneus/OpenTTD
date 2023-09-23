@@ -133,7 +133,7 @@ struct SetPaceFactorWindow : Window {
 		// SLOWPACE: stolen from QueryString::DrawEditBox
 		bool rtl = _current_text_dir == TD_RTL;
 		Dimension sprite_size = GetSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
-		int clearbtn_width = sprite_size.width + WD_IMGBTN_LEFT + WD_IMGBTN_RIGHT;
+		int clearbtn_width = sprite_size.width + WidgetDimensions::unscaled.imgbtn.left + WidgetDimensions::unscaled.imgbtn.right;
 		return clearbtn_width;
 	}
 

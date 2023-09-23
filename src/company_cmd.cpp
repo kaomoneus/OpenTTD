@@ -560,8 +560,8 @@ Company *DoStartupNewCompany(bool is_ai, CompanyID company = INVALID_COMPANY)
 	ResetCompanyLivery(c);
 	_company_colours[c->index] = (Colours)c->colour;
 
-    // c->money = c->current_loan = (std::min<int64>(INITIAL_LOAN, _economy.max_loan) * _economy.inflation_prices >> 16) / 50000 * 50000;
 
+    /* Scale the initial loan based on the inflation rounded down to the loan interval. The maximum loan has already been inflation adjusted. */
     auto initial_loan = INITIAL_LOAN * GetPaceFactor();
 	auto loan_interval = ::GetLoanInterval();
 	c->money = c->current_loan = std::min<int64>((initial_loan * _economy.inflation_prices >> 16) / loan_interval * loan_interval, _economy.max_loan);

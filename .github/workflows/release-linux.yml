@@ -42,6 +42,7 @@ jobs:
           perl-IPC-Cmd \
           wget \
           zip \
+          autoconf-archive \
           # EOF
         echo "::endgroup::"
 

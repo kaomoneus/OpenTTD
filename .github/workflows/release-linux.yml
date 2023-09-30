@@ -27,23 +27,28 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /vcpkg/installed
-        key: ubuntu-20.04-vcpkg-release-0 # Increase the number whenever dependencies are modified
+        key: ubuntu-20.04-vcpkg-release-1 # Increase the number whenever dependencies are modified
         restore-keys: |
           ubuntu-20.04-vcpkg-release
 
     - name: Install dependencies
       run: |
         echo "::group::Install system dependencies"
-        # ICU is used as vcpkg fails to install ICU. Other dependencies
-        # are needed either for vcpkg or for the packages installed with
-        # vcpkg.
+        # perl-IPC-Cmd, wget, and zip are needed to run vcpkg.
+        # autoconf-archive is needed to build ICU.
         yum install -y \
-          libicu-devel \
+          autoconf-archive \
           perl-IPC-Cmd \
           wget \
           zip \
           autoconf-archive \
           # EOF
+
+        # aclocal looks first in /usr/local/share/aclocal, and if that doesn't
+        # exist only looks in /usr/share/aclocal. We have files in both that
+        # are important. So copy the latter to the first, and we are good to
+        # go.
+        cp /usr/share/aclocal/* /usr/local/share/aclocal/
         echo "::endgroup::"
 
         # The yum variant of fluidsynth depends on all possible audio drivers,

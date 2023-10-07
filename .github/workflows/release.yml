@@ -31,12 +31,13 @@ jobs:
     with:
       version: ${{ needs.source.outputs.version }}
 
-  emscripten:
-    name: Emscripten
-    needs: source
+  # Temporary disabled
+  # emscripten:
+  #   name: Emscripten
+  #   needs: source
 
-    uses: ./.github/workflows/release-emscripten.yml
-    secrets: inherit
+  #   uses: ./.github/workflows/release-emscripten.yml
+  #   secrets: inherit
 
   linux:
     name: Linux (Generic)

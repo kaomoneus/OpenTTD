@@ -41,7 +41,7 @@ jobs:
           perl-IPC-Cmd \
           wget \
           zip \
-          autoconf-archive \
+          libXdmcp-devel \
           # EOF
 
         # aclocal looks first in /usr/local/share/aclocal, and if that doesn't

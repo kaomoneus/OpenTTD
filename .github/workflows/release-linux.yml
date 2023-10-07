@@ -37,6 +37,7 @@ jobs:
         # perl-IPC-Cmd, wget, and zip are needed to run vcpkg.
         # autoconf-archive is needed to build ICU.
         yum install -y \
+          libicu-devel \
           autoconf-archive \
           perl-IPC-Cmd \
           wget \
@@ -109,7 +110,6 @@ jobs:
             fontconfig \
             freetype \
             harfbuzz \
-            icu \
             liblzma \
             libpng \
             lzo \

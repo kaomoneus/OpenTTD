@@ -1,4 +1,4 @@
-name: Release (MacOS)
+name: Release Random Debug (MacOS)
 
 on:
   workflow_call:

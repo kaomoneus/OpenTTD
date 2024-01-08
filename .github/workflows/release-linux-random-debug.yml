@@ -1,4 +1,4 @@
-name: Release (Linux)
+name: Release Random Debug (Linux)
 
 on:
   workflow_call:

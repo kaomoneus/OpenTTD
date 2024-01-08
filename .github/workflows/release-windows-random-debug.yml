@@ -1,4 +1,4 @@
-name: Release (Windows)
+name: Release Random Debug (Windows)
 
 on:
   workflow_call:

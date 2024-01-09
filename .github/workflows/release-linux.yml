@@ -43,6 +43,11 @@ jobs:
           wget \
           zip \
           # EOF
+
+        # Fix https://github.com/microsoft/vcpkg/issues/35913
+        yum install -y \
+          autoconf automake autoconf-archive
+
         echo "::endgroup::"
 
         # The yum variant of fluidsynth depends on all possible audio drivers,

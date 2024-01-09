@@ -1,5 +1,5 @@
 name: CI
- 
+
 on:
   pull_request:
   push:
@@ -112,6 +112,13 @@ jobs:
           ${{ matrix.libsdl }} \
           zlib1g-dev \
           # EOF
+        echo "::endgroup::"
+
+        echo "::group::Install vcpkg dependencies"
+
+        # Disable vcpkg integration, as we mostly use system libraries.
+        mv vcpkg.json vcpkg-disabled.json
+
         echo "::endgroup::"
       env:
         DEBIAN_FRONTEND: noninteractive

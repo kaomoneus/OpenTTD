@@ -126,6 +126,13 @@ jobs:
           /vcpkg/vcpkg install python3
           ln -sf /vcpkg/installed/x64-linux/tools/python3/python3.[0-9][0-9] /usr/bin/python3
         )
+
+        # Force vcpkg to install dependencies first
+        (
+          cd ${GITHUB_WORKSPACE}
+          /vcpkg/vcpkg install
+        )
+
         echo "::endgroup::"
 
     - name: Install GCC problem matcher

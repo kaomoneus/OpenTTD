@@ -46,57 +46,57 @@ jobs:
     uses: ./.github/workflows/release-linux.yml
     secrets: inherit
 
-  macos:
-    name: MacOS
-    needs: source
+  # macos:
+  #   name: MacOS
+  #   needs: source
 
-    uses: ./.github/workflows/release-macos.yml
-    secrets: inherit
+  #   uses: ./.github/workflows/release-macos.yml
+  #   secrets: inherit
 
-  windows:
-    name: Windows
-    needs: source
+  # windows:
+  #   name: Windows
+  #   needs: source
 
-    uses: ./.github/workflows/release-windows.yml
-    secrets: inherit
+  #   uses: ./.github/workflows/release-windows.yml
+  #   secrets: inherit
 
-    with:
-      is_tag: ${{ needs.source.outputs.is_tag }}
+  #   with:
+  #     is_tag: ${{ needs.source.outputs.is_tag }}
 
-  windows-store:
-    name: Windows Store
-    needs:
-    - source
-    - windows
+  # windows-store:
+  #   name: Windows Store
+  #   needs:
+  #   - source
+  #   - windows
 
-    if: needs.source.outputs.is_tag == 'true'
+  #   if: needs.source.outputs.is_tag == 'true'
 
-    uses: ./.github/workflows/release-windows-store.yml
-    secrets: inherit
+  #   uses: ./.github/workflows/release-windows-store.yml
+  #   secrets: inherit
 
-    with:
-      version: ${{ needs.source.outputs.version }}
+  #   with:
+  #     version: ${{ needs.source.outputs.version }}
 
-  linux_random_debug:
-    name: Linux Random Debug (Generic)
-    needs: source
+  # linux_random_debug:
+  #   name: Linux Random Debug (Generic)
+  #   needs: source
 
-    uses: ./.github/workflows/release-linux-random-debug.yml
-    secrets: inherit
+  #   uses: ./.github/workflows/release-linux-random-debug.yml
+  #   secrets: inherit
 
-  macos_random_debug:
-    name: MacOS Random Debug
-    needs: source
+  # macos_random_debug:
+  #   name: MacOS Random Debug
+  #   needs: source
 
-    uses: ./.github/workflows/release-macos-random-debug.yml
-    secrets: inherit
+  #   uses: ./.github/workflows/release-macos-random-debug.yml
+  #   secrets: inherit
 
-  windows_random_debug:
-    name: Windows Random Debug
-    needs: source
+  # windows_random_debug:
+  #   name: Windows Random Debug
+  #   needs: source
 
-    uses: ./.github/workflows/release-windows-random-debug.yml
-    secrets: inherit
+  #   uses: ./.github/workflows/release-windows-random-debug.yml
+  #   secrets: inherit
 
-    with:
-      is_tag: ${{ needs.source.outputs.is_tag }}
+  #   with:
+  #     is_tag: ${{ needs.source.outputs.is_tag }}

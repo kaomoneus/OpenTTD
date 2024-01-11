@@ -7,7 +7,7 @@ jobs:
   linux:
     name: Linux (Generic)
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       # manylinux2014 is based on CentOS 7, but already has a lot of things
       # installed and preconfigured. It makes it easier to build OpenTTD.
@@ -23,46 +23,22 @@ jobs:
       run: |
         tar -xf source.tar.gz --strip-components=1
 
-    # curl is too old for most of the tools to work properly. For example,
-    # rust-toolchain doesn't work properly, neither vcpkg caching.
-    # The easier solution here is to upgrade curl.
-    - name: Update curl
-      run: |
-        yum install -y \
-          openssl-devel \
-          # EOF
-
-        mkdir /curl
-        cd /curl
-        curl -o curl-7.81.0.zip https://curl.se/download/curl-7.81.0.zip
-        unzip curl-7.81.0.zip
-        cd curl-7.81.0
-        ./configure --with-ssl --with-zlib --prefix=/usr --libdir=/usr/lib64
-        make -j $(nproc)
-        make install
-
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Enable Rust cache
-      uses: Swatinem/rust-cache@v2
-
-    # - name: Setup vcpkg caching
-    #   uses: actions/github-script@v6
-    #   with:
-    #     script: |
-    #       core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-    #       core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-    #       core.exportVariable('VCPKG_BINARY_SOURCES', 'clear;x-gha,readwrite')
+    - name: Enable vcpkg cache
+      uses: actions/cache@v3
+      with:
+        path: /vcpkg/installed
+        key: ubuntu-20.04-vcpkg-release-0 # Increase the number whenever dependencies are modified
+        restore-keys: |
+          ubuntu-20.04-vcpkg-release
 
     - name: Install dependencies
       run: |
         echo "::group::Install system dependencies"
-        # perl-IPC-Cmd, wget, and zip are needed to run vcpkg.
-        # autoconf-archive is needed to build ICU.
+        # ICU is used as vcpkg fails to install ICU. Other dependencies
+        # are needed either for vcpkg or for the packages installed with
+        # vcpkg.
         yum install -y \
           libicu-devel \
-          autoconf-archive \
           perl-IPC-Cmd \
           wget \
           zip \
@@ -73,6 +49,7 @@ jobs:
         # are important. So copy the latter to the first, and we are good to
         # go.
         cp /usr/share/aclocal/* /usr/local/share/aclocal/
+
         echo "::endgroup::"
 
         # The yum variant of fluidsynth depends on all possible audio drivers,
@@ -110,29 +87,34 @@ jobs:
         # We use vcpkg for our dependencies, to get more up-to-date version.
         echo "::group::Install vcpkg and dependencies"
 
-        git clone https://github.com/microsoft/vcpkg /vcpkg
+        # We do a little dance to make sure we copy the cached install folder
+        # into our new clone.
+        git clone --depth=1 https://github.com/microsoft/vcpkg /vcpkg-clone
+        if [ -e /vcpkg/installed ]; then
+          mv /vcpkg/installed /vcpkg-clone/
+          rm -rf /vcpkg
+        fi
+        mv /vcpkg-clone /vcpkg
 
         (
           cd /vcpkg
           ./bootstrap-vcpkg.sh -disableMetrics
+
+          # Make Python3 available for other packages.
+          ./vcpkg install python3
+          ln -sf $(pwd)/installed/x64-linux/tools/python3/python3.[0-9][0-9] /usr/bin/python3
+
+          ./vcpkg install \
+            curl[http2] \
+            fontconfig \
+            freetype \
+            liblzma \
+            libpng \
+            lzo \
+            sdl2 \
+            zlib \
+            # EOF
         )
-
-        # Make Python3 available for other packages. This needs to be done
-        # first, as otherwise dependencies fail to build because Python3 is
-        # not available.
-        (
-          cd /
-
-          /vcpkg/vcpkg install python3
-          ln -sf /vcpkg/installed/x64-linux/tools/python3/python3.[0-9][0-9] /usr/bin/python3
-        )
-
-        # Force vcpkg to install dependencies first
-        (
-          cd ${GITHUB_WORKSPACE}
-          /vcpkg/vcpkg install
-        )
-
         echo "::endgroup::"
 
     - name: Install GCC problem matcher

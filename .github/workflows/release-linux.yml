@@ -39,6 +39,7 @@ jobs:
         # vcpkg.
         yum install -y \
           libicu-devel \
+          autoconf-archive \
           perl-IPC-Cmd \
           wget \
           zip \

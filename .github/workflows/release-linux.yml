@@ -23,13 +23,13 @@ jobs:
       run: |
         tar -xf source.tar.gz --strip-components=1
 
-    - name: Enable vcpkg cache
-      uses: actions/cache@v3
-      with:
-        path: /vcpkg/installed
-        key: ubuntu-20.04-vcpkg-release-0 # Increase the number whenever dependencies are modified
-        restore-keys: |
-          ubuntu-20.04-vcpkg-release
+    # - name: Enable vcpkg cache
+    #   uses: actions/cache@v3
+    #   with:
+    #     path: /vcpkg/installed
+    #     key: ubuntu-20.04-vcpkg-release-0 # Increase the number whenever dependencies are modified
+    #     restore-keys: |
+    #       ubuntu-20.04-vcpkg-release
 
     - name: Install dependencies
       run: |

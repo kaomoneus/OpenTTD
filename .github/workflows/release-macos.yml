@@ -46,16 +46,8 @@ jobs:
 
     - name: Prepare vcpkg
       run: |
-        vcpkg install \
-          liblzma:x64-osx \
-          liblzma:arm64-osx \
-          libpng:x64-osx \
-          libpng:arm64-osx \
-          lzo:x64-osx \
-          lzo:arm64-osx \
-          zlib:x64-osx \
-          zlib:arm64-osx \
-          # EOF
+        cd ${GITHUB_WORKSPACE}
+        vcpkg install
 
     - name: Install GCC problem matcher
       uses: ammaraskar/gcc-problem-matcher@master

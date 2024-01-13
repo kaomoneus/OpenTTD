@@ -61,8 +61,7 @@ jobs:
       shell: bash
       run: |
         cd ${GITHUB_WORKSPACE}
-        vcpkg install --triplet=${{ matrix.arch }}-windows-static \
-          # EOF
+        vcpkg install --triplet=${{ matrix.arch }}-windows-static
 
     - name: Install MSVC problem matcher
       uses: ammaraskar/msvc-problem-matcher@master

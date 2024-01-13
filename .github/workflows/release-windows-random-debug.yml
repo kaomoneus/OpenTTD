@@ -86,6 +86,7 @@ jobs:
           -GNinja \
           -DOPTION_TOOLS_ONLY=ON \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_FLAGS_INIT="-DRANDOM_DEBUG" \
           # EOF
         echo "::endgroup::"
 
@@ -129,7 +130,7 @@ jobs:
           -DHOST_BINARY_DIR=${GITHUB_WORKSPACE}/build-host \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DWINDOWS_CERTIFICATE_COMMON_NAME="${WINDOWS_CERTIFICATE_COMMON_NAME}" \
-          -DCMAKE_CXX_FLAGS_INIT="-DRANDOM_DEBUG" \          
+          -DCMAKE_CXX_FLAGS_INIT="-DRANDOM_DEBUG" \
           # EOF
         echo "::endgroup::"
 
@@ -154,6 +155,7 @@ jobs:
           -DHOST_BINARY_DIR=${GITHUB_WORKSPACE}/build-host \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DWINDOWS_CERTIFICATE_COMMON_NAME="${WINDOWS_CERTIFICATE_COMMON_NAME}" \
+          -DCMAKE_CXX_FLAGS_INIT="-DRANDOM_DEBUG" \
           # EOF
         echo "::endgroup::"
 

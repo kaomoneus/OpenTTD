@@ -23,13 +23,13 @@ jobs:
       run: |
         tar -xf source.tar.gz --strip-components=1
 
-    - name: Enable vcpkg cache
-      uses: actions/cache@v3
-      with:
-        path: /vcpkg/installed
-        key: ubuntu-20.04-vcpkg-release-0 # Increase the number whenever dependencies are modified
-        restore-keys: |
-          ubuntu-20.04-vcpkg-release
+    # - name: Enable vcpkg cache
+    #   uses: actions/cache@v3
+    #   with:
+    #     path: /vcpkg/installed
+    #     key: ubuntu-20.04-vcpkg-release-0 # Increase the number whenever dependencies are modified
+    #     restore-keys: |
+    #       ubuntu-20.04-vcpkg-release
 
     - name: Install dependencies
       run: |
@@ -39,10 +39,18 @@ jobs:
         # vcpkg.
         yum install -y \
           libicu-devel \
+          autoconf-archive \
           perl-IPC-Cmd \
           wget \
           zip \
           # EOF
+
+        # aclocal looks first in /usr/local/share/aclocal, and if that doesn't
+        # exist only looks in /usr/share/aclocal. We have files in both that
+        # are important. So copy the latter to the first, and we are good to
+        # go.
+        cp /usr/share/aclocal/* /usr/local/share/aclocal/
+
         echo "::endgroup::"
 
         # The yum variant of fluidsynth depends on all possible audio drivers,
@@ -82,7 +90,7 @@ jobs:
 
         # We do a little dance to make sure we copy the cached install folder
         # into our new clone.
-        git clone --depth=1 https://github.com/microsoft/vcpkg /vcpkg-clone
+        git clone https://github.com/microsoft/vcpkg /vcpkg-clone
         if [ -e /vcpkg/installed ]; then
           mv /vcpkg/installed /vcpkg-clone/
           rm -rf /vcpkg
@@ -94,19 +102,16 @@ jobs:
           ./bootstrap-vcpkg.sh -disableMetrics
 
           # Make Python3 available for other packages.
-          ./vcpkg install python3
-          ln -sf $(pwd)/installed/x64-linux/tools/python3/python3.[0-9][0-9] /usr/bin/python3
+          cp ${GITHUB_WORKSPACE}/vcpkg_python3.json /vcpkg.json
+          cd /
+          /vcpkg/vcpkg install
+          ln -sf /vcpkg_installed/x64-linux/tools/python3/python3.[0-9][0-9] /usr/bin/python3
 
-          ./vcpkg install \
-            curl[http2] \
-            fontconfig \
-            freetype \
-            liblzma \
-            libpng \
-            lzo \
-            sdl2 \
-            zlib \
-            # EOF
+          # Make sure we have access to python3
+          python3 --version
+
+          cd ${GITHUB_WORKSPACE}
+          /vcpkg/vcpkg install
         )
         echo "::endgroup::"
 

@@ -60,11 +60,8 @@ jobs:
     - name: Prepare vcpkg
       shell: bash
       run: |
+        cd ${GITHUB_WORKSPACE}
         vcpkg install --triplet=${{ matrix.arch }}-windows-static \
-          liblzma \
-          libpng \
-          lzo \
-          zlib \
           # EOF
 
     - name: Install MSVC problem matcher

@@ -90,7 +90,7 @@ jobs:
 
         # We do a little dance to make sure we copy the cached install folder
         # into our new clone.
-        git clone --depth=1 https://github.com/microsoft/vcpkg /vcpkg-clone
+        git clone https://github.com/microsoft/vcpkg /vcpkg-clone
         if [ -e /vcpkg/installed ]; then
           mv /vcpkg/installed /vcpkg-clone/
           rm -rf /vcpkg

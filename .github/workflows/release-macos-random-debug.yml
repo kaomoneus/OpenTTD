@@ -7,7 +7,7 @@ jobs:
   macos:
     name: MacOS
 
-    runs-on: macos-11
+    runs-on: macos-latest
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.13
 
@@ -28,7 +28,6 @@ jobs:
       run: |
         brew install \
           pandoc \
-          pkg-config \
           # EOF
 
     - name: Prepare cache key
@@ -47,16 +46,8 @@ jobs:
 
     - name: Prepare vcpkg
       run: |
-        vcpkg install \
-          liblzma:x64-osx \
-          liblzma:arm64-osx \
-          libpng:x64-osx \
-          libpng:arm64-osx \
-          lzo:x64-osx \
-          lzo:arm64-osx \
-          zlib:x64-osx \
-          zlib:arm64-osx \
-          # EOF
+        cd ${GITHUB_WORKSPACE}
+        vcpkg install
 
     - name: Install GCC problem matcher
       uses: ammaraskar/gcc-problem-matcher@master

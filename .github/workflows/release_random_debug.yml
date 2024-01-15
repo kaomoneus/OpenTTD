@@ -1,0 +1,46 @@
+name: Release Random Debug
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Ref to build (for Pull Requests, use refs/pull/NNN/head)'
+        required: true
+  repository_dispatch:
+    # client_payload should be the same as the inputs for workflow_dispatch.
+    types:
+    - Build*
+  release:
+    types:
+    - published
+
+jobs:
+  source:
+    name: Source
+
+    uses: ./.github/workflows/release-source.yml
+    secrets: inherit
+
+  linux_random_debug:
+    name: Linux Random Debug (Generic)
+    needs: source
+
+    uses: ./.github/workflows/release-linux-random-debug.yml
+    secrets: inherit
+
+  macos_random_debug:
+    name: MacOS Random Debug
+    needs: source
+
+    uses: ./.github/workflows/release-macos-random-debug.yml
+    secrets: inherit
+
+  windows_random_debug:
+    name: Windows Random Debug
+    needs: source
+
+    uses: ./.github/workflows/release-windows-random-debug.yml
+    secrets: inherit
+
+    with:
+      is_tag: ${{ needs.source.outputs.is_tag }}

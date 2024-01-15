@@ -195,6 +195,6 @@ jobs:
     - name: Store bundles
       uses: actions/upload-artifact@v3
       with:
-        name: openttd-windows-${{ matrix.arch }}
+        name: openttd-windows-rd-${{ matrix.arch }}
         path: build/bundles
         retention-days: 5

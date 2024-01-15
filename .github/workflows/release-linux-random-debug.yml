@@ -153,6 +153,6 @@ jobs:
     - name: Store bundles
       uses: actions/upload-artifact@v3
       with:
-        name: openttd-linux-generic
+        name: openttd-linux-rd-generic
         path: build/bundles
         retention-days: 5

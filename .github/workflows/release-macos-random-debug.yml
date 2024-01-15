@@ -187,6 +187,6 @@ jobs:
     - name: Store bundles
       uses: actions/upload-artifact@v3
       with:
-        name: openttd-macos-universal
+        name: openttd-macos-rd-universal
         path: build-x64/bundles
         retention-days: 5

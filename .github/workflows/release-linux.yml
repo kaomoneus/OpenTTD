@@ -116,7 +116,7 @@ jobs:
         echo "::endgroup::"
 
     - name: Install GCC problem matcher
-      uses: ammaraskar/gcc-problem-matcher@master
+      uses: ammaraskar/gcc-problem-matcher@0.2.0
 
     - name: Build
       run: |

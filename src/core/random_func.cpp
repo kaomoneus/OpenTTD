@@ -71,11 +71,12 @@ void SetRandomSeed(uint32 seed)
 #ifdef RANDOM_DEBUG
 uint32 DoRandom(int line, const char *file)
 {
+	auto rnd = _random.Next();
 	if (_networking && (!_network_server || (NetworkClientSocket::IsValidID(0) && NetworkClientSocket::Get(0)->status != NetworkClientSocket::STATUS_INACTIVE))) {
-		Debug(random, 0, "{:08x}; {:02x}; {:04x}; {:02x}; {}:{}", _date, _date_fract, _frame_counter, (byte)_current_company, file, line);
+		Debug(random, 0, "date: {:08x}; fract: {:02x}; frame: {:04x}; company: {:02x}; rnd: {:08x}; {}:{}", _date, _date_fract, _frame_counter, (byte)_current_company, rnd, file, line);
 	}
 
-	return _random.Next();
+	return rnd;
 }
 
 uint32 DoRandomRange(uint32 limit, int line, const char *file)

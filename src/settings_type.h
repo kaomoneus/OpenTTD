@@ -632,9 +632,9 @@ static inline GameSettings &GetGameSettings()
 	return (_game_mode == GM_MENU) ? _settings_newgame : _settings_game;
 }
 
-int GetPaceFactor();
+int32 GetPaceFactor();
 
-inline int GetDayTicks() {
+inline int32 GetDayTicks() {
 	return GetPaceFactor() * VANILLA_DAY_TICKS;
 }
 

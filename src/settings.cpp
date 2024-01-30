@@ -1746,7 +1746,7 @@ void IConsoleListSettings(const char *prefilter)
 	IConsolePrint(CC_HELP, "Use 'setting' command to change a value.");
 }
 
-int GetPaceFactor() {
+int32 GetPaceFactor() {
 	static const uint16 factors[] = {
 			// Game year lasts
 			0,          // Custom, read year_pace_custom_15minutes

@@ -41,7 +41,7 @@ typedef uint8  Minute; ///< Type for the minute of hour, note: 0 based
 // Ideally e should replace it everywhere with GetDayTicks call.
 #define DAY_TICKS ::GetDayTicks()
 
-static const int VANILLA_DAY_TICKS = 74; ///< ticks per vanilla day. Used as a primary time unit for animation.
+static const int32 VANILLA_DAY_TICKS = 74; ///< ticks per vanilla day. Used as a primary time unit for animation.
 
 static const int DAYS_IN_YEAR      = 365; ///< days per year
 static const int DAYS_IN_LEAP_YEAR = 366; ///< sometimes, you need one day more...

@@ -216,13 +216,13 @@ std::tuple<uint8, uint8> TicksToHourMinute(Ticks ticks) {
 }
 
 std::tuple<Date, DateFract> GameDateToVanillaDate(Date d, DateFract fract) {
-	auto x = std::div((long)d * GetDayTicks() + fract, (long)VANILLA_DAY_TICKS);
+	auto x = std::div((int64)d * GetDayTicks() + fract, (int64)VANILLA_DAY_TICKS);
 	return {x.quot, x.rem};
 }
 
 std::tuple<Date, DateFract> VanillaDateToGameDate(Date d, DateFract fract) {
-	long x = (long)d * VANILLA_DAY_TICKS + fract;
-	auto dd = std::div(x, (long) GetDayTicks());
+	int64 x = (int64)d * VANILLA_DAY_TICKS + fract;
+	auto dd = std::div(x, (int64) GetDayTicks());
 	return {dd.quot, dd.rem};
 }
 

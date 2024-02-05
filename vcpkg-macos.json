@@ -1,0 +1,37 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+    "dependencies": [
+      {
+        "name": "curl",
+        "platform": "linux",
+        "features": [
+          "http2"
+        ]
+      },
+      {
+        "name": "fontconfig",
+        "platform": "linux"
+      },
+      {
+        "name": "freetype",
+        "platform": "linux"
+      },
+      {
+        "name": "liblzma"
+      },
+      {
+        "name": "libpng"
+      },
+      {
+        "name": "lzo"
+      },
+      {
+        "name": "sdl2",
+        "platform": "linux"
+      },
+      {
+        "name": "zlib"
+      }
+    ],
+    "builtin-baseline": "fecdd89f28ed883b26a48c2b30085f6384070bb8"
+  }

@@ -7,7 +7,7 @@ jobs:
   macos:
     name: MacOS
 
-    runs-on: macos-11
+    runs-on: macos-latest
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.13
 
@@ -47,6 +47,7 @@ jobs:
     - name: Prepare vcpkg
       run: |
         cd ${GITHUB_WORKSPACE}
+        cp vcpkg-macos.json vcpkg.json
         vcpkg install
 
     - name: Install GCC problem matcher

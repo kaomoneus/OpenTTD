@@ -47,6 +47,7 @@ jobs:
     - name: Prepare vcpkg
       run: |
         cd ${GITHUB_WORKSPACE}
+        cp vcpkg-macos.json vcpkg.json
         vcpkg install
 
     - name: Install GCC problem matcher
